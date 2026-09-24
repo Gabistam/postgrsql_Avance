@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avant la séance — Installer PostgreSQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;
+--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f1f5f9;--card:#fff;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15.5px}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:44px 20px 34px}
+.wrap{max-width:1000px;margin:0 auto}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+header h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.2;margin-bottom:10px}
+header p.lead{color:#cbd5e1;max-width:700px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:13px;font-weight:500}
+.gprog{margin-top:22px;max-width:480px}
+.gprog-label{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:6px}
+.gprog-bar{height:8px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+.gprog-fill{height:100%;width:0;background:#34d399;transition:width .4s}
+.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(15,23,42,.05)}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 10px}
+.tab{background:none;border:none;border-bottom:3px solid transparent;padding:15px 15px;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--primary)} .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+main{padding:28px 14px 60px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;margin-bottom:14px;line-height:1.3}
+.icon-bg{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.ib-blue{background:var(--primary-light)}.ib-green{background:var(--secondary-light)}.ib-amber{background:var(--accent-light)}.ib-red{background:var(--danger-light)}.ib-purple{background:var(--purple-light)}
+.num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--primary);background:var(--primary-light);padding:3px 9px;border-radius:7px}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+p+p{margin-top:8px}
+ul.clean{list-style:none;margin:6px 0}
+ul.clean li{padding:4px 0 4px 22px;position:relative}
+ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--primary);font-weight:700}
+ol.steps{margin:6px 0 6px 22px} ol.steps li{margin:4px 0}
+.objectif-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:14px;color:var(--primary-dark)}
+.instruction-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;margin:14px 0;color:#78350f}
+.warn-box{background:var(--danger-light);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;margin:14px 0;color:#7f1d1d}
+.ok-box{background:var(--secondary-light);border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin:14px 0;color:#064e3b}
+.analogie{background:var(--purple-light);border-left:4px solid var(--purple);border-radius:10px;padding:14px 18px;margin:14px 0;color:#4c1d95}
+.ftag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0}
+.f1{background:#dbeafe;color:#1e40af}.f2{background:#d1fae5;color:#065f46}.f3{background:#fef3c7;color:#92400e}.f4{background:#fee2e2;color:#991b1b}.f5{background:#ede9fe;color:#5b21b6}
+code.inl{background:#e2e8f0;padding:1px 6px;border-radius:5px;font-size:13px}
+.code{margin:10px 0;border-radius:10px;overflow:hidden;background:var(--dark)}
+.code-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#1e293b;color:#94a3b8;font-size:12px;font-family:'JetBrains Mono',monospace}
+.copy{background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.copy:hover{background:#475569}.copy.done{background:var(--secondary)}
+.code pre{color:#e2e8f0;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0}
+pre .c{color:#64748b;font-style:italic} pre .k{color:#93c5fd;font-weight:500} pre .s{color:#86efac} pre .n{color:#fcd34d} pre .m{color:#f9a8d4}
+pre.sh{color:#a7f3d0}
+.res{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:4px 0 12px}
+.res-bar{display:flex;justify-content:space-between;background:#f8fafc;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;font-weight:700;color:var(--secondary)}
+.res-bar span{color:var(--muted);font-weight:500}
+.tbl{overflow-x:auto}
+.tbl table,.grid-table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#f1f5f9;text-align:left;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate,#334155);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 12px;border-bottom:1px solid #f1f5f9;font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap}
+.tbl td.null{color:#94a3b8;font-style:italic}
+.res-note{padding:9px 12px;font-size:13px;color:var(--muted);background:#f8fafc;border-top:1px solid var(--border)}
+.grid-table th{background:var(--dark-2);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:13px}
+.grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.grid-table tr:nth-child(even) td{background:#f8fafc}
+.grid-table td:first-child{font-weight:600}
+.understood{display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.understood input{accent-color:var(--secondary);width:18px;height:18px}
+.understood.done{border-color:var(--secondary);color:var(--secondary);background:var(--secondary-light)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.toc a{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.toc a:hover{border-color:var(--primary)}
+.result-panel{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:var(--radius);padding:22px 24px;margin:6px 0 22px}
+.result-panel h4{color:#fff;font-size:16px;margin-bottom:8px}
+.result-panel .score{color:#34d399;font-weight:800;font-family:'JetBrains Mono',monospace}
+.result-panel ul{margin-left:18px}.result-panel li{margin:3px 0}
+.os-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.os{font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--muted)}
+.os.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.os-panel{display:none}.os-panel.active{display:block}
+.gl-search{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px}
+.gl-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.gl-item b{font-family:'JetBrains Mono',monospace;font-size:14px}
+.gl-item p{font-size:14px;color:#334155;margin-top:2px}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--primary);background:var(--primary);color:#fff}
+.btn:hover{filter:brightness(.95)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 40px}
+@media (max-width:700px){.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style></head><body>
+<header><div class="wrap"><span class="badge">🐘 SQL avancé avec PostgreSQL · Avant la séance 1</span><h1>Préparer son environnement PostgreSQL</h1><p class="lead">Installer PostgreSQL, se connecter, créer la base de travail et charger le jeu de données de démonstration, étape par étape.</p>
+<div class="meta"><span class="pill">⏱ 30 à 45 min</span><span class="pill">🪟 🍎 🐧 🐳 Tous systèmes</span><span class="pill">🗄 Base cours_sql</span><span class="pill">📥 demo.sql inclus</span></div><div class="gprog"><div class="gprog-label"><span>Étapes terminées</span><span id="gprog-txt">0</span></div><div class="gprog-bar"><div class="gprog-fill" id="gprog-fill"></div></div></div></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" role="tablist"><button class="tab active" data-tab="intro" role="tab">🎯 Vue d'ensemble</button><button class="tab" data-tab="install" role="tab">⬇️ Installation</button><button class="tab" data-tab="donnees" role="tab">🗄 Base & données</button><button class="tab" data-tab="depannage" role="tab">🛟 Dépannage</button><button class="tab" data-tab="memo" role="tab">📌 Aide-mémoire</button></div></nav>
+<main class="wrap"><section class="panel active" id="intro">
+<div class="card"><div class="section-title"><span class="icon-bg ib-blue">🎯</span>Pourquoi ce support ?</div>
+<div class="objectif-box">Arriver à la première séance avec <strong>PostgreSQL installé, une base créée et le jeu de données de démonstration chargé</strong>. En séance, on ne perd pas de temps en installation : on code.</div>
+<p>Comptez <strong>30 à 45 minutes</strong>. Suivez les étapes dans l'ordre et cochez chacune une fois terminée : la barre de progression en haut vous indique où vous en êtes. Si vous bloquez, l'onglet <em>Dépannage</em> couvre les erreurs les plus fréquentes.</p>
+</div>
+<div class="card"><div class="section-title"><span class="icon-bg ib-green">🗺</span>Les 8 étapes</div>
+<div class="toc">
+<a href="#" data-go="install" data-anchor="step1"><span class="num">1</span>Comprendre ce qu'on installe</a>
+<a href="#" data-go="install" data-anchor="step2"><span class="num">2</span>Installer PostgreSQL</a>
+<a href="#" data-go="install" data-anchor="step3"><span class="num">3</span>Vérifier l'installation</a>
+<a href="#" data-go="install" data-anchor="step4"><span class="num">4</span>Se connecter avec psql</a>
+<a href="#" data-go="install" data-anchor="step5"><span class="num">5</span>Installer DBeaver (conseillé)</a>
+<a href="#" data-go="donnees" data-anchor="step6"><span class="num">6</span>Créer la base de travail</a>
+<a href="#" data-go="donnees" data-anchor="step7"><span class="num">7</span>Charger le jeu de démonstration</a>
+<a href="#" data-go="donnees" data-anchor="step8"><span class="num">8</span>Vérifier que tout est prêt</a>
+</div></div>
+<div class="card"><div class="section-title"><span class="icon-bg ib-amber">📋</span>Ce qu'il vous faut</div>
+<ul class="clean">
+<li>Un ordinateur Windows, macOS ou Linux avec les droits administrateur</li>
+<li>Environ 500 Mo d'espace disque</li>
+<li>Une connexion internet pour les téléchargements</li>
+<li>Un mot de passe que vous retiendrez pour le compte <code class="inl">postgres</code> (notez-le !)</li>
+</ul></div></section><section class="panel" id="install"><div class="card" id="step1"><div class="section-title"><span class="icon-bg ib-blue">🧠</span><span><span class="num">Étape 1</span>&nbsp; Comprendre ce qu'on installe</span></div><p>PostgreSQL fonctionne en deux parties, comme un restaurant :</p>
+<div class="analogie">🍽️ <strong>Le serveur PostgreSQL</strong>, c'est la cuisine : il stocke les données et exécute les requêtes, en arrière-plan, en permanence.<br>
+🧑‍💼 <strong>Le client</strong> (psql ou DBeaver), c'est le serveur en salle : il prend votre commande (la requête SQL), l'apporte en cuisine et vous rapporte le plat (le résultat).</div>
+<table class="grid-table"><tr><th>Élément</th><th>Rôle</th><th>Obligatoire ?</th></tr>
+<tr><td>Serveur PostgreSQL</td><td>Stocke les bases et exécute le SQL</td><td>Oui</td></tr>
+<tr><td>psql</td><td>Client en ligne de commande, installé avec le serveur</td><td>Oui</td></tr>
+<tr><td>DBeaver</td><td>Client graphique : éditeur SQL, résultats en tableau</td><td>Conseillé</td></tr></table>
+<div class="instruction-box">📌 Version attendue : <strong>PostgreSQL 16 ou 17</strong>. Une version plus ancienne fonctionnera pour la plupart des notions, mais pas toutes.</div><label class="understood"><input type="checkbox"><span>✔ Étape terminée</span></label></div><div class="card" id="step2"><div class="section-title"><span class="icon-bg ib-green">⬇️</span><span><span class="num">Étape 2</span>&nbsp; Installer PostgreSQL</span></div><p>Choisissez votre système :</p><div><div class="os-tabs"><button type="button" class="os active" data-os="win">🪟 Windows</button><button type="button" class="os" data-os="mac">🍎 macOS</button><button type="button" class="os" data-os="lin">🐧 Linux</button><button type="button" class="os" data-os="dock">🐳 Docker</button></div><div class="os-panel active" data-os="win"><ol class="steps">
+<li>Allez sur <strong>postgresql.org → Download → Windows</strong> et téléchargez l'installeur (proposé par EDB), version 17.</li>
+<li>Lancez l'installeur. Laissez cochés <strong>PostgreSQL Server</strong>, <strong>pgAdmin 4</strong> et <strong>Command Line Tools</strong>. Stack Builder est inutile.</li>
+<li>Choisissez le <strong>mot de passe du superutilisateur <code class="inl">postgres</code></strong> et notez-le.</li>
+<li>Laissez le port par défaut <strong>5432</strong> et la locale par défaut, puis terminez l'installation.</li>
+<li>Pour utiliser <code class="inl">psql</code> dans n'importe quel terminal, ajoutez ce dossier à la variable d'environnement <strong>Path</strong> (Paramètres → « Modifier les variables d'environnement système ») :</li></ol><div class="code"><div class="code-bar"><span>Dossier à ajouter au Path</span><button class="copy" type="button">Copier</button></div><pre class="sh">C:\Program Files\PostgreSQL\17\bin</pre></div>
+<div class="instruction-box">💡 Alternative sans toucher au Path : dans le menu Démarrer, ouvrez <strong>SQL Shell (psql)</strong>. Il vous pose 5 questions : appuyez sur Entrée pour garder les valeurs par défaut, puis tapez votre mot de passe.</div></div><div class="os-panel" data-os="mac"><p><strong>Option A — Postgres.app</strong> (la plus simple)</p>
+<ol class="steps"><li>Téléchargez Postgres.app sur <strong>postgresapp.com</strong> et glissez-la dans Applications.</li>
+<li>Ouvrez-la et cliquez sur <strong>Initialize</strong> : le serveur démarre.</li>
+<li>Rendez <code class="inl">psql</code> disponible dans le Terminal :</li></ol><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">sudo mkdir -p /etc/paths.d &amp;&amp;
+echo /Applications/Postgres.app/Contents/Versions/latest/bin | sudo tee /etc/paths.d/postgresapp</pre></div>
+<p>Fermez puis rouvrez le Terminal.</p>
+<p style="margin-top:14px"><strong>Option B — Homebrew</strong></p><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">brew install postgresql@17
+brew services start postgresql@17
+echo 'export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"' &gt;&gt; ~/.zshrc
+source ~/.zshrc</pre></div>
+<div class="instruction-box">⚠️ Sur Mac, l'utilisateur par défaut est <strong>votre nom d'utilisateur macOS</strong>, sans mot de passe. Dans la suite, remplacez <code class="inl">-U postgres</code> par votre nom, ou retirez simplement <code class="inl">-U postgres</code>.</div></div><div class="os-panel" data-os="lin"><div class="code"><div class="code-bar"><span>Ubuntu / Debian</span><button class="copy" type="button">Copier</button></div><pre class="sh">sudo apt update
+sudo apt install postgresql
+sudo systemctl status postgresql     # doit afficher « active »</pre></div>
+<p>Sous Linux, on se connecte avec le compte système <code class="inl">postgres</code>. Pour pouvoir aussi se connecter avec un mot de passe (utile pour DBeaver), définissez-en un :</p><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">sudo -u postgres psql
+\password postgres
+\q</pre></div></div><div class="os-panel" data-os="dock"><p>Si Docker Desktop est déjà installé, une seule commande suffit :</p><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">docker run --name pg-cours -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:17</pre></div>
+<p>Le mot de passe est <code class="inl">postgres</code>. Pour ouvrir psql dans le conteneur :</p><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">docker exec -it pg-cours psql -U postgres</pre></div>
+<div class="instruction-box">💡 Le conteneur s'arrête quand vous éteignez Docker. Relancez-le avec <code class="inl">docker start pg-cours</code>.</div></div></div><label class="understood"><input type="checkbox"><span>✔ Étape terminée</span></label></div><div class="card" id="step3"><div class="section-title"><span class="icon-bg ib-amber">🔎</span><span><span class="num">Étape 3</span>&nbsp; Vérifier l'installation</span></div><p>Ouvrez un terminal (Invite de commandes ou PowerShell sous Windows) et tapez :</p><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">psql --version</pre></div>
+<p>Vous devez obtenir une ligne du type <code class="inl">psql (PostgreSQL) 17.x</code>. Si le terminal répond que la commande est introuvable, voir <strong>Dépannage → « psql n'est pas reconnu »</strong>.</p><label class="understood"><input type="checkbox"><span>✔ Étape terminée</span></label></div><div class="card" id="step4"><div class="section-title"><span class="icon-bg ib-purple">🔌</span><span><span class="num">Étape 4</span>&nbsp; Se connecter avec psql</span></div><p>Connectez-vous au serveur avec le compte <code class="inl">postgres</code> :</p><div><div class="os-tabs"><button type="button" class="os active" data-os="w">Windows / Docker / Mac Homebrew</button><button type="button" class="os" data-os="m">Mac Postgres.app</button><button type="button" class="os" data-os="l">Linux</button></div><div class="os-panel active" data-os="w"><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">psql -U postgres -h localhost</pre></div></div><div class="os-panel" data-os="m"><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">psql</pre></div></div><div class="os-panel" data-os="l"><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">sudo -u postgres psql</pre></div></div></div>
+<p>Tapez votre mot de passe (rien ne s'affiche pendant la saisie, c'est normal). Vous arrivez sur l'invite :</p><div class="code"><div class="code-bar"><span>Invite psql</span><button class="copy" type="button">Copier</button></div><pre class="sh">postgres=#</pre></div>
+<p>Testez votre première requête. Notez le <strong>point-virgule final</strong> : c'est lui qui déclenche l'exécution.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> version();</pre></div>
+<p>Pour quitter psql : <code class="inl">\q</code></p>
+<div class="instruction-box">💡 Si l'invite devient <code class="inl">postgres-#</code> au lieu de <code class="inl">postgres=#</code>, psql attend la suite de votre requête : vous avez oublié le <code class="inl">;</code>. Tapez-le puis Entrée.</div><label class="understood"><input type="checkbox"><span>✔ Étape terminée</span></label></div><div class="card" id="step5"><div class="section-title"><span class="icon-bg ib-blue">🖥️</span><span><span class="num">Étape 5</span>&nbsp; Installer DBeaver (conseillé)</span></div><p>DBeaver offre un éditeur SQL confortable et affiche les résultats sous forme de tableau. Il est gratuit (version Community).</p>
+<ol class="steps">
+<li>Téléchargez <strong>DBeaver Community</strong> sur <strong>dbeaver.io</strong> et installez-le.</li>
+<li>Cliquez sur <strong>Nouvelle connexion</strong> (icône de prise électrique) → <strong>PostgreSQL</strong>.</li>
+<li>Renseignez : Host <code class="inl">localhost</code>, Port <code class="inl">5432</code>, Database <code class="inl">postgres</code>, Username <code class="inl">postgres</code>, et votre mot de passe.</li>
+<li>Cliquez sur <strong>Tester la connexion</strong>. À la première utilisation, DBeaver propose de télécharger le pilote : acceptez.</li>
+<li>Validez avec <strong>Terminer</strong>. La connexion apparaît à gauche.</li></ol>
+<div class="ok-box">✅ psql suffit pour tout le cours. DBeaver est un confort, pas une obligation.</div><label class="understood"><input type="checkbox"><span>✔ Étape terminée</span></label></div></section><section class="panel" id="donnees"><div class="card" id="step6"><div class="section-title"><span class="icon-bg ib-green">🗄️</span><span><span class="num">Étape 6</span>&nbsp; Créer la base de travail</span></div><p>Une fois connecté dans psql (invite <code class="inl">postgres=#</code>), créez la base qui servira à tout le cours, puis connectez-vous dessus :</p><div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">DATABASE</span> cours_sql;
+<span class="m">\c</span> cours_sql</pre></div>
+<p>L'invite devient <code class="inl">cours_sql=#</code> : vous êtes dans la bonne base.</p>
+<div class="instruction-box">📌 Dans DBeaver : clic droit sur la connexion → <strong>Créer → Base de données</strong>, nommez-la <code class="inl">cours_sql</code>. Modifiez ensuite la connexion pour que « Database » pointe sur <code class="inl">cours_sql</code>.</div><label class="understood"><input type="checkbox"><span>✔ Étape terminée</span></label></div><div class="card" id="step7"><div class="section-title"><span class="icon-bg ib-amber">📥</span><span><span class="num">Étape 7</span>&nbsp; Charger le jeu de démonstration</span></div><p>Le fichier <code class="inl">demo.sql</code> crée 6 petites tables sur trois univers : un championnat de foot, des genres musicaux avec des streams, et des scores de jeux vidéo. Tous les exemples du cours s'appuient dessus.</p>
+<p><button class="btn" type="button" id="dl-demo">⬇️ Télécharger demo.sql</button></p>
+<p style="margin-top:12px">Puis chargez-le, <strong>depuis le dossier où se trouve le fichier</strong> :</p><div><div class="os-tabs"><button type="button" class="os active" data-os="a">Terminal</button><button type="button" class="os" data-os="b">Dans psql</button><button type="button" class="os" data-os="c">Linux</button><button type="button" class="os" data-os="d">Docker</button><button type="button" class="os" data-os="e">DBeaver</button></div><div class="os-panel active" data-os="a"><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">psql -U postgres -h localhost -d cours_sql -f demo.sql</pre></div></div><div class="os-panel" data-os="b"><div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\i</span> C:/Users/votre_nom/Downloads/demo.sql</pre></div><p>Utilisez des <strong>/</strong> même sous Windows.</p></div><div class="os-panel" data-os="c"><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">cp demo.sql /tmp/demo.sql
+sudo -u postgres psql -d cours_sql -f /tmp/demo.sql</pre></div><p>La copie dans <code class="inl">/tmp</code> évite une erreur de permission : le compte <code class="inl">postgres</code> ne peut pas lire votre dossier personnel.</p></div><div class="os-panel" data-os="d"><div class="code"><div class="code-bar"><span>Terminal</span><button class="copy" type="button">Copier</button></div><pre class="sh">docker cp demo.sql pg-cours:/demo.sql
+docker exec -it pg-cours psql -U postgres -d cours_sql -f /demo.sql</pre></div></div><div class="os-panel" data-os="e"><p>Ouvrez un éditeur SQL sur la base <code class="inl">cours_sql</code>, collez le contenu du fichier et exécutez <strong>tout le script</strong> avec <code class="inl">Alt+X</code> (et non Ctrl+Entrée, qui n'exécute qu'une requête).</p></div></div>
+<div class="ok-box">✅ À la première exécution, des messages <code class="inl">NOTICE: table … does not exist, skipping</code> s'affichent : c'est normal. Le script supprime les tables avant de les recréer, ce qui permet de le relancer à tout moment pour repartir de zéro.</div>
+<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Voir le contenu de demo.sql</summary><div class="code"><div class="code-bar"><span>demo.sql</span><button class="copy" type="button">Copier</button></div><pre><span class="c">-- =====================================================================</span>
+<span class="c">--  Jeu de données de démonstration — SQL avancé avec PostgreSQL</span>
+<span class="c">--  Domaines : sport (championnat), musique (genres, streams), jeux vidéo</span>
+<span class="c">--  Script ré-exécutable : il supprime puis recrée toutes les tables.</span>
+<span class="c">-- =====================================================================</span>
+
+<span class="c">-- (tournois et inscriptions sont créées pendant les exercices N2)</span>
+<span class="k">DROP</span> <span class="k">TABLE</span> <span class="k">IF</span> <span class="k">EXISTS</span> inscriptions, tournois, joueurs, matchs, equipes, genres, parties, streams <span class="k">CASCADE</span>;
+
+<span class="c">-- ---------- SPORT : un mini-championnat de 6 équipes ----------</span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> equipes (
+    id    <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">BY</span> <span class="k">DEFAULT</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    nom   <span class="k">VARCHAR</span>(<span class="n">50</span>) <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">UNIQUE</span>,
+    ville <span class="k">VARCHAR</span>(<span class="n">50</span>) <span class="k">NOT</span> <span class="k">NULL</span>
+);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> joueurs (
+    id        <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">BY</span> <span class="k">DEFAULT</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    nom       <span class="k">VARCHAR</span>(<span class="n">80</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    equipe_id <span class="k">INTEGER</span> <span class="k">REFERENCES</span> equipes(id),      <span class="c">-- NULL = joueur sans club</span>
+    poste     <span class="k">VARCHAR</span>(<span class="n">20</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    buts      <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="n">0</span> <span class="k">CHECK</span> (buts &gt;= <span class="n">0</span>)
+);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> matchs (
+    id             <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">BY</span> <span class="k">DEFAULT</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    journee        <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span>,
+    equipe_dom_id  <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> equipes(id),
+    equipe_ext_id  <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> equipes(id),
+    buts_dom       <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">CHECK</span> (buts_dom &gt;= <span class="n">0</span>),
+    buts_ext       <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">CHECK</span> (buts_ext &gt;= <span class="n">0</span>)
+);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> equipes (nom, ville) <span class="k">VALUES</span>
+  (<span class="s">'PSG'</span>, <span class="s">'Paris'</span>), (<span class="s">'OM'</span>, <span class="s">'Marseille'</span>), (<span class="s">'OL'</span>, <span class="s">'Lyon'</span>),
+  (<span class="s">'LOSC'</span>, <span class="s">'Lille'</span>), (<span class="s">'Stade Rennais'</span>, <span class="s">'Rennes'</span>), (<span class="s">'RC Lens'</span>, <span class="s">'Lens'</span>);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> joueurs (nom, equipe_id, poste, buts) <span class="k">VALUES</span>
+  (<span class="s">'Yanis Belkacem'</span>, <span class="n">1</span>, <span class="s">'attaquant'</span>, <span class="n">7</span>),
+  (<span class="s">'Hugo Martin'</span>,    <span class="n">1</span>, <span class="s">'milieu'</span>,    <span class="n">2</span>),
+  (<span class="s">'Enzo Rossi'</span>,     <span class="n">2</span>, <span class="s">'attaquant'</span>, <span class="n">5</span>),
+  (<span class="s">'Adam Diallo'</span>,    <span class="n">2</span>, <span class="s">'défenseur'</span>, <span class="n">0</span>),
+  (<span class="s">'Lucas Moreau'</span>,   <span class="n">3</span>, <span class="s">'attaquant'</span>, <span class="n">4</span>),
+  (<span class="s">'Noah Petit'</span>,     <span class="n">4</span>, <span class="s">'milieu'</span>,    <span class="n">1</span>),
+  (<span class="s">'Rayan Ndiaye'</span>,   <span class="n">5</span>, <span class="s">'attaquant'</span>, <span class="n">2</span>),
+  (<span class="s">'Ilyes Haddad'</span>,   <span class="n">6</span>, <span class="s">'attaquant'</span>, <span class="n">6</span>),
+  (<span class="s">'Théo Garnier'</span>,   <span class="n">6</span>, <span class="s">'défenseur'</span>, <span class="n">1</span>),
+  (<span class="s">'Sami Koné'</span>,   <span class="k">NULL</span>, <span class="s">'attaquant'</span>, <span class="n">0</span>);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> matchs (journee, equipe_dom_id, equipe_ext_id, buts_dom, buts_ext) <span class="k">VALUES</span>
+  (<span class="n">1</span>, <span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">1</span>), (<span class="n">1</span>, <span class="n">3</span>, <span class="n">4</span>, <span class="n">2</span>, <span class="n">2</span>), (<span class="n">1</span>, <span class="n">5</span>, <span class="n">6</span>, <span class="n">0</span>, <span class="n">1</span>),
+  (<span class="n">2</span>, <span class="n">1</span>, <span class="n">3</span>, <span class="n">1</span>, <span class="n">1</span>), (<span class="n">2</span>, <span class="n">2</span>, <span class="n">5</span>, <span class="n">2</span>, <span class="n">0</span>), (<span class="n">2</span>, <span class="n">4</span>, <span class="n">6</span>, <span class="n">1</span>, <span class="n">3</span>),
+  (<span class="n">3</span>, <span class="n">1</span>, <span class="n">4</span>, <span class="n">2</span>, <span class="n">0</span>), (<span class="n">3</span>, <span class="n">2</span>, <span class="n">6</span>, <span class="n">1</span>, <span class="n">1</span>), (<span class="n">3</span>, <span class="n">3</span>, <span class="n">5</span>, <span class="n">3</span>, <span class="n">1</span>),
+  (<span class="n">4</span>, <span class="n">1</span>, <span class="n">5</span>, <span class="n">4</span>, <span class="n">2</span>), (<span class="n">4</span>, <span class="n">2</span>, <span class="n">4</span>, <span class="n">2</span>, <span class="n">1</span>), (<span class="n">4</span>, <span class="n">3</span>, <span class="n">6</span>, <span class="n">0</span>, <span class="n">2</span>),
+  (<span class="n">5</span>, <span class="n">1</span>, <span class="n">6</span>, <span class="n">1</span>, <span class="n">2</span>), (<span class="n">5</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">2</span>, <span class="n">2</span>), (<span class="n">5</span>, <span class="n">4</span>, <span class="n">5</span>, <span class="n">1</span>, <span class="n">1</span>);
+
+<span class="c">-- ---------- MUSIQUE : arbre des genres + streams mensuels ----------</span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> genres (
+    id        <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">BY</span> <span class="k">DEFAULT</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    nom       <span class="k">VARCHAR</span>(<span class="n">50</span>) <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">UNIQUE</span>,
+    parent_id <span class="k">INTEGER</span> <span class="k">REFERENCES</span> genres(id)         <span class="c">-- NULL = genre racine</span>
+);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> genres (nom, parent_id) <span class="k">VALUES</span>
+  (<span class="s">'Rock'</span>, <span class="k">NULL</span>),        <span class="c">-- 1</span>
+  (<span class="s">'Metal'</span>, <span class="n">1</span>),          <span class="c">-- 2</span>
+  (<span class="s">'Heavy metal'</span>, <span class="n">2</span>),    <span class="c">-- 3</span>
+  (<span class="s">'Thrash metal'</span>, <span class="n">2</span>),   <span class="c">-- 4</span>
+  (<span class="s">'Punk'</span>, <span class="n">1</span>),           <span class="c">-- 5</span>
+  (<span class="s">'Électro'</span>, <span class="k">NULL</span>),     <span class="c">-- 6</span>
+  (<span class="s">'House'</span>, <span class="n">6</span>),          <span class="c">-- 7</span>
+  (<span class="s">'Deep house'</span>, <span class="n">7</span>),     <span class="c">-- 8</span>
+  (<span class="s">'Techno'</span>, <span class="n">6</span>),         <span class="c">-- 9</span>
+  (<span class="s">'Hip-hop'</span>, <span class="k">NULL</span>),     <span class="c">-- 10</span>
+  (<span class="s">'Trap'</span>, <span class="n">10</span>),          <span class="c">-- 11</span>
+  (<span class="s">'Drill'</span>, <span class="n">11</span>);         <span class="c">-- 12</span>
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> streams (
+    artiste  <span class="k">VARCHAR</span>(<span class="n">50</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    mois     <span class="k">DATE</span>        <span class="k">NOT</span> <span class="k">NULL</span>,          <span class="c">-- 1er jour du mois</span>
+    ecoutes  <span class="k">INTEGER</span>     <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">CHECK</span> (ecoutes &gt;= <span class="n">0</span>),
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> (artiste, mois)
+);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> streams (artiste, mois, ecoutes) <span class="k">VALUES</span>
+  (<span class="s">'Nova'</span>,  <span class="s">'2026-01-01'</span>, <span class="n">12000</span>), (<span class="s">'Nova'</span>,  <span class="s">'2026-02-01'</span>, <span class="n">15000</span>),
+  (<span class="s">'Nova'</span>,  <span class="s">'2026-03-01'</span>, <span class="n">14000</span>), (<span class="s">'Nova'</span>,  <span class="s">'2026-04-01'</span>, <span class="n">21000</span>),
+  (<span class="s">'Nova'</span>,  <span class="s">'2026-05-01'</span>, <span class="n">30000</span>), (<span class="s">'Nova'</span>,  <span class="s">'2026-06-01'</span>, <span class="n">28000</span>),
+  (<span class="s">'Kairo'</span>, <span class="s">'2026-01-01'</span>,  <span class="n">8000</span>), (<span class="s">'Kairo'</span>, <span class="s">'2026-02-01'</span>,  <span class="n">9000</span>),
+  (<span class="s">'Kairo'</span>, <span class="s">'2026-03-01'</span>, <span class="n">13000</span>), (<span class="s">'Kairo'</span>, <span class="s">'2026-04-01'</span>, <span class="n">12500</span>),
+  (<span class="s">'Kairo'</span>, <span class="s">'2026-05-01'</span>, <span class="n">12500</span>), (<span class="s">'Kairo'</span>, <span class="s">'2026-06-01'</span>, <span class="n">19000</span>);
+
+<span class="c">-- ---------- JEUX VIDÉO : scores de parties ----------</span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> parties (
+    id          <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">BY</span> <span class="k">DEFAULT</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    pseudo      <span class="k">VARCHAR</span>(<span class="n">30</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    jeu         <span class="k">VARCHAR</span>(<span class="n">30</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    score       <span class="k">INTEGER</span>     <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">CHECK</span> (score &gt;= <span class="n">0</span>),
+    date_partie <span class="k">DATE</span>        <span class="k">NOT</span> <span class="k">NULL</span>
+);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> parties (pseudo, jeu, score, date_partie) <span class="k">VALUES</span>
+  (<span class="s">'Zed'</span>,   <span class="s">'Tetris'</span>,  <span class="n">12000</span>, <span class="s">'2026-09-01'</span>),
+  (<span class="s">'Lyna'</span>,  <span class="s">'Tetris'</span>,  <span class="n">15000</span>, <span class="s">'2026-09-02'</span>),
+  (<span class="s">'Mo'</span>,    <span class="s">'Tetris'</span>,  <span class="n">15000</span>, <span class="s">'2026-09-03'</span>),
+  (<span class="s">'Kenji'</span>, <span class="s">'Tetris'</span>,   <span class="n">9000</span>, <span class="s">'2026-09-03'</span>),
+  (<span class="s">'Sara'</span>,  <span class="s">'Tetris'</span>,  <span class="n">11000</span>, <span class="s">'2026-09-04'</span>),
+  (<span class="s">'Zed'</span>,   <span class="s">'Pac-Man'</span>,  <span class="n">8000</span>, <span class="s">'2026-09-01'</span>),
+  (<span class="s">'Lyna'</span>,  <span class="s">'Pac-Man'</span>,  <span class="n">5000</span>, <span class="s">'2026-09-02'</span>),
+  (<span class="s">'Mo'</span>,    <span class="s">'Pac-Man'</span>,  <span class="n">8000</span>, <span class="s">'2026-09-05'</span>),
+  (<span class="s">'Kenji'</span>, <span class="s">'Pac-Man'</span>,  <span class="n">9500</span>, <span class="s">'2026-09-06'</span>),
+  (<span class="s">'Sara'</span>,  <span class="s">'Pac-Man'</span>,  <span class="n">7000</span>, <span class="s">'2026-09-06'</span>),
+  (<span class="s">'Zed'</span>,   <span class="s">'Tetris'</span>,  <span class="n">13500</span>, <span class="s">'2026-09-08'</span>),
+  (<span class="s">'Lyna'</span>,  <span class="s">'Pac-Man'</span>,  <span class="n">6500</span>, <span class="s">'2026-09-09'</span>);
+
+<span class="c">-- ---------- Contrôle : chaque table doit afficher le bon nombre de lignes ----------</span>
+<span class="k">SELECT</span> <span class="s">'equipes'</span> <span class="k">AS</span> table_name, <span class="k">COUNT</span>(*) <span class="k">AS</span> lignes <span class="k">FROM</span> equipes
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'joueurs'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> joueurs
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'matchs'</span>,  <span class="k">COUNT</span>(*) <span class="k">FROM</span> matchs
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'genres'</span>,  <span class="k">COUNT</span>(*) <span class="k">FROM</span> genres
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'streams'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> streams
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'parties'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> parties;</pre></div></details><label class="understood"><input type="checkbox"><span>✔ Étape terminée</span></label></div><div class="card" id="step8"><div class="section-title"><span class="icon-bg ib-purple">✅</span><span><span class="num">Étape 8</span>&nbsp; Vérifier que tout est prêt</span></div><p>La dernière requête du script affiche un tableau de contrôle. Vous pouvez aussi la relancer vous-même :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="s">'equipes'</span> <span class="k">AS</span> table_name, <span class="k">COUNT</span>(*) <span class="k">AS</span> lignes <span class="k">FROM</span> equipes
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'joueurs'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> joueurs
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'matchs'</span>,  <span class="k">COUNT</span>(*) <span class="k">FROM</span> matchs
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'genres'</span>,  <span class="k">COUNT</span>(*) <span class="k">FROM</span> genres
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'streams'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> streams
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'parties'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> parties;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>table_name</th><th>lignes</th></tr></thead><tbody><tr><td class="">equipes</td><td class="">6</td></tr><tr><td class="">joueurs</td><td class="">10</td></tr><tr><td class="">matchs</td><td class="">15</td></tr><tr><td class="">genres</td><td class="">12</td></tr><tr><td class="">streams</td><td class="">12</td></tr><tr><td class="">parties</td><td class="">12</td></tr></tbody></table></div><div class="res-note">Vous obtenez exactement ces 6 lignes ? Vous êtes prêt pour la séance 1.</div></div>
+<p>Dernier test, listez les tables avec la méta-commande psql :</p><div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\dt</span></pre></div><label class="understood"><input type="checkbox"><span>✔ Étape terminée</span></label></div>
+<div class="result-panel"><h4>🎉 Prêt pour la séance 1 quand…</h4><ul>
+<li><code>psql --version</code> affiche la version 16 ou 17</li>
+<li>vous vous connectez à la base <code>cours_sql</code></li>
+<li>le tableau de contrôle affiche <span class="score">6 tables</span> avec les bons nombres de lignes</li></ul></div></section><section class="panel" id="depannage"><div class="card"><div class="section-title"><span class="icon-bg ib-red">🛟</span>Erreurs fréquentes et solutions</div><div class="gl-item"><b style="font-family:Sora">« psql n'est pas reconnu » / « command not found »</b><p>Le dossier de PostgreSQL n'est pas dans le Path. Sous Windows, ajoutez <code class="inl">C:\Program Files\PostgreSQL\17\bin</code> au Path puis <strong>rouvrez le terminal</strong>, ou utilisez SQL Shell (psql). Sous Mac, refaites la commande de l'étape 2 puis rouvrez le Terminal.</p></div><div class="gl-item"><b style="font-family:Sora">« password authentication failed for user postgres »</b><p>Mot de passe incorrect. Sous Windows, c'est celui choisi pendant l'installation. Sous Linux, définissez-le avec <code class="inl">\password postgres</code> (étape 2). Sous Mac, l'utilisateur est votre nom macOS, sans mot de passe.</p></div><div class="gl-item"><b style="font-family:Sora">« connection refused » / « could not connect to server »</b><p>Le serveur n'est pas démarré. Windows : services → <em>postgresql-x64-17</em> → Démarrer. Mac : ouvrez Postgres.app ou <code class="inl">brew services start postgresql@17</code>. Linux : <code class="inl">sudo systemctl start postgresql</code>. Docker : <code class="inl">docker start pg-cours</code>.</p></div><div class="gl-item"><b style="font-family:Sora">« port 5432 is already in use »</b><p>Un autre PostgreSQL tourne déjà (ancienne installation, autre conteneur). Arrêtez-le, ou lancez Docker sur un autre port : <code class="inl">-p 5433:5432</code>, puis connectez-vous avec <code class="inl">-p 5433</code>.</p></div><div class="gl-item"><b style="font-family:Sora">« Console code page (850) differs from Windows code page (1252) »</b><p>Simple avertissement sous Windows : les accents peuvent mal s'afficher. Tapez <code class="inl">chcp 1252</code> avant de lancer psql, ou utilisez DBeaver.</p></div><div class="gl-item"><b style="font-family:Sora">« demo.sql: No such file or directory »</b><p>Vous n'êtes pas dans le dossier du fichier. Placez-vous dedans avec <code class="inl">cd</code>, ou indiquez le chemin complet du fichier.</p></div><div class="gl-item"><b style="font-family:Sora">« Permission denied » en chargeant demo.sql sous Linux</b><p>Le compte postgres ne peut pas lire votre dossier personnel. Copiez le fichier dans <code class="inl">/tmp</code> (voir étape 7).</p></div><div class="gl-item"><b style="font-family:Sora">L'invite affiche <code class="inl">postgres-#</code> et rien ne se passe</b><p>psql attend la fin de la requête : ajoutez <code class="inl">;</code> et Entrée. Pour tout annuler : <code class="inl">Ctrl+C</code>.</p></div>
+<div class="instruction-box" style="margin-top:18px">🙋 Toujours bloqué ? Venez à la séance avec <strong>une capture d'écran du message d'erreur</strong> : on le règle en début de séance.</div></div></section><section class="panel" id="memo"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">📌</span>Aide-mémoire psql</div><table class="grid-table"><tr><th>Commande</th><th>Effet</th></tr><tr><td class="mono" style="font-size:13px">psql -U postgres -h localhost</td><td>Se connecter au serveur</td></tr><tr><td class="mono" style="font-size:13px">psql -U postgres -h localhost -d cours_sql</td><td>Se connecter directement à une base</td></tr><tr><td class="mono" style="font-size:13px">\l</td><td>Lister les bases</td></tr><tr><td class="mono" style="font-size:13px">\c cours_sql</td><td>Changer de base</td></tr><tr><td class="mono" style="font-size:13px">\dt</td><td>Lister les tables</td></tr><tr><td class="mono" style="font-size:13px">\d joueurs</td><td>Décrire une table (colonnes, contraintes)</td></tr><tr><td class="mono" style="font-size:13px">\i fichier.sql</td><td>Exécuter un fichier SQL</td></tr><tr><td class="mono" style="font-size:13px">\x</td><td>Affichage vertical (lignes longues)</td></tr><tr><td class="mono" style="font-size:13px">\?</td><td>Aide des méta-commandes</td></tr><tr><td class="mono" style="font-size:13px">\h CREATE TABLE</td><td>Aide sur une commande SQL</td></tr><tr><td class="mono" style="font-size:13px">\q</td><td>Quitter psql</td></tr></table>
+<div class="instruction-box">📌 Les commandes qui commencent par <code class="inl">\</code> sont des <strong>méta-commandes</strong> propres à psql : elles ne prennent pas de point-virgule. Les requêtes SQL, elles, en ont toujours besoin.</div></div></section></main>
+<footer>SQL avancé avec PostgreSQL · M1 Tech Lead</footer>
+<script>
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+function show(id){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});}
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.go);
+if(a.dataset.anchor){setTimeout(()=>document.getElementById(a.dataset.anchor).scrollIntoView({behavior:'smooth'}),60);}}));
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{
+ const txt=b.closest('.code').querySelector('pre').innerText;
+ const done=()=>{b.textContent='Copié ✓';b.classList.add('done');setTimeout(()=>{b.textContent='Copier';b.classList.remove('done')},1500)};
+ if(navigator.clipboard){navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(txt,done))}else fallback(txt,done);}));
+function fallback(t,done){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){}a.remove();}
+function refresh(){const all=document.querySelectorAll('.understood input');const d=[...all].filter(i=>i.checked).length;
+ const f=document.getElementById('gprog-fill');if(!f)return;f.style.width=(all.length?d/all.length*100:0)+'%';
+ document.getElementById('gprog-txt').textContent=d+' / '+all.length;}
+document.querySelectorAll('.understood input').forEach(i=>i.addEventListener('change',()=>{i.closest('.understood').classList.toggle('done',i.checked);refresh();}));
+refresh();
+document.querySelectorAll('.os-tabs').forEach(g=>g.querySelectorAll('.os').forEach(b=>b.addEventListener('click',()=>{
+ const box=g.parentElement;g.querySelectorAll('.os').forEach(x=>x.classList.toggle('active',x===b));
+ box.querySelectorAll(':scope > .os-panel').forEach(p=>p.classList.toggle('active',p.dataset.os===b.dataset.os));})));
+const s=document.querySelector('.gl-search');if(s){s.addEventListener('input',()=>{const q=s.value.toLowerCase();
+ document.querySelectorAll('.gl-item').forEach(i=>i.style.display=i.innerText.toLowerCase().includes(q)?'':'none');});}
+const DEMO_SQL="-- =====================================================================\n--  Jeu de donn\u00e9es de d\u00e9monstration \u2014 SQL avanc\u00e9 avec PostgreSQL\n--  Domaines : sport (championnat), musique (genres, streams), jeux vid\u00e9o\n--  Script r\u00e9-ex\u00e9cutable : il supprime puis recr\u00e9e toutes les tables.\n-- =====================================================================\n\n-- (tournois et inscriptions sont cr\u00e9\u00e9es pendant les exercices N2)\nDROP TABLE IF EXISTS inscriptions, tournois, joueurs, matchs, equipes, genres, parties, streams CASCADE;\n\n-- ---------- SPORT : un mini-championnat de 6 \u00e9quipes ----------\nCREATE TABLE equipes (\n    id    INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    nom   VARCHAR(50) NOT NULL UNIQUE,\n    ville VARCHAR(50) NOT NULL\n);\n\nCREATE TABLE joueurs (\n    id        INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    nom       VARCHAR(80) NOT NULL,\n    equipe_id INTEGER REFERENCES equipes(id),      -- NULL = joueur sans club\n    poste     VARCHAR(20) NOT NULL,\n    buts      INTEGER NOT NULL DEFAULT 0 CHECK (buts >= 0)\n);\n\nCREATE TABLE matchs (\n    id             INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    journee        INTEGER NOT NULL,\n    equipe_dom_id  INTEGER NOT NULL REFERENCES equipes(id),\n    equipe_ext_id  INTEGER NOT NULL REFERENCES equipes(id),\n    buts_dom       INTEGER NOT NULL CHECK (buts_dom >= 0),\n    buts_ext       INTEGER NOT NULL CHECK (buts_ext >= 0)\n);\n\nINSERT INTO equipes (nom, ville) VALUES\n  ('PSG', 'Paris'), ('OM', 'Marseille'), ('OL', 'Lyon'),\n  ('LOSC', 'Lille'), ('Stade Rennais', 'Rennes'), ('RC Lens', 'Lens');\n\nINSERT INTO joueurs (nom, equipe_id, poste, buts) VALUES\n  ('Yanis Belkacem', 1, 'attaquant', 7),\n  ('Hugo Martin',    1, 'milieu',    2),\n  ('Enzo Rossi',     2, 'attaquant', 5),\n  ('Adam Diallo',    2, 'd\u00e9fenseur', 0),\n  ('Lucas Moreau',   3, 'attaquant', 4),\n  ('Noah Petit',     4, 'milieu',    1),\n  ('Rayan Ndiaye',   5, 'attaquant', 2),\n  ('Ilyes Haddad',   6, 'attaquant', 6),\n  ('Th\u00e9o Garnier',   6, 'd\u00e9fenseur', 1),\n  ('Sami Kon\u00e9',   NULL, 'attaquant', 0);\n\nINSERT INTO matchs (journee, equipe_dom_id, equipe_ext_id, buts_dom, buts_ext) VALUES\n  (1, 1, 2, 3, 1), (1, 3, 4, 2, 2), (1, 5, 6, 0, 1),\n  (2, 1, 3, 1, 1), (2, 2, 5, 2, 0), (2, 4, 6, 1, 3),\n  (3, 1, 4, 2, 0), (3, 2, 6, 1, 1), (3, 3, 5, 3, 1),\n  (4, 1, 5, 4, 2), (4, 2, 4, 2, 1), (4, 3, 6, 0, 2),\n  (5, 1, 6, 1, 2), (5, 2, 3, 2, 2), (5, 4, 5, 1, 1);\n\n-- ---------- MUSIQUE : arbre des genres + streams mensuels ----------\nCREATE TABLE genres (\n    id        INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    nom       VARCHAR(50) NOT NULL UNIQUE,\n    parent_id INTEGER REFERENCES genres(id)         -- NULL = genre racine\n);\n\nINSERT INTO genres (nom, parent_id) VALUES\n  ('Rock', NULL),        -- 1\n  ('Metal', 1),          -- 2\n  ('Heavy metal', 2),    -- 3\n  ('Thrash metal', 2),   -- 4\n  ('Punk', 1),           -- 5\n  ('\u00c9lectro', NULL),     -- 6\n  ('House', 6),          -- 7\n  ('Deep house', 7),     -- 8\n  ('Techno', 6),         -- 9\n  ('Hip-hop', NULL),     -- 10\n  ('Trap', 10),          -- 11\n  ('Drill', 11);         -- 12\n\nCREATE TABLE streams (\n    artiste  VARCHAR(50) NOT NULL,\n    mois     DATE        NOT NULL,          -- 1er jour du mois\n    ecoutes  INTEGER     NOT NULL CHECK (ecoutes >= 0),\n    PRIMARY KEY (artiste, mois)\n);\n\nINSERT INTO streams (artiste, mois, ecoutes) VALUES\n  ('Nova',  '2026-01-01', 12000), ('Nova',  '2026-02-01', 15000),\n  ('Nova',  '2026-03-01', 14000), ('Nova',  '2026-04-01', 21000),\n  ('Nova',  '2026-05-01', 30000), ('Nova',  '2026-06-01', 28000),\n  ('Kairo', '2026-01-01',  8000), ('Kairo', '2026-02-01',  9000),\n  ('Kairo', '2026-03-01', 13000), ('Kairo', '2026-04-01', 12500),\n  ('Kairo', '2026-05-01', 12500), ('Kairo', '2026-06-01', 19000);\n\n-- ---------- JEUX VID\u00c9O : scores de parties ----------\nCREATE TABLE parties (\n    id          INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    pseudo      VARCHAR(30) NOT NULL,\n    jeu         VARCHAR(30) NOT NULL,\n    score       INTEGER     NOT NULL CHECK (score >= 0),\n    date_partie DATE        NOT NULL\n);\n\nINSERT INTO parties (pseudo, jeu, score, date_partie) VALUES\n  ('Zed',   'Tetris',  12000, '2026-09-01'),\n  ('Lyna',  'Tetris',  15000, '2026-09-02'),\n  ('Mo',    'Tetris',  15000, '2026-09-03'),\n  ('Kenji', 'Tetris',   9000, '2026-09-03'),\n  ('Sara',  'Tetris',  11000, '2026-09-04'),\n  ('Zed',   'Pac-Man',  8000, '2026-09-01'),\n  ('Lyna',  'Pac-Man',  5000, '2026-09-02'),\n  ('Mo',    'Pac-Man',  8000, '2026-09-05'),\n  ('Kenji', 'Pac-Man',  9500, '2026-09-06'),\n  ('Sara',  'Pac-Man',  7000, '2026-09-06'),\n  ('Zed',   'Tetris',  13500, '2026-09-08'),\n  ('Lyna',  'Pac-Man',  6500, '2026-09-09');\n\n-- ---------- Contr\u00f4le : chaque table doit afficher le bon nombre de lignes ----------\nSELECT 'equipes' AS table_name, COUNT(*) AS lignes FROM equipes\nUNION ALL SELECT 'joueurs', COUNT(*) FROM joueurs\nUNION ALL SELECT 'matchs',  COUNT(*) FROM matchs\nUNION ALL SELECT 'genres',  COUNT(*) FROM genres\nUNION ALL SELECT 'streams', COUNT(*) FROM streams\nUNION ALL SELECT 'parties', COUNT(*) FROM parties;\n";
+document.getElementById('dl-demo').addEventListener('click',()=>{const b=new Blob([DEMO_SQL],{type:'text/plain'});
+const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='demo.sql';document.body.appendChild(a);a.click();a.remove();});</script></body></html>

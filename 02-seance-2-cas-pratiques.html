@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance 2 — Cas pratiques · SQL avancé avec PostgreSQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;
+--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f1f5f9;--card:#fff;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15.5px}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:44px 20px 34px}
+.wrap{max-width:1000px;margin:0 auto}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+header h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.2;margin-bottom:10px}
+header p.lead{color:#cbd5e1;max-width:700px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:13px;font-weight:500}
+.gprog{margin-top:22px;max-width:480px}
+.gprog-label{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:6px}
+.gprog-bar{height:8px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+.gprog-fill{height:100%;width:0;background:#34d399;transition:width .4s}
+.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(15,23,42,.05)}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 10px}
+.tab{background:none;border:none;border-bottom:3px solid transparent;padding:15px 15px;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--primary)} .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+main{padding:28px 14px 60px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;margin-bottom:14px;line-height:1.3}
+.icon-bg{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.ib-blue{background:var(--primary-light)}.ib-green{background:var(--secondary-light)}.ib-amber{background:var(--accent-light)}.ib-red{background:var(--danger-light)}.ib-purple{background:var(--purple-light)}
+.num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--primary);background:var(--primary-light);padding:3px 9px;border-radius:7px}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+p+p{margin-top:8px}
+ul.clean{list-style:none;margin:6px 0}
+ul.clean li{padding:4px 0 4px 22px;position:relative}
+ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--primary);font-weight:700}
+ol.steps{margin:6px 0 6px 22px} ol.steps li{margin:4px 0}
+.objectif-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:14px;color:var(--primary-dark)}
+.instruction-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;margin:14px 0;color:#78350f}
+.warn-box{background:var(--danger-light);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;margin:14px 0;color:#7f1d1d}
+.ok-box{background:var(--secondary-light);border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin:14px 0;color:#064e3b}
+.analogie{background:var(--purple-light);border-left:4px solid var(--purple);border-radius:10px;padding:14px 18px;margin:14px 0;color:#4c1d95}
+.ftag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0}
+.f1{background:#dbeafe;color:#1e40af}.f2{background:#d1fae5;color:#065f46}.f3{background:#fef3c7;color:#92400e}.f4{background:#fee2e2;color:#991b1b}.f5{background:#ede9fe;color:#5b21b6}
+code.inl{background:#e2e8f0;padding:1px 6px;border-radius:5px;font-size:13px}
+.code{margin:10px 0;border-radius:10px;overflow:hidden;background:var(--dark)}
+.code-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#1e293b;color:#94a3b8;font-size:12px;font-family:'JetBrains Mono',monospace}
+.copy{background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.copy:hover{background:#475569}.copy.done{background:var(--secondary)}
+.code pre{color:#e2e8f0;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0}
+pre .c{color:#64748b;font-style:italic} pre .k{color:#93c5fd;font-weight:500} pre .s{color:#86efac} pre .n{color:#fcd34d} pre .m{color:#f9a8d4}
+pre.sh{color:#a7f3d0}
+.res{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:4px 0 12px}
+.res-bar{display:flex;justify-content:space-between;background:#f8fafc;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;font-weight:700;color:var(--secondary)}
+.res-bar span{color:var(--muted);font-weight:500}
+.tbl{overflow-x:auto}
+.tbl table,.grid-table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#f1f5f9;text-align:left;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate,#334155);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 12px;border-bottom:1px solid #f1f5f9;font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap}
+.tbl td.null{color:#94a3b8;font-style:italic}
+.res-note{padding:9px 12px;font-size:13px;color:var(--muted);background:#f8fafc;border-top:1px solid var(--border)}
+.grid-table th{background:var(--dark-2);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:13px}
+.grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.grid-table tr:nth-child(even) td{background:#f8fafc}
+.grid-table td:first-child{font-weight:600}
+.understood{display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.understood input{accent-color:var(--secondary);width:18px;height:18px}
+.understood.done{border-color:var(--secondary);color:var(--secondary);background:var(--secondary-light)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.toc a{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.toc a:hover{border-color:var(--primary)}
+.result-panel{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:var(--radius);padding:22px 24px;margin:6px 0 22px}
+.result-panel h4{color:#fff;font-size:16px;margin-bottom:8px}
+.result-panel .score{color:#34d399;font-weight:800;font-family:'JetBrains Mono',monospace}
+.result-panel ul{margin-left:18px}.result-panel li{margin:3px 0}
+.os-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.os{font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--muted)}
+.os.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.os-panel{display:none}.os-panel.active{display:block}
+.gl-search{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px}
+.gl-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.gl-item b{font-family:'JetBrains Mono',monospace;font-size:14px}
+.gl-item p{font-size:14px;color:#334155;margin-top:2px}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--primary);background:var(--primary);color:#fff}
+.btn:hover{filter:brightness(.95)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 40px}
+@media (max-width:700px){.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.actions-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn.ghost{background:#fff;color:var(--primary)}
+.term-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.term-grid{grid-template-columns:1fr}}
+.term-item{display:flex;align-items:center;gap:10px;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:13.5px;border:2px solid transparent}
+.term-item span{flex:1}
+.term-item select{font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:7px;padding:5px 6px;border:none;background:#1e293b;color:#fff}
+.term-item.ok{border-color:#34d399}.term-item.ko{border-color:#f87171}
+.def-item{display:flex;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;font-size:14px;background:#fff}
+.def-item b{font-family:'JetBrains Mono',monospace;color:var(--primary)}
+.group{border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.group h4{font-size:15px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sit{display:block;width:100%;text-align:left;font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:#fff;margin-bottom:7px;cursor:pointer;color:var(--text)}
+.sit:hover{border-color:var(--primary)}
+.sit.sel{border-color:var(--accent);background:var(--accent-light)}
+.sit.good{border-color:var(--secondary);background:var(--secondary-light)}
+.sit.bad{border-color:var(--danger);background:var(--danger-light)}
+.expl{font-size:13.5px;margin-top:8px;padding:10px 12px;border-radius:9px;background:#f8fafc;color:#334155}
+.vf{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:9px}
+.vf-row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.vf-row p{flex:1;min-width:220px;font-size:14.5px}
+.vf-btns{display:flex;gap:6px}
+.vf-btns button{font-family:inherit;font-weight:600;font-size:13px;border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 14px;cursor:pointer}
+.vf-btns button.sel{background:var(--primary);border-color:var(--primary);color:#fff}
+.vf.good{border-color:var(--secondary)}.vf.bad{border-color:var(--danger)}
+.exo{border-top:1px solid var(--border);padding-top:16px;margin-top:16px}
+.exo-head{display:flex;gap:10px;align-items:center;font-size:15px}
+.enonce{margin:8px 0}
+details.hint summary,details.corrige summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--accent);margin:6px 0}
+details.corrige summary{color:var(--secondary)}
+details.hint p{font-size:14px;background:var(--accent-light);padding:10px 12px;border-radius:9px;color:#78350f}
+pre.errmsg{padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap;margin:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--border);text-decoration:none;color:var(--primary);background:#fff}
+.chip:hover{border-color:var(--primary)}
+.chip-m{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.chip-m:hover{border-color:var(--primary)}
+.acc{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.acc>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;font-weight:700;font-size:16px}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary:hover{background:#f8fafc}
+.acc>summary:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.acc-title{flex:1}
+.acc-count{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);background:#f1f5f9;padding:3px 10px;border-radius:999px}
+.acc-count.full{background:var(--secondary-light);color:#065f46}
+.chev{color:var(--muted);transition:transform .25s}
+.acc[open] .chev{transform:rotate(180deg)}
+.acc[open]>summary{border-bottom:1px solid var(--border)}
+.acc-body{padding:0 20px 20px}
+.acc-body .exo:first-child{border-top:none;margin-top:4px}
+@media (max-width:600px){.acc>summary{flex-wrap:wrap}.acc-title{flex-basis:60%}}
+.prog{margin:10px 0 14px}.prog-label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.prog-bar{height:8px;background:var(--border);border-radius:999px;overflow:hidden}.prog-fill{height:100%;width:0;background:var(--secondary);transition:width .35s}
+.lock-pills{display:flex;gap:8px;flex-wrap:wrap}
+.lock-pill{font-weight:600;font-size:13px;padding:6px 14px;border-radius:999px;background:#f1f5f9;color:var(--muted)}
+.lock-pill.done{background:var(--secondary-light);color:#065f46}
+.tab.locked::after{content:" 🔒"}
+body:not(.formateur) .formateur-only{display:none!important}
+.mode-flag{display:none}body.formateur .mode-flag{display:inline-block;background:#fbbf24;color:#0f172a}
+</style></head><body>
+<header><div class="wrap"><span class="badge">🐘 SQL avancé avec PostgreSQL · Séance 2 · Cas pratiques</span>
+<h1>Agrégations, JSONB, vues & fonctions en pratique</h1>
+<p class="lead">Trois cas pour vérifier les notions, 24 mini-exos pour s'entraîner, puis la suite du projet fil rouge FilmBox.</p>
+<div class="meta"><span class="pill">🧩 26 termes</span><span class="pill">🔀 Ordre aléatoire</span><span class="pill">🛠 24 mini-exos</span><span class="pill">🎬 4 missions</span><span class="pill">🔒 Glossaire verrouillé</span><span class="pill mode-flag">👩‍🏫 Mode formateur</span></div></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" role="tablist"><button class="tab active" data-tab="intro" role="tab">🎯 Vue d'ensemble</button><button class="tab" data-tab="cas1" role="tab">🧩 Cas 1</button><button class="tab" data-tab="cas2" role="tab">🔍 Cas 2</button><button class="tab" data-tab="cas3" role="tab">✅ Cas 3</button><button class="tab" data-tab="exos" role="tab">🛠 Mini-exos</button><button class="tab" data-tab="filmbox" role="tab">🎬 FilmBox</button><button class="tab locked" data-tab="glossaire" role="tab">📖 Glossaire</button></div></nav>
+<main class="wrap"><section class="panel active" id="intro"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🎯</span>Cas pratiques de la séance 2</div>
+<div class="objectif-box">Vérifier la compréhension des notions N10 à N17, s'entraîner sur des exercices courts, puis poursuivre le projet FilmBox.</div>
+<table class="grid-table"><tr><th>Étape</th><th>Contenu</th><th>Base</th></tr>
+<tr><td>🧩 Cas 1</td><td>26 termes à associer à leur définition</td><td>—</td></tr>
+<tr><td>🔍 Cas 2</td><td>5 groupes de situations, 1 intruse par groupe</td><td>—</td></tr>
+<tr><td>✅ Cas 3</td><td>18 affirmations vrai / faux</td><td>—</td></tr>
+<tr><td>🛠 Mini-exos</td><td>24 exercices SQL, 3 par notion</td><td class="mono">cours_sql + demo-s2.sql</td></tr>
+<tr><td>🎬 FilmBox</td><td>4 missions (M7 à M10), 13 tâches</td><td class="mono">filmbox + filmbox-s2.sql</td></tr>
+<tr><td>📖 Glossaire</td><td>Débloqué après les 3 cas</td><td>—</td></tr></table>
+<div class="instruction-box">📌 Tous les résultats attendus ont été obtenus en exécutant les corrigés sur PostgreSQL. Si votre résultat diffère, c'est votre requête qu'il faut réinterroger.</div></div></section><section class="panel" id="cas1"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🧩</span>Cas 1 — Correspondance termes / définitions</div><div class="objectif-box">🎯 Associer chaque terme clé de la séance à sa définition.</div><div class="instruction-box">📌 Pour chaque terme, choisissez la lettre de la bonne définition, puis cliquez sur Vérifier. 26 termes répartis en 3 rounds, dans un ordre différent à chaque session.</div>
+<div class="prog"><div class="prog-label"><span id="c1-round-lbl">Round 1</span><span id="c1-ptxt">0 / 26</span></div><div class="prog-bar"><div class="prog-fill" id="c1-fill"></div></div></div>
+<div id="c1-zone"></div>
+<div class="actions-row"><button class="btn" id="c1-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c1-reveal" type="button">Révéler</button><button class="btn ghost" id="c1-next" type="button" hidden>Round suivant</button><button class="btn ghost" id="c1-reset" type="button">Recommencer</button></div>
+<div id="c1-result"></div></div></section><section class="panel" id="cas2"><div class="card"><div class="section-title"><span class="icon-bg ib-green">🔍</span>Cas 2 — Identification de situations</div><div class="objectif-box">🎯 Reconnaître la notion SQL qui répond à un besoin concret.</div><div class="instruction-box">📌 Dans chaque groupe, 4 situations relèvent de la notion indiquée et 1 est une intruse. Cliquez sur l'intruse de chaque groupe, puis vérifiez.</div>
+<div class="prog"><div class="prog-label"><span>Groupes complétés</span><span id="c2-ptxt">0 / 5</span></div><div class="prog-bar"><div class="prog-fill" id="c2-fill"></div></div></div>
+<div id="c2-zone"></div>
+<div class="actions-row"><button class="btn" id="c2-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c2-reveal" type="button">Révéler</button><button class="btn ghost" id="c2-reset" type="button">Recommencer</button></div>
+<div id="c2-result"></div></div></section><section class="panel" id="cas3"><div class="card"><div class="section-title"><span class="icon-bg ib-amber">✅</span>Cas 3 — Vrai ou faux ?</div><div class="objectif-box">🎯 Repérer les idées reçues et les pièges de la séance.</div><div class="instruction-box">📌 Répondez aux 18 affirmations, puis vérifiez : chaque réponse est accompagnée de son explication.</div>
+<div class="prog"><div class="prog-label"><span>Réponses données</span><span id="c3-ptxt">0 / 18</span></div><div class="prog-bar"><div class="prog-fill" id="c3-fill"></div></div></div>
+<div id="c3-zone"></div>
+<div class="actions-row"><button class="btn" id="c3-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c3-reveal" type="button">Révéler</button><button class="btn ghost" id="c3-reset" type="button">Recommencer</button></div>
+<div id="c3-result"></div></div></section><section class="panel" id="exos"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🛠</span>Mini-exos · base cours_sql</div>
+<div class="objectif-box">3 exercices courts par notion pour s'entraîner avant d'attaquer le projet FilmBox. Écrivez votre requête dans psql ou DBeaver, puis comparez votre résultat au <strong>résultat attendu</strong>.</div>
+<div class="instruction-box">📌 Travaillez sur la base <code class="inl">cours_sql</code>, avec <code class="inl">demo-s2.sql</code> chargé. Faites les exercices dans l'ordre : certains réutilisent les vues et fonctions créés juste avant. Pour repartir de zéro, relancez <code class="inl">demo.sql</code> puis <code class="inl">demo-s2.sql</code>. L'ordre des lignes peut légèrement différer si votre requête ne précise pas d'<code class="inl">ORDER BY</code>.</div>
+<div class="prog"><div class="prog-label"><span>Exercices réussis</span><span class="ptxt" id="ptxt-exos">0</span></div><div class="prog-bar"><div class="prog-fill" id="pfill-exos"></div></div></div>
+<div class="chips"><a href="#" class="chip" data-acc="exn-N10">N10</a><a href="#" class="chip" data-acc="exn-N11">N11</a><a href="#" class="chip" data-acc="exn-N12">N12</a><a href="#" class="chip" data-acc="exn-N13">N13</a><a href="#" class="chip" data-acc="exn-N14">N14</a><a href="#" class="chip" data-acc="exn-N15">N15</a><a href="#" class="chip" data-acc="exn-N16">N16</a><a href="#" class="chip" data-acc="exn-N17">N17</a></div>
+<div class="actions-row"><button class="btn ghost" type="button" id="acc-open">Tout déplier</button><button class="btn ghost" type="button" id="acc-close">Tout replier</button></div></div>
+<div class="exos-card"><details class="acc" id="exn-N10"><summary><span class="num">N10</span><span class="acc-title">Agrégats conditionnels : FILTER</span><span class="ftag f1">Agrégations</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-10-1">
+<div class="exo-head"><span class="num">10.1</span><strong>La part de la Switch</strong></div>
+<p class="enonce">Pour chaque mois, affichez les ventes sur Switch, les ventes totales et la part de la Switch en %, arrondie à une décimale.</p><details class="hint"><summary>💡 Indice</summary><p>Réutilisez le même agrégat filtré au numérateur, et l'agrégat sans filtre au dénominateur.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>mois</th><th>switch</th><th>total</th><th>part_switch_pct</th></tr></thead><tbody><tr><td class="">2026-01</td><td class="">1875</td><td class="">6063</td><td class="">30.9</td></tr><tr><td class="">2026-02</td><td class="">1745</td><td class="">6110</td><td class="">28.6</td></tr><tr><td class="">2026-03</td><td class="">1599</td><td class="">5383</td><td class="">29.7</td></tr><tr><td class="">2026-04</td><td class="">1612</td><td class="">4625</td><td class="">34.9</td></tr><tr><td class="">2026-05</td><td class="">1582</td><td class="">5751</td><td class="">27.5</td></tr><tr><td class="">2026-06</td><td class="">1094</td><td class="">5948</td><td class="">18.4</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">TO_CHAR</span>(mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> mois,
+       <span class="k">SUM</span>(quantite) FILTER (<span class="k">WHERE</span> plateforme = <span class="s">'Switch'</span>) <span class="k">AS</span> switch,
+       <span class="k">SUM</span>(quantite)                                      <span class="k">AS</span> total,
+       <span class="k">ROUND</span>(<span class="n">100.0</span> * <span class="k">SUM</span>(quantite) FILTER (<span class="k">WHERE</span> plateforme = <span class="s">'Switch'</span>)
+                   / <span class="k">SUM</span>(quantite), <span class="n">1</span>)                     <span class="k">AS</span> part_switch_pct
+<span class="k">FROM</span> ventes
+<span class="k">GROUP</span> <span class="k">BY</span> mois
+<span class="k">ORDER</span> <span class="k">BY</span> mois;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-10-2">
+<div class="exo-head"><span class="num">10.2</span><strong>Composition des effectifs</strong></div>
+<p class="enonce">Pour chaque équipe, comptez les attaquants, les autres joueurs et l'effectif total, en une seule requête.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>attaquants</th><th>autres</th><th>effectif</th></tr></thead><tbody><tr><td class="">LOSC</td><td class="">0</td><td class="">1</td><td class="">1</td></tr><tr><td class="">OL</td><td class="">1</td><td class="">0</td><td class="">1</td></tr><tr><td class="">OM</td><td class="">1</td><td class="">1</td><td class="">2</td></tr><tr><td class="">PSG</td><td class="">1</td><td class="">1</td><td class="">2</td></tr><tr><td class="">RC Lens</td><td class="">1</td><td class="">1</td><td class="">2</td></tr><tr><td class="">Stade Rennais</td><td class="">1</td><td class="">0</td><td class="">1</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> e.nom <span class="k">AS</span> equipe,
+       <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> j.poste = <span class="s">'attaquant'</span>)  <span class="k">AS</span> attaquants,
+       <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> j.poste &lt;&gt; <span class="s">'attaquant'</span>) <span class="k">AS</span> autres,
+       <span class="k">COUNT</span>(*)                                       <span class="k">AS</span> effectif
+<span class="k">FROM</span> equipes e
+<span class="k">JOIN</span> joueurs j <span class="k">ON</span> j.equipe_id = e.id
+<span class="k">GROUP</span> <span class="k">BY</span> e.nom
+<span class="k">ORDER</span> <span class="k">BY</span> e.nom;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-10-3">
+<div class="exo-head"><span class="num">10.3</span><strong>Les gros mois</strong></div>
+<p class="enonce">Pour chaque jeu, affichez le chiffre d'affaires total et le nombre de lignes de vente à plus de 300 exemplaires.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>chiffre_affaires</th><th>lignes_plus_300</th></tr></thead><tbody><tr><td class="">EA Sports FC 25</td><td class="">347080.41</td><td class="">6</td></tr><tr><td class="">Elden Ring</td><td class="">315847.35</td><td class="">10</td></tr><tr><td class="">Tetris Effect</td><td class="">243899.01</td><td class="">11</td></tr><tr><td class="">Gran Turismo 7</td><td class="">173178.35</td><td class="">5</td></tr><tr><td class="">Mario Kart 8 Deluxe</td><td class="">123399.43</td><td class="">3</td></tr><tr><td class="">Rocket League</td><td class="">108905.52</td><td class="">11</td></tr></tbody></table></div><div class="res-note">… 8 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> j.titre,
+       <span class="k">SUM</span>(v.quantite * v.prix_unitaire)      <span class="k">AS</span> chiffre_affaires,
+       <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> v.quantite &gt; <span class="n">300</span>) <span class="k">AS</span> lignes_plus_300
+<span class="k">FROM</span> ventes v
+<span class="k">JOIN</span> jeux j <span class="k">ON</span> j.id = v.jeu_id
+<span class="k">GROUP</span> <span class="k">BY</span> j.titre
+<span class="k">ORDER</span> <span class="k">BY</span> chiffre_affaires <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N11"><summary><span class="num">N11</span><span class="acc-title">Sous-totaux : ROLLUP et GROUPING SETS</span><span class="ftag f1">Agrégations</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-11-1">
+<div class="exo-head"><span class="num">11.1</span><strong>Buts par équipe et par poste</strong></div>
+<p class="enonce">Affichez le total de buts par équipe et par poste, avec un sous-total par équipe et le total général. Remplacez les NULL de sous-total par des libellés lisibles.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>16 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>poste</th><th>buts</th></tr></thead><tbody><tr><td class="">LOSC</td><td class="">milieu</td><td class="">1</td></tr><tr><td class="">LOSC</td><td class="">Tous postes</td><td class="">1</td></tr><tr><td class="">OL</td><td class="">attaquant</td><td class="">4</td></tr><tr><td class="">OL</td><td class="">Tous postes</td><td class="">4</td></tr><tr><td class="">OM</td><td class="">attaquant</td><td class="">5</td></tr><tr><td class="">OM</td><td class="">défenseur</td><td class="">0</td></tr></tbody></table></div><div class="res-note">… 16 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">CASE</span> <span class="k">WHEN</span> GROUPING(e.nom)   = <span class="n">1</span> <span class="k">THEN</span> <span class="s">'TOTAL'</span>        <span class="k">ELSE</span> e.nom   <span class="k">END</span> <span class="k">AS</span> equipe,
+       <span class="k">CASE</span> <span class="k">WHEN</span> GROUPING(j.poste) = <span class="n">1</span> <span class="k">THEN</span> <span class="s">'Tous postes'</span> <span class="k">ELSE</span> j.poste <span class="k">END</span> <span class="k">AS</span> poste,
+       <span class="k">SUM</span>(j.buts) <span class="k">AS</span> buts
+<span class="k">FROM</span> joueurs j
+<span class="k">JOIN</span> equipes e <span class="k">ON</span> e.id = j.equipe_id
+<span class="k">GROUP</span> <span class="k">BY</span> ROLLUP (e.nom, j.poste)
+<span class="k">ORDER</span> <span class="k">BY</span> GROUPING(e.nom), e.nom, GROUPING(j.poste), j.poste;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-11-2">
+<div class="exo-head"><span class="num">11.2</span><strong>Toutes les combinaisons</strong></div>
+<p class="enonce">Avec <code class='inl'>CUBE</code>, calculez les ventes par plateforme et par trimestre, avec aussi les totaux par trimestre, par plateforme et le total général.</p><details class="hint"><summary>💡 Indice</summary><p><code>GROUPING(a, b)</code> renvoie un nombre binaire : 1 si seul b est agrégé, 2 si seul a l'est, 3 si les deux.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>15 lignes</span></div><div class="tbl"><table><thead><tr><th>plateforme</th><th>trimestre</th><th>ventes</th><th>niveau</th></tr></thead><tbody><tr><td class="">PC</td><td class="">T1</td><td class="">6146</td><td class="">0</td></tr><tr><td class="">PC</td><td class="">T2</td><td class="">5544</td><td class="">0</td></tr><tr><td class="">PS5</td><td class="">T1</td><td class="">4250</td><td class="">0</td></tr><tr><td class="">PS5</td><td class="">T2</td><td class="">4834</td><td class="">0</td></tr><tr><td class="">Switch</td><td class="">T1</td><td class="">5219</td><td class="">0</td></tr><tr><td class="">Switch</td><td class="">T2</td><td class="">4288</td><td class="">0</td></tr></tbody></table></div><div class="res-note">… 15 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> plateforme, trimestre, <span class="k">SUM</span>(quantite) <span class="k">AS</span> ventes,
+       GROUPING(plateforme, trimestre) <span class="k">AS</span> niveau      <span class="c">-- 0 détail, 1 et 2 sous-totaux, 3 total</span>
+<span class="k">FROM</span> (
+    <span class="k">SELECT</span> plateforme, <span class="s">'T'</span> || EXTRACT(QUARTER <span class="k">FROM</span> mois) <span class="k">AS</span> trimestre, quantite
+    <span class="k">FROM</span> ventes
+) v
+<span class="k">GROUP</span> <span class="k">BY</span> CUBE (plateforme, trimestre)
+<span class="k">ORDER</span> <span class="k">BY</span> niveau, plateforme, trimestre;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-11-3">
+<div class="exo-head"><span class="num">11.3</span><strong>Deux rapports en un</strong></div>
+<p class="enonce">En une seule requête, obtenez le chiffre d'affaires par éditeur (tiré du JSONB) et par plateforme, sans le détail croisé.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>12 lignes</span></div><div class="tbl"><table><thead><tr><th>editeur</th><th>plateforme</th><th>chiffre_affaires</th></tr></thead><tbody><tr><td class="">Bandai Namco</td><td class="null">NULL</td><td class="">315847.35</td></tr><tr><td class="">ConcernedApe</td><td class="null">NULL</td><td class="">57890.62</td></tr><tr><td class="">EA Sports</td><td class="null">NULL</td><td class="">347080.41</td></tr><tr><td class="">Enhance</td><td class="null">NULL</td><td class="">243899.01</td></tr><tr><td class="">Nintendo</td><td class="null">NULL</td><td class="">123399.43</td></tr><tr><td class="">Psyonix</td><td class="null">NULL</td><td class="">108905.52</td></tr></tbody></table></div><div class="res-note">… 12 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> j.details -&gt;&gt; <span class="s">'editeur'</span> <span class="k">AS</span> editeur, v.plateforme,
+       <span class="k">SUM</span>(v.quantite * v.prix_unitaire) <span class="k">AS</span> chiffre_affaires
+<span class="k">FROM</span> ventes v
+<span class="k">JOIN</span> jeux j <span class="k">ON</span> j.id = v.jeu_id
+<span class="k">GROUP</span> <span class="k">BY</span> GROUPING SETS ((j.details -&gt;&gt; <span class="s">'editeur'</span>), (v.plateforme))
+<span class="k">ORDER</span> <span class="k">BY</span> editeur, v.plateforme;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N12"><summary><span class="num">N12</span><span class="acc-title">LATERAL</span><span class="ftag f2">LATERAL</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-12-1">
+<div class="exo-head"><span class="num">12.1</span><strong>Les 2 meilleurs mois</strong></div>
+<p class="enonce">Pour chaque jeu, affichez ses 2 meilleurs mois de ventes (toutes plateformes confondues).</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>16 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>mois</th><th>ventes</th></tr></thead><tbody><tr><td class="">EA Sports FC 25</td><td class="">2026-03</td><td class="">1101</td></tr><tr><td class="">EA Sports FC 25</td><td class="">2026-02</td><td class="">988</td></tr><tr><td class="">Elden Ring</td><td class="">2026-06</td><td class="">1155</td></tr><tr><td class="">Elden Ring</td><td class="">2026-04</td><td class="">902</td></tr><tr><td class="">Gran Turismo 7</td><td class="">2026-06</td><td class="">478</td></tr><tr><td class="">Gran Turismo 7</td><td class="">2026-05</td><td class="">472</td></tr></tbody></table></div><div class="res-note">… 16 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> j.titre, <span class="k">TO_CHAR</span>(m.mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> mois, m.ventes
+<span class="k">FROM</span> jeux j
+<span class="k">CROSS</span> <span class="k">JOIN</span> LATERAL (
+    <span class="k">SELECT</span> v.mois, <span class="k">SUM</span>(v.quantite) <span class="k">AS</span> ventes
+    <span class="k">FROM</span> ventes v
+    <span class="k">WHERE</span> v.jeu_id = j.id
+    <span class="k">GROUP</span> <span class="k">BY</span> v.mois
+    <span class="k">ORDER</span> <span class="k">BY</span> ventes <span class="k">DESC</span>
+    <span class="k">LIMIT</span> <span class="n">2</span>
+) m
+<span class="k">ORDER</span> <span class="k">BY</span> j.titre, m.ventes <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-12-2">
+<div class="exo-head"><span class="num">12.2</span><strong>Le dernier match</strong></div>
+<p class="enonce">Pour chaque équipe, affichez son dernier match joué : la journée, l'adversaire et le score vu de son côté.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>journee</th><th>adversaire</th><th>score</th></tr></thead><tbody><tr><td class="">LOSC</td><td class="">5</td><td class="">Stade Rennais</td><td class="">1-1</td></tr><tr><td class="">OL</td><td class="">5</td><td class="">OM</td><td class="">2-2</td></tr><tr><td class="">OM</td><td class="">5</td><td class="">OL</td><td class="">2-2</td></tr><tr><td class="">PSG</td><td class="">5</td><td class="">RC Lens</td><td class="">1-2</td></tr><tr><td class="">RC Lens</td><td class="">5</td><td class="">PSG</td><td class="">2-1</td></tr><tr><td class="">Stade Rennais</td><td class="">5</td><td class="">LOSC</td><td class="">1-1</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> e.nom <span class="k">AS</span> equipe, d.journee, adv.nom <span class="k">AS</span> adversaire, d.score
+<span class="k">FROM</span> equipes e
+<span class="k">CROSS</span> <span class="k">JOIN</span> LATERAL (
+    <span class="k">SELECT</span> m.journee,
+           <span class="k">CASE</span> <span class="k">WHEN</span> m.equipe_dom_id = e.id <span class="k">THEN</span> m.equipe_ext_id <span class="k">ELSE</span> m.equipe_dom_id <span class="k">END</span> <span class="k">AS</span> adversaire_id,
+           <span class="k">CASE</span> <span class="k">WHEN</span> m.equipe_dom_id = e.id <span class="k">THEN</span> m.buts_dom || <span class="s">'-'</span> || m.buts_ext
+                <span class="k">ELSE</span> m.buts_ext || <span class="s">'-'</span> || m.buts_dom <span class="k">END</span> <span class="k">AS</span> score
+    <span class="k">FROM</span> matchs m
+    <span class="k">WHERE</span> e.id <span class="k">IN</span> (m.equipe_dom_id, m.equipe_ext_id)
+    <span class="k">ORDER</span> <span class="k">BY</span> m.journee <span class="k">DESC</span>
+    <span class="k">LIMIT</span> <span class="n">1</span>
+) d
+<span class="k">JOIN</span> equipes adv <span class="k">ON</span> adv.id = d.adversaire_id
+<span class="k">ORDER</span> <span class="k">BY</span> e.nom;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-12-3">
+<div class="exo-head"><span class="num">12.3</span><strong>Le pic de chaque artiste</strong></div>
+<p class="enonce">Pour chaque artiste, affichez son meilleur mois d'écoutes. Partez de la liste des artistes distincts.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>2 lignes</span></div><div class="tbl"><table><thead><tr><th>artiste</th><th>meilleur_mois</th><th>ecoutes</th></tr></thead><tbody><tr><td class="">Kairo</td><td class="">2026-06</td><td class="">19000</td></tr><tr><td class="">Nova</td><td class="">2026-05</td><td class="">30000</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> a.artiste, <span class="k">TO_CHAR</span>(p.mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> meilleur_mois, p.ecoutes
+<span class="k">FROM</span> (<span class="k">SELECT</span> <span class="k">DISTINCT</span> artiste <span class="k">FROM</span> streams) a
+<span class="k">CROSS</span> <span class="k">JOIN</span> LATERAL (
+    <span class="k">SELECT</span> s.mois, s.ecoutes
+    <span class="k">FROM</span> streams s
+    <span class="k">WHERE</span> s.artiste = a.artiste
+    <span class="k">ORDER</span> <span class="k">BY</span> s.ecoutes <span class="k">DESC</span>
+    <span class="k">LIMIT</span> <span class="n">1</span>
+) p
+<span class="k">ORDER</span> <span class="k">BY</span> a.artiste;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N13"><summary><span class="num">N13</span><span class="acc-title">JSONB</span><span class="ftag f3">JSONB</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-13-1">
+<div class="exo-head"><span class="num">13.1</span><strong>Tout public</strong></div>
+<p class="enonce">Affichez le titre, l'éditeur et le prix des jeux classés PEGI 3 ou 7, du moins cher au plus cher.</p><details class="hint"><summary>💡 Indice</summary><p>Convertissez avant de comparer ou de trier : sinon, c'est l'ordre alphabétique.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>editeur</th><th>prix</th></tr></thead><tbody><tr><td class="">Stardew Valley</td><td class="">ConcernedApe</td><td class="">13.99</td></tr><tr><td class="">Rocket League</td><td class="">Psyonix</td><td class="">19.99</td></tr><tr><td class="">Tetris Effect</td><td class="">Enhance</td><td class="">39.99</td></tr><tr><td class="">Mario Kart 8 Deluxe</td><td class="">Nintendo</td><td class="">59.99</td></tr><tr><td class="">EA Sports FC 25</td><td class="">EA Sports</td><td class="">69.99</td></tr><tr><td class="">Gran Turismo 7</td><td class="">Sony Interactive Entertainment</td><td class="">79.99</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre,
+       details -&gt;&gt; <span class="s">'editeur'</span>           <span class="k">AS</span> editeur,
+       (details -&gt;&gt; <span class="s">'prix'</span>)::<span class="k">NUMERIC</span>   <span class="k">AS</span> prix
+<span class="k">FROM</span> jeux
+<span class="k">WHERE</span> (details -&gt;&gt; <span class="s">'pegi'</span>)::<span class="k">INTEGER</span> &lt;= <span class="n">7</span>
+<span class="k">ORDER</span> <span class="k">BY</span> prix;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-13-2">
+<div class="exo-head"><span class="num">13.2</span><strong>Jouer en solo sur Switch</strong></div>
+<p class="enonce">Trouvez les jeux disponibles sur Switch qui ne sont <strong>pas</strong> multijoueurs.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>titre</th></tr></thead><tbody><tr><td class="">Hades</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre
+<span class="k">FROM</span> jeux
+<span class="k">WHERE</span> details -&gt; <span class="s">'plateformes'</span> ? <span class="s">'Switch'</span>
+  <span class="k">AND</span> details @&gt; <span class="s">'{"multijoueur": false}'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-13-3">
+<div class="exo-head"><span class="num">13.3</span><strong>Les genres du catalogue</strong></div>
+<p class="enonce">Pour chaque genre, affichez le nombre de jeux et leur prix moyen, arrondi au centime.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>7 lignes</span></div><div class="tbl"><table><thead><tr><th>genre</th><th>nb_jeux</th><th>prix_moyen</th></tr></thead><tbody><tr><td class="">course</td><td class="">3</td><td class="">53.32</td></tr><tr><td class="">action</td><td class="">2</td><td class="">42.49</td></tr><tr><td class="">rpg</td><td class="">2</td><td class="">36.99</td></tr><tr><td class="">simulation</td><td class="">2</td><td class="">46.99</td></tr><tr><td class="">sport</td><td class="">2</td><td class="">44.99</td></tr><tr><td class="">puzzle</td><td class="">1</td><td class="">39.99</td></tr></tbody></table></div><div class="res-note">… 7 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> g.genre,
+       <span class="k">COUNT</span>(*)                                  <span class="k">AS</span> nb_jeux,
+       <span class="k">ROUND</span>(<span class="k">AVG</span>((j.details -&gt;&gt; <span class="s">'prix'</span>)::<span class="k">NUMERIC</span>), <span class="n">2</span>) <span class="k">AS</span> prix_moyen
+<span class="k">FROM</span> jeux j
+<span class="k">CROSS</span> <span class="k">JOIN</span> LATERAL jsonb_array_elements_text(j.details -&gt; <span class="s">'genres'</span>) <span class="k">AS</span> g(genre)
+<span class="k">GROUP</span> <span class="k">BY</span> g.genre
+<span class="k">ORDER</span> <span class="k">BY</span> nb_jeux <span class="k">DESC</span>, g.genre;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N14"><summary><span class="num">N14</span><span class="acc-title">Les vues</span><span class="ftag f4">Vues</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-14-1">
+<div class="exo-head"><span class="num">14.1</span><strong>La vue des ventes</strong></div>
+<p class="enonce">Créez une vue <code class='inl'>v_ventes_jeux</code> (titre, plateforme, mois, quantité, chiffre d'affaires), puis utilisez-la pour obtenir le chiffre d'affaires par plateforme.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>4 lignes</span></div><div class="tbl"><table><thead><tr><th>plateforme</th><th>chiffre_affaires</th></tr></thead><tbody><tr><td class="">PS5</td><td class="">499479.16</td></tr><tr><td class="">PC</td><td class="">418547.10</td></tr><tr><td class="">Switch</td><td class="">314507.93</td></tr><tr><td class="">Xbox</td><td class="">231354.01</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE VIEW v_ventes_jeux <span class="k">AS</span>
+<span class="k">SELECT</span> j.titre, v.plateforme, v.mois, v.quantite,
+       v.quantite * v.prix_unitaire <span class="k">AS</span> chiffre_affaires
+<span class="k">FROM</span> ventes v
+<span class="k">JOIN</span> jeux j <span class="k">ON</span> j.id = v.jeu_id;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> plateforme, <span class="k">SUM</span>(chiffre_affaires) <span class="k">AS</span> chiffre_affaires
+<span class="k">FROM</span> v_ventes_jeux
+<span class="k">GROUP</span> <span class="k">BY</span> plateforme
+<span class="k">ORDER</span> <span class="k">BY</span> chiffre_affaires <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-14-2">
+<div class="exo-head"><span class="num">14.2</span><strong>Ajouter une colonne à une vue</strong></div>
+<p class="enonce">Ajoutez l'éditeur à la vue <code class='inl'>v_ventes_jeux</code> avec <code class='inl'>CREATE OR REPLACE VIEW</code>, puis affichez le chiffre d'affaires par éditeur.</p><details class="hint"><summary>💡 Indice</summary><p><code>CREATE OR REPLACE VIEW</code> accepte de nouvelles colonnes seulement à la fin : on ne peut ni retirer, ni renommer, ni réordonner les colonnes existantes.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>editeur</th><th>chiffre_affaires</th></tr></thead><tbody><tr><td class="">EA Sports</td><td class="">347080.41</td></tr><tr><td class="">Bandai Namco</td><td class="">315847.35</td></tr><tr><td class="">Enhance</td><td class="">243899.01</td></tr><tr><td class="">Sony Interactive Entertainment</td><td class="">173178.35</td></tr><tr><td class="">Nintendo</td><td class="">123399.43</td></tr><tr><td class="">Psyonix</td><td class="">108905.52</td></tr></tbody></table></div><div class="res-note">… 8 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE VIEW v_ventes_jeux <span class="k">AS</span>
+<span class="k">SELECT</span> j.titre, v.plateforme, v.mois, v.quantite,
+       v.quantite * v.prix_unitaire <span class="k">AS</span> chiffre_affaires,
+       j.details -&gt;&gt; <span class="s">'editeur'</span>      <span class="k">AS</span> editeur      <span class="c">-- nouvelle colonne : obligatoirement à la fin</span>
+<span class="k">FROM</span> ventes v
+<span class="k">JOIN</span> jeux j <span class="k">ON</span> j.id = v.jeu_id;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> editeur, <span class="k">SUM</span>(chiffre_affaires) <span class="k">AS</span> chiffre_affaires
+<span class="k">FROM</span> v_ventes_jeux
+<span class="k">GROUP</span> <span class="k">BY</span> editeur
+<span class="k">ORDER</span> <span class="k">BY</span> chiffre_affaires <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-14-3">
+<div class="exo-head"><span class="num">14.3</span><strong>Une vue qui protège</strong></div>
+<p class="enonce">Créez une vue modifiable <code class='inl'>v_parties_tetris</code> limitée aux parties de Tetris et qui refuse toute écriture hors de ce périmètre. Vérifiez en y insérant une partie de Pac-Man.</p>
+<div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur attendue</div><pre class="errmsg">ERROR:  new row violates check option for view &quot;v_parties_tetris&quot;
+DETAIL:  Failing row contains (13, Zed, Pac-Man, 12000, 2026-09-10).</pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE VIEW v_parties_tetris <span class="k">AS</span>
+<span class="k">SELECT</span> id, pseudo, jeu, score, date_partie
+<span class="k">FROM</span> parties
+<span class="k">WHERE</span> jeu = <span class="s">'Tetris'</span>
+<span class="k">WITH</span> <span class="k">CHECK</span> OPTION;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> v_parties_tetris (pseudo, jeu, score, date_partie)
+<span class="k">VALUES</span> (<span class="s">'Zed'</span>, <span class="s">'Pac-Man'</span>, <span class="n">12000</span>, <span class="s">'2026-09-10'</span>);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N15"><summary><span class="num">N15</span><span class="acc-title">Les vues matérialisées</span><span class="ftag f4">Vues</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-15-1">
+<div class="exo-head"><span class="num">15.1</span><strong>Le bilan mensuel</strong></div>
+<p class="enonce">Créez une vue matérialisée <code class='inl'>mv_ventes_mensuelles</code> (mois, exemplaires vendus, chiffre d'affaires), avec l'index nécessaire à un rafraîchissement sans blocage. Affichez-la.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>mois</th><th>exemplaires</th><th>chiffre_affaires</th></tr></thead><tbody><tr><td class="">2026-01</td><td class="">6063</td><td class="">258798.37</td></tr><tr><td class="">2026-02</td><td class="">6110</td><td class="">258409.90</td></tr><tr><td class="">2026-03</td><td class="">5383</td><td class="">234006.17</td></tr><tr><td class="">2026-04</td><td class="">4625</td><td class="">200737.75</td></tr><tr><td class="">2026-05</td><td class="">5751</td><td class="">245036.49</td></tr><tr><td class="">2026-06</td><td class="">5948</td><td class="">266899.52</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> MATERIALIZED VIEW mv_ventes_mensuelles <span class="k">AS</span>
+<span class="k">SELECT</span> mois,
+       <span class="k">SUM</span>(quantite)                 <span class="k">AS</span> exemplaires,
+       <span class="k">SUM</span>(quantite * prix_unitaire) <span class="k">AS</span> chiffre_affaires
+<span class="k">FROM</span> ventes
+<span class="k">GROUP</span> <span class="k">BY</span> mois;
+
+<span class="k">CREATE</span> <span class="k">UNIQUE</span> INDEX <span class="k">ON</span> mv_ventes_mensuelles (mois);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">TO_CHAR</span>(mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> mois, exemplaires, chiffre_affaires
+<span class="k">FROM</span> mv_ventes_mensuelles
+<span class="k">ORDER</span> <span class="k">BY</span> mois;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-15-2">
+<div class="exo-head"><span class="num">15.2</span><strong>Juillet arrive</strong></div>
+<p class="enonce">Enregistrez une vente de 250 Hades sur PC en juillet 2026. Vérifiez que la vue matérialisée ne la voit pas, rafraîchissez-la sans bloquer les lectures, puis vérifiez à nouveau.</p>
+<div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> 0 ligne pour juillet avant le rafraîchissement, 1 ligne après.</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>mois_juillet</th></tr></thead><tbody><tr><td class="">0</td></tr></tbody></table></div></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>mois</th><th>exemplaires</th><th>chiffre_affaires</th></tr></thead><tbody><tr><td class="">2026-07</td><td class="">250</td><td class="">6247.50</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> ventes (jeu_id, plateforme, mois, quantite, prix_unitaire)
+<span class="k">SELECT</span> id, <span class="s">'PC'</span>, <span class="s">'2026-07-01'</span>, <span class="n">250</span>, (details -&gt;&gt; <span class="s">'prix'</span>)::<span class="k">NUMERIC</span>
+<span class="k">FROM</span> jeux <span class="k">WHERE</span> titre = <span class="s">'Hades'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> mois_juillet
+<span class="k">FROM</span> mv_ventes_mensuelles
+<span class="k">WHERE</span> mois = <span class="s">'2026-07-01'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>REFRESH MATERIALIZED VIEW CONCURRENTLY mv_ventes_mensuelles;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">TO_CHAR</span>(mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> mois, exemplaires, chiffre_affaires
+<span class="k">FROM</span> mv_ventes_mensuelles
+<span class="k">WHERE</span> mois = <span class="s">'2026-07-01'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-15-3">
+<div class="exo-head"><span class="num">15.3</span><strong>Le classement des ventes</strong></div>
+<p class="enonce">Créez une vue matérialisée <code class='inl'>mv_top_jeux</code> qui classe les jeux selon leurs exemplaires vendus (avec leur rang), puis affichez le podium.</p><details class="hint"><summary>💡 Indice</summary><p>Une vue matérialisée peut stocker le résultat d'une fonction de fenêtrage : on peut ensuite filtrer sur le rang directement.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>rang</th><th>titre</th><th>exemplaires</th></tr></thead><tbody><tr><td class="">1</td><td class="">Tetris Effect</td><td class="">6099</td></tr><tr><td class="">2</td><td class="">Rocket League</td><td class="">5448</td></tr><tr><td class="">3</td><td class="">Elden Ring</td><td class="">5265</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> MATERIALIZED VIEW mv_top_jeux <span class="k">AS</span>
+<span class="k">SELECT</span> j.titre,
+       <span class="k">SUM</span>(v.quantite) <span class="k">AS</span> exemplaires,
+       <span class="k">RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER</span> <span class="k">BY</span> <span class="k">SUM</span>(v.quantite) <span class="k">DESC</span>) <span class="k">AS</span> rang
+<span class="k">FROM</span> ventes v
+<span class="k">JOIN</span> jeux j <span class="k">ON</span> j.id = v.jeu_id
+<span class="k">GROUP</span> <span class="k">BY</span> j.titre;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> rang, titre, exemplaires
+<span class="k">FROM</span> mv_top_jeux
+<span class="k">WHERE</span> rang &lt;= <span class="n">3</span>
+<span class="k">ORDER</span> <span class="k">BY</span> rang;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N16"><summary><span class="num">N16</span><span class="acc-title">Fonctions SQL</span><span class="ftag f5">Fonctions</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-16-1">
+<div class="exo-head"><span class="num">16.1</span><strong>Le prix TTC</strong></div>
+<p class="enonce">Écrivez une fonction <code class='inl'>prix_ttc(prix, taux)</code> qui ajoute la TVA, avec un taux de 20 % par défaut, arrondie au centime. Appliquez-la au prix de chaque jeu.</p><details class="hint"><summary>💡 Indice</summary><p>Un paramètre peut avoir une valeur par défaut : <code>p_taux NUMERIC DEFAULT 20</code>.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>4 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>prix_ht</th><th>prix_ttc</th></tr></thead><tbody><tr><td class="">Gran Turismo 7</td><td class="">79.99</td><td class="">95.99</td></tr><tr><td class="">EA Sports FC 25</td><td class="">69.99</td><td class="">83.99</td></tr><tr><td class="">Mario Kart 8 Deluxe</td><td class="">59.99</td><td class="">71.99</td></tr><tr><td class="">Elden Ring</td><td class="">59.99</td><td class="">71.99</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION prix_ttc(p_prix <span class="k">NUMERIC</span>, p_taux <span class="k">NUMERIC</span> <span class="k">DEFAULT</span> <span class="n">20</span>)
+RETURNS <span class="k">NUMERIC</span>
+LANGUAGE sql
+IMMUTABLE
+<span class="k">AS</span> $$
+    <span class="k">SELECT</span> <span class="k">ROUND</span>(p_prix * (<span class="n">1</span> + p_taux / <span class="n">100</span>), <span class="n">2</span>);
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre,
+       (details -&gt;&gt; <span class="s">'prix'</span>)::<span class="k">NUMERIC</span>           <span class="k">AS</span> prix_ht,
+       prix_ttc((details -&gt;&gt; <span class="s">'prix'</span>)::<span class="k">NUMERIC</span>) <span class="k">AS</span> prix_ttc
+<span class="k">FROM</span> jeux
+<span class="k">ORDER</span> <span class="k">BY</span> prix_ht <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">4</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-16-2">
+<div class="exo-head"><span class="num">16.2</span><strong>Les ventes d'un jeu</strong></div>
+<p class="enonce">Écrivez une fonction <code class='inl'>ventes_jeu(titre)</code> qui renvoie une table : mois, plateforme et quantité de chaque vente du jeu. Appelez-la pour Hades.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>4 lignes</span></div><div class="tbl"><table><thead><tr><th>mois</th><th>plateforme</th><th>quantite</th></tr></thead><tbody><tr><td class="">2026-01-01</td><td class="">PC</td><td class="">116</td></tr><tr><td class="">2026-01-01</td><td class="">Switch</td><td class="">439</td></tr><tr><td class="">2026-02-01</td><td class="">PC</td><td class="">400</td></tr><tr><td class="">2026-02-01</td><td class="">Switch</td><td class="">295</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION ventes_jeu(p_titre <span class="k">TEXT</span>)
+RETURNS <span class="k">TABLE</span> (mois <span class="k">DATE</span>, plateforme <span class="k">VARCHAR</span>, quantite <span class="k">INTEGER</span>)
+LANGUAGE sql
+STABLE
+<span class="k">AS</span> $$
+    <span class="k">SELECT</span> v.mois, v.plateforme, v.quantite
+    <span class="k">FROM</span> ventes v
+    <span class="k">JOIN</span> jeux j <span class="k">ON</span> j.id = v.jeu_id
+    <span class="k">WHERE</span> j.titre = p_titre
+    <span class="k">ORDER</span> <span class="k">BY</span> v.mois, v.plateforme;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> * <span class="k">FROM</span> ventes_jeu(<span class="s">'Hades'</span>) <span class="k">LIMIT</span> <span class="n">4</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-16-3">
+<div class="exo-head"><span class="num">16.3</span><strong>Combiner ses fonctions</strong></div>
+<p class="enonce">En utilisant <code class='inl'>ventes_jeu</code>, affichez le total vendu par plateforme pour Elden Ring.</p><details class="hint"><summary>💡 Indice</summary><p>Une fonction qui renvoie une table s'utilise dans le FROM, comme une table.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>plateforme</th><th>total</th></tr></thead><tbody><tr><td class="">Xbox</td><td class="">2054</td></tr><tr><td class="">PS5</td><td class="">1696</td></tr><tr><td class="">PC</td><td class="">1515</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> plateforme, <span class="k">SUM</span>(quantite) <span class="k">AS</span> total
+<span class="k">FROM</span> ventes_jeu(<span class="s">'Elden Ring'</span>)
+<span class="k">GROUP</span> <span class="k">BY</span> plateforme
+<span class="k">ORDER</span> <span class="k">BY</span> total <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N17"><summary><span class="num">N17</span><span class="acc-title">Fonctions PL/pgSQL</span><span class="ftag f5">Fonctions</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-17-1">
+<div class="exo-head"><span class="num">17.1</span><strong>La catégorie d'âge</strong></div>
+<p class="enonce">Écrivez une fonction PL/pgSQL <code class='inl'>categorie_pegi(titre)</code> qui renvoie « Tout public » (PEGI 3 ou 7), « Adolescents » (12) ou « Adultes » (16 ou 18), et lève une erreur si le jeu n'existe pas. Testez-la sur tous les jeux, puis sur un titre inconnu.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>categorie</th></tr></thead><tbody><tr><td class="">EA Sports FC 25</td><td class="">Tout public</td></tr><tr><td class="">Elden Ring</td><td class="">Adultes</td></tr><tr><td class="">Gran Turismo 7</td><td class="">Tout public</td></tr><tr><td class="">Hades</td><td class="">Adolescents</td></tr><tr><td class="">Mario Kart 8 Deluxe</td><td class="">Tout public</td></tr><tr><td class="">Rocket League</td><td class="">Tout public</td></tr></tbody></table></div><div class="res-note">… 8 lignes au total</div></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur attendue</div><pre class="errmsg">ERROR:  Jeu inconnu : Minecraft
+CONTEXT:  PL/pgSQL function categorie_pegi(text) line 9 at RAISE</pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION categorie_pegi(p_titre <span class="k">TEXT</span>)
+RETURNS <span class="k">TEXT</span>
+LANGUAGE plpgsql
+STABLE
+<span class="k">AS</span> $$
+DECLARE
+    v_pegi <span class="k">INTEGER</span>;
+BEGIN
+    <span class="k">SELECT</span> (details -&gt;&gt; <span class="s">'pegi'</span>)::<span class="k">INTEGER</span> <span class="k">INTO</span> v_pegi
+    <span class="k">FROM</span> jeux <span class="k">WHERE</span> titre = p_titre;
+
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Jeu inconnu : %'</span>, p_titre;
+    <span class="k">END</span> <span class="k">IF</span>;
+
+    <span class="k">IF</span> v_pegi &lt;= <span class="n">7</span> <span class="k">THEN</span>
+        RETURN <span class="s">'Tout public'</span>;
+    ELSIF v_pegi = <span class="n">12</span> <span class="k">THEN</span>
+        RETURN <span class="s">'Adolescents'</span>;
+    <span class="k">ELSE</span>
+        RETURN <span class="s">'Adultes'</span>;
+    <span class="k">END</span> <span class="k">IF</span>;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre, categorie_pegi(titre) <span class="k">AS</span> categorie
+<span class="k">FROM</span> jeux
+<span class="k">ORDER</span> <span class="k">BY</span> titre;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> categorie_pegi(<span class="s">'Minecraft'</span>);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-17-2">
+<div class="exo-head"><span class="num">17.2</span><strong>Le bilan d'une équipe</strong></div>
+<p class="enonce">Écrivez une fonction <code class='inl'>bilan(equipe)</code> qui renvoie un texte du type « 3 V · 1 N · 1 D · 10 pts ». Stockez les compteurs dans des variables avec une seule requête.</p><details class="hint"><summary>💡 Indice</summary><p><code>SELECT a, b, c INTO v_a, v_b, v_c</code> remplit plusieurs variables d'un coup, et <code>format()</code> assemble le texte.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>bilan</th></tr></thead><tbody><tr><td class="">LOSC</td><td class="">0 V · 2 N · 3 D · 2 pts</td></tr><tr><td class="">OL</td><td class="">1 V · 3 N · 1 D · 6 pts</td></tr><tr><td class="">OM</td><td class="">2 V · 2 N · 1 D · 8 pts</td></tr><tr><td class="">PSG</td><td class="">3 V · 1 N · 1 D · 10 pts</td></tr><tr><td class="">RC Lens</td><td class="">4 V · 1 N · 0 D · 13 pts</td></tr><tr><td class="">Stade Rennais</td><td class="">0 V · 1 N · 4 D · 1 pts</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION bilan(p_equipe <span class="k">TEXT</span>)
+RETURNS <span class="k">TEXT</span>
+LANGUAGE plpgsql
+STABLE
+<span class="k">AS</span> $$
+DECLARE
+    v_id <span class="k">INTEGER</span>;
+    v_v  <span class="k">INTEGER</span>;
+    v_n  <span class="k">INTEGER</span>;
+    v_d  <span class="k">INTEGER</span>;
+BEGIN
+    <span class="k">SELECT</span> id <span class="k">INTO</span> v_id <span class="k">FROM</span> equipes <span class="k">WHERE</span> nom = p_equipe;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Équipe inconnue : %'</span>, p_equipe;
+    <span class="k">END</span> <span class="k">IF</span>;
+
+    <span class="c">-- Un seul passage sur les matchs, trois compteurs (N10)</span>
+    <span class="k">SELECT</span> <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> (equipe_dom_id = v_id <span class="k">AND</span> buts_dom &gt; buts_ext)
+                               <span class="k">OR</span> (equipe_ext_id = v_id <span class="k">AND</span> buts_ext &gt; buts_dom)),
+           <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> buts_dom = buts_ext),
+           <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> (equipe_dom_id = v_id <span class="k">AND</span> buts_dom &lt; buts_ext)
+                               <span class="k">OR</span> (equipe_ext_id = v_id <span class="k">AND</span> buts_ext &lt; buts_dom))
+    <span class="k">INTO</span> v_v, v_n, v_d
+    <span class="k">FROM</span> matchs
+    <span class="k">WHERE</span> v_id <span class="k">IN</span> (equipe_dom_id, equipe_ext_id);
+
+    RETURN format(<span class="s">'%s V · %s N · %s D · %s pts'</span>, v_v, v_n, v_d, <span class="n">3</span> * v_v + v_n);
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom, bilan(nom) <span class="k">AS</span> bilan
+<span class="k">FROM</span> equipes
+<span class="k">ORDER</span> <span class="k">BY</span> nom;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-17-3">
+<div class="exo-head"><span class="num">17.3</span><strong>La bonne volatilité</strong></div>
+<p class="enonce">Écrivez <code class='inl'>ventes_totales(titre)</code>, qui renvoie le nombre total d'exemplaires vendus d'un jeu (0 s'il n'a aucune vente) et lève une erreur si le jeu n'existe pas. Choisissez la volatilité et justifiez-la.</p><details class="hint"><summary>💡 Indice</summary><p><code>COALESCE(SUM(...), 0)</code> : SUM renvoie NULL s'il n'y a aucune ligne.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>exemplaires</th></tr></thead><tbody><tr><td class="">Tetris Effect</td><td class="">6099</td></tr><tr><td class="">Rocket League</td><td class="">5448</td></tr><tr><td class="">Elden Ring</td><td class="">5265</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION ventes_totales(p_titre <span class="k">TEXT</span>)
+RETURNS <span class="k">INTEGER</span>
+LANGUAGE plpgsql
+STABLE              <span class="c">-- lit des tables : ni IMMUTABLE (données qui changent), ni VOLATILE (n'écrit rien)</span>
+<span class="k">AS</span> $$
+DECLARE
+    v_id    <span class="k">INTEGER</span>;
+    v_total <span class="k">INTEGER</span>;
+BEGIN
+    <span class="k">SELECT</span> id <span class="k">INTO</span> v_id <span class="k">FROM</span> jeux <span class="k">WHERE</span> titre = p_titre;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Jeu inconnu : %'</span>, p_titre;
+    <span class="k">END</span> <span class="k">IF</span>;
+
+    <span class="k">SELECT</span> COALESCE(<span class="k">SUM</span>(quantite), <span class="n">0</span>) <span class="k">INTO</span> v_total
+    <span class="k">FROM</span> ventes <span class="k">WHERE</span> jeu_id = v_id;
+
+    RETURN v_total;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre, ventes_totales(titre) <span class="k">AS</span> exemplaires
+<span class="k">FROM</span> jeux
+<span class="k">ORDER</span> <span class="k">BY</span> exemplaires <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">3</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details></div></section><section class="panel" id="filmbox"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">🎬</span>Projet fil rouge · FilmBox, épisode 2</div>
+<div class="objectif-box">L'équipe produit de FilmBox veut un tableau de bord, une fiche film enrichie, des vues prêtes à l'emploi pour le front… et en finir avec un classement que 3 notes suffisent à fausser. Les missions M7 à M10 prolongent celles de la séance 1.</div>
+<h3>🗄 Ce qui change dans la base</h3>
+<p>Chaque film reçoit une fiche détaillée en JSONB : durée, pays, langue originale, tags et, pour quatre d'entre eux, l'Oscar du meilleur film.</p>
+<div class="code"><div class="code-bar"><span>Nouvelle colonne</span><button class="copy" type="button">Copier</button></div><pre>films.details  JSONB
+<span class="c">-- exemple :</span>
+{"duree": <span class="n">148</span>, "pays": ["États-Unis", "Royaume-Uni"], "langue": "anglais",
+ "tags": ["rêves", "braquage"]}</pre></div>
+<h3>📥 Installation</h3>
+<p><button class="btn" type="button" id="dl-filmbox">⬇️ Télécharger filmbox-s2.sql</button></p>
+<div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\c</span> filmbox
+<span class="m">\i</span> C:/chemin/vers/filmbox-s2.sql</pre></div>
+<div class="instruction-box">📌 <code class="inl">filmbox-s2.sql</code> s'exécute <strong>après</strong> <code class="inl">filmbox.sql</code>. Faites les missions dans l'ordre : M10 utilise la vue créée en M9, et la note ajoutée en M9 modifie les moyennes suivantes. Pour repartir de zéro, relancez <code class="inl">filmbox.sql</code> puis <code class="inl">filmbox-s2.sql</code>.</div>
+<div class="prog"><div class="prog-label"><span>Tâches réussies</span><span class="ptxt" id="ptxt-fb">0</span></div><div class="prog-bar"><div class="prog-fill" id="pfill-fb"></div></div></div>
+<div class="toc"><a href="#" class="chip-m" data-anchor="mis-M7"><span class="num">M7</span>📊 Le tableau de bord <span class="ftag f5" style="margin-left:auto">N10 · N11</span></a><a href="#" class="chip-m" data-anchor="mis-M8"><span class="num">M8</span>🧬 La fiche film enrichie <span class="ftag f5" style="margin-left:auto">N12 · N13</span></a><a href="#" class="chip-m" data-anchor="mis-M9"><span class="num">M9</span>🪟 Vues et cache <span class="ftag f5" style="margin-left:auto">N14 · N15</span></a><a href="#" class="chip-m" data-anchor="mis-M10"><span class="num">M10</span>🤩 La note pondérée <span class="ftag f5" style="margin-left:auto">N16 · N17</span></a></div></div><div class="card fb-card" id="mis-M7"><div class="section-title"><span class="icon-bg ib-purple">📊</span><span><span class="num">M7</span>&nbsp; Le tableau de bord</span></div><span class="ftag f4">Notions N10 · N11</span><p style="margin-top:8px">Construire les indicateurs de la page d'administration de FilmBox.</p><div class="exo" id="ex-M7-1">
+<div class="exo-head"><span class="num">M7.1</span><strong>Coups de cœur et déceptions</strong></div>
+<p class="enonce">Pour chaque genre, affichez le nombre de notes, le nombre de « coups de cœur » (note ≥ 4,5) et de « déceptions » (note ≤ 2,5).</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>9 lignes</span></div><div class="tbl"><table><thead><tr><th>genre</th><th>nb_notes</th><th>coups_de_coeur</th><th>deceptions</th></tr></thead><tbody><tr><td class="">Science-fiction</td><td class="">38</td><td class="">16</td><td class="">2</td></tr><tr><td class="">Drame</td><td class="">30</td><td class="">11</td><td class="">0</td></tr><tr><td class="">Comédie</td><td class="">27</td><td class="">8</td><td class="">0</td></tr><tr><td class="">Policier</td><td class="">19</td><td class="">7</td><td class="">0</td></tr><tr><td class="">Thriller</td><td class="">14</td><td class="">7</td><td class="">0</td></tr><tr><td class="">Action</td><td class="">13</td><td class="">7</td><td class="">0</td></tr></tbody></table></div><div class="res-note">… 9 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> f.genre,
+       <span class="k">COUNT</span>(*)                              <span class="k">AS</span> nb_notes,
+       <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> n.note &gt;= <span class="n">4.5</span>) <span class="k">AS</span> coups_de_coeur,
+       <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> n.note &lt;= <span class="n">2.5</span>) <span class="k">AS</span> deceptions
+<span class="k">FROM</span> notes n
+<span class="k">JOIN</span> films f <span class="k">ON</span> f.id = n.film_id
+<span class="k">GROUP</span> <span class="k">BY</span> f.genre
+<span class="k">ORDER</span> <span class="k">BY</span> nb_notes <span class="k">DESC</span>, f.genre;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M7-2">
+<div class="exo-head"><span class="num">M7.2</span><strong>La SF vue par chaque membre</strong></div>
+<p class="enonce">Pour chaque membre, comparez sa note moyenne en science-fiction à sa note moyenne tous genres confondus.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>moyenne_sf</th><th>moyenne_globale</th></tr></thead><tbody><tr><td class="">bobine</td><td class="">4.29</td><td class="">4.05</td></tr><tr><td class="">darkroom</td><td class="">4.17</td><td class="">4.10</td></tr><tr><td class="">maxou_ciné</td><td class="">4.13</td><td class="">3.98</td></tr><tr><td class="">nolanfan</td><td class="">4.10</td><td class="">3.87</td></tr><tr><td class="">sofa_critic</td><td class="">4.00</td><td class="">3.96</td></tr><tr><td class="">cinephile_92</td><td class="">3.92</td><td class="">4.10</td></tr></tbody></table></div><div class="res-note">… 8 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> u.pseudo,
+       <span class="k">ROUND</span>(<span class="k">AVG</span>(n.note) FILTER (<span class="k">WHERE</span> f.genre = <span class="s">'Science-fiction'</span>), <span class="n">2</span>) <span class="k">AS</span> moyenne_sf,
+       <span class="k">ROUND</span>(<span class="k">AVG</span>(n.note), <span class="n">2</span>)                                           <span class="k">AS</span> moyenne_globale
+<span class="k">FROM</span> notes n
+<span class="k">JOIN</span> films f        <span class="k">ON</span> f.id = n.film_id
+<span class="k">JOIN</span> utilisateurs u <span class="k">ON</span> u.id = n.utilisateur_id
+<span class="k">GROUP</span> <span class="k">BY</span> u.pseudo
+<span class="k">ORDER</span> <span class="k">BY</span> moyenne_sf <span class="k">DESC</span> NULLS LAST, u.pseudo;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M7-3">
+<div class="exo-head"><span class="num">M7.3</span><strong>L'activité par trimestre</strong></div>
+<p class="enonce">Affichez le nombre de visionnages par genre et par trimestre 2026, avec un sous-total par genre et le total général.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>36 lignes</span></div><div class="tbl"><table><thead><tr><th>genre</th><th>trimestre</th><th>visionnages</th></tr></thead><tbody><tr><td class="">Action</td><td class="">T1</td><td class="">10</td></tr><tr><td class="">Action</td><td class="">T2</td><td class="">5</td></tr><tr><td class="">Action</td><td class="">T3</td><td class="">5</td></tr><tr><td class="">Action</td><td class="">Année</td><td class="">20</td></tr><tr><td class="">Aventure</td><td class="">T1</td><td class="">3</td></tr><tr><td class="">Aventure</td><td class="">T2</td><td class="">3</td></tr></tbody></table></div><div class="res-note">… 36 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">CASE</span> <span class="k">WHEN</span> GROUPING(genre)     = <span class="n">1</span> <span class="k">THEN</span> <span class="s">'TOTAL'</span> <span class="k">ELSE</span> genre     <span class="k">END</span> <span class="k">AS</span> genre,
+       <span class="k">CASE</span> <span class="k">WHEN</span> GROUPING(trimestre) = <span class="n">1</span> <span class="k">THEN</span> <span class="s">'Année'</span> <span class="k">ELSE</span> trimestre <span class="k">END</span> <span class="k">AS</span> trimestre,
+       <span class="k">COUNT</span>(*) <span class="k">AS</span> visionnages
+<span class="k">FROM</span> (
+    <span class="k">SELECT</span> f.genre, <span class="s">'T'</span> || EXTRACT(QUARTER <span class="k">FROM</span> j.date_visionnage) <span class="k">AS</span> trimestre
+    <span class="k">FROM</span> journal j
+    <span class="k">JOIN</span> films f <span class="k">ON</span> f.id = j.film_id
+) t
+<span class="k">GROUP</span> <span class="k">BY</span> ROLLUP (genre, trimestre)
+<span class="k">ORDER</span> <span class="k">BY</span> GROUPING(genre), genre, GROUPING(trimestre), trimestre;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="card fb-card" id="mis-M8"><div class="section-title"><span class="icon-bg ib-purple">🧬</span><span><span class="num">M8</span>&nbsp; La fiche film enrichie</span></div><span class="ftag f4">Notions N12 · N13</span><p style="margin-top:8px">Exploiter la nouvelle fiche JSONB des films et le fil d'activité des membres.</p><div class="exo" id="ex-M8-1">
+<div class="exo-head"><span class="num">M8.1</span><strong>Les films fleuves</strong></div>
+<p class="enonce">Chargez <code class='inl'>filmbox-s2.sql</code>, puis affichez les films de plus de 2 h 30, avec leur durée en minutes, du plus long au plus court.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>7 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>duree_min</th></tr></thead><tbody><tr><td class="">Titanic</td><td class="">194</td></tr><tr><td class="">Le Loup de Wall Street</td><td class="">180</td></tr><tr><td class="">Il faut sauver le soldat Ryan</td><td class="">169</td></tr><tr><td class="">The Dark Knight Rises</td><td class="">164</td></tr><tr><td class="">Once Upon a Time… in Hollywood</td><td class="">161</td></tr><tr><td class="">The Dark Knight</td><td class="">152</td></tr></tbody></table></div><div class="res-note">… 7 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre, (details -&gt;&gt; <span class="s">'duree'</span>)::<span class="k">INTEGER</span> <span class="k">AS</span> duree_min
+<span class="k">FROM</span> films
+<span class="k">WHERE</span> (details -&gt;&gt; <span class="s">'duree'</span>)::<span class="k">INTEGER</span> &gt; <span class="n">150</span>
+<span class="k">ORDER</span> <span class="k">BY</span> duree_min <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M8-2">
+<div class="exo-head"><span class="num">M8.2</span><strong>Les oscarisés</strong></div>
+<p class="enonce">Affichez les films qui ont reçu l'Oscar du meilleur film, avec leur réalisateur et leur année.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>4 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>annee</th><th>realisateur</th></tr></thead><tbody><tr><td class="">Forrest Gump</td><td class="">1994</td><td class="">Robert Zemeckis</td></tr><tr><td class="">Titanic</td><td class="">1997</td><td class="">James Cameron</td></tr><tr><td class="">Les Infiltrés</td><td class="">2006</td><td class="">Martin Scorsese</td></tr><tr><td class="">The Artist</td><td class="">2011</td><td class="">Michel Hazanavicius</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> f.titre, f.annee, p.nom <span class="k">AS</span> realisateur
+<span class="k">FROM</span> films f
+<span class="k">JOIN</span> casting c   <span class="k">ON</span> c.film_id = f.id <span class="k">AND</span> c.role = <span class="s">'realisateur'</span>
+<span class="k">JOIN</span> personnes p <span class="k">ON</span> p.id = c.personne_id
+<span class="k">WHERE</span> f.details @&gt; <span class="s">'{"oscar_meilleur_film": true}'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> f.annee;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M8-3">
+<div class="exo-head"><span class="num">M8.3</span><strong>Les tags les plus fréquents</strong></div>
+<p class="enonce">Affichez les 5 tags les plus utilisés dans le catalogue, avec le nombre de films concernés.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>tag</th><th>nb_films</th></tr></thead><tbody><tr><td class="">culte</td><td class="">6</td></tr><tr><td class="">super-héros</td><td class="">6</td></tr><tr><td class="">histoire vraie</td><td class="">4</td></tr><tr><td class="">voyage dans le temps</td><td class="">4</td></tr><tr><td class="">Gotham</td><td class="">3</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> t.tag, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_films
+<span class="k">FROM</span> films f
+<span class="k">CROSS</span> <span class="k">JOIN</span> LATERAL jsonb_array_elements_text(f.details -&gt; <span class="s">'tags'</span>) <span class="k">AS</span> t(tag)
+<span class="k">GROUP</span> <span class="k">BY</span> t.tag
+<span class="k">ORDER</span> <span class="k">BY</span> nb_films <span class="k">DESC</span>, t.tag
+<span class="k">LIMIT</span> <span class="n">5</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M8-4">
+<div class="exo-head"><span class="num">M8.4</span><strong>Le fil d'activité</strong></div>
+<p class="enonce">Pour chaque membre, affichez ses 2 derniers visionnages (film et date).</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>16 lignes</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>titre</th><th>date_visionnage</th></tr></thead><tbody><tr><td class="">bobine</td><td class="">Le Fabuleux Destin d&#x27;Amélie Poulain</td><td class="">2026-09-12</td></tr><tr><td class="">bobine</td><td class="">Mystic River</td><td class="">2026-09-08</td></tr><tr><td class="">cinephile_92</td><td class="">X-Men : Le Commencement</td><td class="">2026-09-16</td></tr><tr><td class="">cinephile_92</td><td class="">Inception</td><td class="">2026-08-18</td></tr><tr><td class="">darkroom</td><td class="">The Dark Knight</td><td class="">2026-09-12</td></tr><tr><td class="">darkroom</td><td class="">Il faut sauver le soldat Ryan</td><td class="">2026-09-09</td></tr></tbody></table></div><div class="res-note">… 16 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> u.pseudo, d.titre, d.date_visionnage
+<span class="k">FROM</span> utilisateurs u
+<span class="k">CROSS</span> <span class="k">JOIN</span> LATERAL (
+    <span class="k">SELECT</span> f.titre, j.date_visionnage
+    <span class="k">FROM</span> journal j
+    <span class="k">JOIN</span> films f <span class="k">ON</span> f.id = j.film_id
+    <span class="k">WHERE</span> j.utilisateur_id = u.id
+    <span class="k">ORDER</span> <span class="k">BY</span> j.date_visionnage <span class="k">DESC</span>, j.id <span class="k">DESC</span>
+    <span class="k">LIMIT</span> <span class="n">2</span>
+) d
+<span class="k">ORDER</span> <span class="k">BY</span> u.pseudo, d.date_visionnage <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="card fb-card" id="mis-M9"><div class="section-title"><span class="icon-bg ib-purple">🪟</span><span><span class="num">M9</span>&nbsp; Vues et cache</span></div><span class="ftag f4">Notions N14 · N15</span><p style="margin-top:8px">Offrir à l'équipe front des vues prêtes à l'emploi et un cache des statistiques.</p><div class="exo" id="ex-M9-1">
+<div class="exo-head"><span class="num">M9.1</span><strong>La fiche film</strong></div>
+<p class="enonce">Créez la vue <code class='inl'>v_fiche_film</code> : titre, année, genre, réalisateur(s), durée, nombre de notes et moyenne. Affichez ensuite les fiches des films de science-fiction.</p><details class="hint"><summary>💡 Indice</summary><p>Joindre directement casting et notes multiplierait les lignes. Calculez chaque information dans son propre LATERAL.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>7 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>annee</th><th>realisateurs</th><th>duree_min</th><th>nb_notes</th><th>moyenne</th></tr></thead><tbody><tr><td class="">Retour vers le futur</td><td class="">1985</td><td class="">Robert Zemeckis</td><td class="">116</td><td class="">7</td><td class="">4.64</td></tr><tr><td class="">Inception</td><td class="">2010</td><td class="">Christopher Nolan</td><td class="">148</td><td class="">5</td><td class="">4.60</td></tr><tr><td class="">Retour vers le futur III</td><td class="">1990</td><td class="">Robert Zemeckis</td><td class="">118</td><td class="">7</td><td class="">4.21</td></tr><tr><td class="">X-Men : Le Commencement</td><td class="">2011</td><td class="">Matthew Vaughn</td><td class="">132</td><td class="">3</td><td class="">3.83</td></tr><tr><td class="">X-Men : Days of Future Past</td><td class="">2014</td><td class="">Bryan Singer</td><td class="">132</td><td class="">5</td><td class="">3.80</td></tr><tr><td class="">Retour vers le futur II</td><td class="">1989</td><td class="">Robert Zemeckis</td><td class="">108</td><td class="">5</td><td class="">3.80</td></tr></tbody></table></div><div class="res-note">… 7 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE VIEW v_fiche_film <span class="k">AS</span>
+<span class="k">SELECT</span> f.id, f.titre, f.annee, f.genre,
+       r.realisateurs,
+       (f.details -&gt;&gt; <span class="s">'duree'</span>)::<span class="k">INTEGER</span> <span class="k">AS</span> duree_min,
+       s.nb_notes, s.moyenne
+<span class="k">FROM</span> films f
+<span class="k">LEFT</span> <span class="k">JOIN</span> LATERAL (                       <span class="c">-- réalisateurs, sans dupliquer les lignes</span>
+    <span class="k">SELECT</span> STRING_AGG(p.nom, <span class="s">', '</span> <span class="k">ORDER</span> <span class="k">BY</span> p.nom) <span class="k">AS</span> realisateurs
+    <span class="k">FROM</span> casting c <span class="k">JOIN</span> personnes p <span class="k">ON</span> p.id = c.personne_id
+    <span class="k">WHERE</span> c.film_id = f.id <span class="k">AND</span> c.role = <span class="s">'realisateur'</span>
+) r <span class="k">ON</span> true
+<span class="k">LEFT</span> <span class="k">JOIN</span> LATERAL (                       <span class="c">-- statistiques des notes</span>
+    <span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_notes, <span class="k">ROUND</span>(<span class="k">AVG</span>(n.note), <span class="n">2</span>) <span class="k">AS</span> moyenne
+    <span class="k">FROM</span> notes n <span class="k">WHERE</span> n.film_id = f.id
+) s <span class="k">ON</span> true;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre, annee, realisateurs, duree_min, nb_notes, moyenne
+<span class="k">FROM</span> v_fiche_film
+<span class="k">WHERE</span> genre = <span class="s">'Science-fiction'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> moyenne <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M9-2">
+<div class="exo-head"><span class="num">M9.2</span><strong>Le cache des statistiques</strong></div>
+<p class="enonce">Créez la vue matérialisée <code class='inl'>mv_stats_films</code> (film, nombre de notes, moyenne) rafraîchissable sans blocage. Puis <code class='inl'>sofa_critic</code> donne 2/5 à Inception : montrez que la vue n'a pas changé, rafraîchissez-la, et vérifiez.</p>
+<div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> 5 notes et 4,60 de moyenne avant le rafraîchissement ; 6 notes et 4,17 après.</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>nb_notes</th><th>moyenne</th></tr></thead><tbody><tr><td class="">Inception</td><td class="">5</td><td class="">4.60</td></tr></tbody></table></div></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>nb_notes</th><th>moyenne</th></tr></thead><tbody><tr><td class="">Inception</td><td class="">6</td><td class="">4.17</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> MATERIALIZED VIEW mv_stats_films <span class="k">AS</span>
+<span class="k">SELECT</span> film_id, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_notes, <span class="k">ROUND</span>(<span class="k">AVG</span>(note), <span class="n">2</span>) <span class="k">AS</span> moyenne
+<span class="k">FROM</span> notes
+<span class="k">GROUP</span> <span class="k">BY</span> film_id;
+
+<span class="k">CREATE</span> <span class="k">UNIQUE</span> INDEX <span class="k">ON</span> mv_stats_films (film_id);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> notes (utilisateur_id, film_id, note, note_le)
+<span class="k">SELECT</span> u.id, f.id, <span class="n">2.0</span>, <span class="s">'2026-09-21'</span>
+<span class="k">FROM</span> utilisateurs u, films f
+<span class="k">WHERE</span> u.pseudo = <span class="s">'sofa_critic'</span> <span class="k">AND</span> f.titre = <span class="s">'Inception'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> f.titre, s.nb_notes, s.moyenne
+<span class="k">FROM</span> mv_stats_films s <span class="k">JOIN</span> films f <span class="k">ON</span> f.id = s.film_id
+<span class="k">WHERE</span> f.titre = <span class="s">'Inception'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>REFRESH MATERIALIZED VIEW CONCURRENTLY mv_stats_films;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> f.titre, s.nb_notes, s.moyenne
+<span class="k">FROM</span> mv_stats_films s <span class="k">JOIN</span> films f <span class="k">ON</span> f.id = s.film_id
+<span class="k">WHERE</span> f.titre = <span class="s">'Inception'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M9-3">
+<div class="exo-head"><span class="num">M9.3</span><strong>La vitrine science-fiction</strong></div>
+<p class="enonce">Créez une vue modifiable <code class='inl'>v_films_sf</code> limitée aux films de science-fiction, qui refuse toute modification les faisant sortir de ce genre. Testez en tentant de reclasser Inception en « Action » à travers la vue.</p>
+<div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur attendue</div><pre class="errmsg">ERROR:  new row violates check option for view &quot;v_films_sf&quot;
+DETAIL:  Failing row contains (12, Inception, 2010, Action, null, null, {&quot;pays&quot;: [&quot;États-Unis&quot;, &quot;Royaume-Uni&quot;], &quot;tags&quot;: [&quot;rêves&quot;, &quot;bra...).</pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE VIEW v_films_sf <span class="k">AS</span>
+<span class="k">SELECT</span> id, titre, annee, genre
+<span class="k">FROM</span> films
+<span class="k">WHERE</span> genre = <span class="s">'Science-fiction'</span>
+<span class="k">WITH</span> <span class="k">CHECK</span> OPTION;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">UPDATE</span> v_films_sf
+<span class="k">SET</span> genre = <span class="s">'Action'</span>
+<span class="k">WHERE</span> titre = <span class="s">'Inception'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="card fb-card" id="mis-M10"><div class="section-title"><span class="icon-bg ib-purple">🤩</span><span><span class="num">M10</span>&nbsp; La note pondérée</span></div><span class="ftag f4">Notions N16 · N17</span><p style="margin-top:8px">Mettre fin aux classements faussés par les films trop peu notés, et mesurer les affinités entre membres.</p><div class="exo" id="ex-M10-1">
+<div class="exo-head"><span class="num">M10.1</span><strong>Une durée lisible</strong></div>
+<p class="enonce">Écrivez une fonction SQL <code class='inl'>duree_texte(minutes)</code> qui renvoie une durée du type « 2 h 28 », puis utilisez-la sur les 3 films les plus longs.</p><details class="hint"><summary>💡 Indice</summary><p>La division entière <code>/</code> donne les heures, le modulo <code>%</code> les minutes restantes.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>duree</th></tr></thead><tbody><tr><td class="">Titanic</td><td class="">3 h 14</td></tr><tr><td class="">Le Loup de Wall Street</td><td class="">3 h 00</td></tr><tr><td class="">Il faut sauver le soldat Ryan</td><td class="">2 h 49</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION duree_texte(p_minutes <span class="k">INTEGER</span>)
+RETURNS <span class="k">TEXT</span>
+LANGUAGE sql
+IMMUTABLE
+<span class="k">AS</span> $$
+    <span class="k">SELECT</span> (p_minutes / <span class="n">60</span>) || <span class="s">' h '</span> || LPAD((p_minutes % <span class="n">60</span>)::<span class="k">TEXT</span>, <span class="n">2</span>, <span class="s">'0'</span>);
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre, duree_texte((details -&gt;&gt; <span class="s">'duree'</span>)::<span class="k">INTEGER</span>) <span class="k">AS</span> duree
+<span class="k">FROM</span> films
+<span class="k">ORDER</span> <span class="k">BY</span> (details -&gt;&gt; <span class="s">'duree'</span>)::<span class="k">INTEGER</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">3</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M10-2">
+<div class="exo-head"><span class="num">M10.2</span><strong>La note pondérée 🤩</strong></div>
+<p class="enonce">Un film noté 5/5 par une seule personne ne doit pas dépasser un film noté 4,6 par vingt membres. Écrivez en PL/pgSQL <code class='inl'>note_ponderee(film_id, m)</code> selon la formule du Top 250 d'IMDb : <code class='inl'>(v / (v + m)) × R + (m / (v + m)) × C</code>, où v est le nombre de notes du film, R sa moyenne, m le seuil de votes (5 par défaut) et C la moyenne de toutes les notes. Levez une erreur si le film n'a aucune note. Comparez ensuite les 5 premiers selon la moyenne brute et selon la note pondérée.</p><details class="hint"><summary>💡 Indice</summary><p>Avec <code>SELECT COUNT(*) …</code>, il y a toujours une ligne : <code>IF NOT FOUND</code> ne se déclenche jamais. Testez plutôt <code>v_nb = 0</code>.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>nb_notes</th><th>moyenne</th><th>rang_brut</th><th>note_ponderee</th><th>rang_pondere</th></tr></thead><tbody><tr><td class="">Retour vers le futur</td><td class="">7</td><td class="">4.64</td><td class="">2</td><td class="">4.38</td><td class="">1</td></tr><tr><td class="">La Haine</td><td class="">4</td><td class="">4.75</td><td class="">1</td><td class="">4.34</td><td class="">2</td></tr><tr><td class="">Arrête-moi si tu peux</td><td class="">5</td><td class="">4.60</td><td class="">4</td><td class="">4.31</td><td class="">3</td></tr><tr><td class="">Seven</td><td class="">6</td><td class="">4.50</td><td class="">5</td><td class="">4.28</td><td class="">4</td></tr><tr><td class="">Les Évadés</td><td class="">4</td><td class="">4.63</td><td class="">3</td><td class="">4.28</td><td class="">4</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION note_ponderee(p_film_id <span class="k">INTEGER</span>, p_m <span class="k">INTEGER</span> <span class="k">DEFAULT</span> <span class="n">5</span>)
+RETURNS <span class="k">NUMERIC</span>
+LANGUAGE plpgsql
+STABLE
+<span class="k">AS</span> $$
+DECLARE
+    v_nb       <span class="k">INTEGER</span>;
+    v_moyenne  <span class="k">NUMERIC</span>;
+    v_globale  <span class="k">NUMERIC</span>;
+BEGIN
+    <span class="k">SELECT</span> <span class="k">COUNT</span>(*), <span class="k">AVG</span>(note) <span class="k">INTO</span> v_nb, v_moyenne
+    <span class="k">FROM</span> notes <span class="k">WHERE</span> film_id = p_film_id;
+
+    <span class="k">IF</span> v_nb = <span class="n">0</span> <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Le film % n''a encore aucune note'</span>, p_film_id;
+    <span class="k">END</span> <span class="k">IF</span>;
+
+    <span class="k">SELECT</span> <span class="k">AVG</span>(note) <span class="k">INTO</span> v_globale <span class="k">FROM</span> notes;
+
+    RETURN <span class="k">ROUND</span>(  (v_nb::<span class="k">NUMERIC</span> / (v_nb + p_m)) * v_moyenne
+                 + (p_m::<span class="k">NUMERIC</span>  / (v_nb + p_m)) * v_globale, <span class="n">2</span>);
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre, nb_notes, moyenne,
+       <span class="k">RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER</span> <span class="k">BY</span> moyenne <span class="k">DESC</span>)          <span class="k">AS</span> rang_brut,
+       note_ponderee(id)                            <span class="k">AS</span> note_ponderee,
+       <span class="k">RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER</span> <span class="k">BY</span> note_ponderee(id) <span class="k">DESC</span>) <span class="k">AS</span> rang_pondere
+<span class="k">FROM</span> v_fiche_film
+<span class="k">ORDER</span> <span class="k">BY</span> rang_pondere
+<span class="k">LIMIT</span> <span class="n">5</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M10-3">
+<div class="exo-head"><span class="num">M10.3</span><strong>La compatibilité cinéphile</strong></div>
+<p class="enonce">Écrivez une fonction SQL <code class='inl'>compatibilite(pseudo_a, pseudo_b)</code> qui renvoie les films notés par les deux membres, avec les deux notes et leur écart. Utilisez-la ensuite pour calculer, en une requête, le nombre de films communs et l'écart moyen entre <code class='inl'>cinephile_92</code> et <code class='inl'>nolanfan</code>.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>note_a</th><th>note_b</th><th>ecart</th></tr></thead><tbody><tr><td class="">Inception</td><td class="">5.0</td><td class="">3.5</td><td class="">1.5</td></tr><tr><td class="">Ocean&#x27;s Eleven</td><td class="">3.0</td><td class="">4.5</td><td class="">1.5</td></tr><tr><td class="">Once Upon a Time… in Hollywood</td><td class="">4.5</td><td class="">3.0</td><td class="">1.5</td></tr><tr><td class="">X-Men : Days of Future Past</td><td class="">3.5</td><td class="">4.5</td><td class="">1.0</td></tr><tr><td class="">Intouchables</td><td class="">5.0</td><td class="">4.5</td><td class="">0.5</td></tr></tbody></table></div></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>films_communs</th><th>ecart_moyen</th></tr></thead><tbody><tr><td class="">12</td><td class="">0.63</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION compatibilite(p_a <span class="k">TEXT</span>, p_b <span class="k">TEXT</span>)
+RETURNS <span class="k">TABLE</span> (titre <span class="k">VARCHAR</span>, note_a <span class="k">NUMERIC</span>, note_b <span class="k">NUMERIC</span>, ecart <span class="k">NUMERIC</span>)
+LANGUAGE sql
+STABLE
+<span class="k">AS</span> $$
+    <span class="k">SELECT</span> f.titre, na.note, nb.note, ABS(na.note - nb.note)
+    <span class="k">FROM</span> notes na
+    <span class="k">JOIN</span> utilisateurs ua <span class="k">ON</span> ua.id = na.utilisateur_id <span class="k">AND</span> ua.pseudo = p_a
+    <span class="k">JOIN</span> notes nb        <span class="k">ON</span> nb.film_id = na.film_id
+    <span class="k">JOIN</span> utilisateurs ub <span class="k">ON</span> ub.id = nb.utilisateur_id <span class="k">AND</span> ub.pseudo = p_b
+    <span class="k">JOIN</span> films f         <span class="k">ON</span> f.id = na.film_id
+    <span class="k">ORDER</span> <span class="k">BY</span> ABS(na.note - nb.note) <span class="k">DESC</span>, f.titre;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> * <span class="k">FROM</span> compatibilite(<span class="s">'cinephile_92'</span>, <span class="s">'nolanfan'</span>) <span class="k">LIMIT</span> <span class="n">5</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">COUNT</span>(*)             <span class="k">AS</span> films_communs,
+       <span class="k">ROUND</span>(<span class="k">AVG</span>(ecart), <span class="n">2</span>) <span class="k">AS</span> ecart_moyen
+<span class="k">FROM</span> compatibilite(<span class="s">'cinephile_92'</span>, <span class="s">'nolanfan'</span>);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="result-panel"><h4>🎬 Et après ?</h4><p>En séance 3, FilmBox passe à l'échelle : des centaines de milliers de films, et des requêtes à accélérer avec les bons index, preuves à l'appui.</p></div></section><section class="panel" id="glossaire"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">📖</span>Glossaire de la séance</div>
+<div id="gl-locked"><div class="instruction-box">🔒 Le glossaire se débloque une fois les 3 cas terminés.</div>
+<div class="lock-pills"><span class="lock-pill" id="lp1">⏳ Cas 1</span><span class="lock-pill" id="lp2">⏳ Cas 2</span><span class="lock-pill" id="lp3">⏳ Cas 3</span></div></div>
+<div id="gl-open" hidden><div><span class="ftag f1">Agrégations</span><span class="ftag f2">LATERAL</span><span class="ftag f3">JSONB</span><span class="ftag f4">Vues</span><span class="ftag f5">Fonctions</span></div><br>
+<input class="gl-search" type="search" placeholder="Rechercher un terme…" aria-label="Rechercher un terme"><div class="gl-item"><b>-&gt;&gt;</b> <span class="ftag f3">JSONB</span><p>Opérateur qui extrait un élément d&#x27;un document JSON sous forme de texte.</p></div><div class="gl-item"><b>@&gt;</b> <span class="ftag f3">JSONB</span><p>Opérateur vrai si le document JSON contient le fragment donné.</p></div><div class="gl-item"><b>CROSS JOIN LATERAL</b> <span class="ftag f2">LATERAL</span><p>Exécute la sous-requête pour chaque ligne de gauche et ne garde que les lignes qui ont un résultat.</p></div><div class="gl-item"><b>CUBE</b> <span class="ftag f1">Agrégations</span><p>Extension du regroupement qui calcule les sous-totaux pour toutes les combinaisons de colonnes.</p></div><div class="gl-item"><b>Dollar quoting ($$)</b> <span class="ftag f5">Fonctions</span><p>Délimiteurs du corps d&#x27;une fonction, qui évitent d&#x27;échapper les apostrophes.</p></div><div class="gl-item"><b>FILTER</b> <span class="ftag f1">Agrégations</span><p>Clause attachée à un agrégat, qui ne lui fait prendre en compte que les lignes vérifiant une condition.</p></div><div class="gl-item"><b>Fonction SQL</b> <span class="ftag f5">Fonctions</span><p>Fonction dont le corps est composé de requêtes SQL.</p></div><div class="gl-item"><b>GROUPING SETS</b> <span class="ftag f1">Agrégations</span><p>Extension du regroupement qui liste précisément les regroupements à calculer.</p></div><div class="gl-item"><b>GROUPING()</b> <span class="ftag f1">Agrégations</span><p>Fonction qui vaut 1 quand la ligne est un sous-total sur la colonne indiquée.</p></div><div class="gl-item"><b>JSON</b> <span class="ftag f3">JSONB</span><p>Format texte de données structurées en objets entre accolades et tableaux entre crochets.</p></div><div class="gl-item"><b>JSONB</b> <span class="ftag f3">JSONB</span><p>Type PostgreSQL qui stocke du JSON en binaire : plus rapide à interroger et indexable.</p></div><div class="gl-item"><b>jsonb_array_elements_text</b> <span class="ftag f3">JSONB</span><p>Fonction qui transforme un tableau JSON en une ligne par élément.</p></div><div class="gl-item"><b>LATERAL</b> <span class="ftag f2">LATERAL</span><p>Mot-clé qui permet à une sous-requête du FROM d&#x27;utiliser les colonnes des tables placées avant elle.</p></div><div class="gl-item"><b>LEFT JOIN LATERAL … ON true</b> <span class="ftag f2">LATERAL</span><p>Exécute la sous-requête pour chaque ligne de gauche et conserve aussi celles sans résultat.</p></div><div class="gl-item"><b>PL/pgSQL</b> <span class="ftag f5">Fonctions</span><p>Langage procédural de PostgreSQL : variables, conditions, boucles, exceptions.</p></div><div class="gl-item"><b>RAISE EXCEPTION</b> <span class="ftag f5">Fonctions</span><p>Instruction qui interrompt une fonction avec un message d&#x27;erreur.</p></div><div class="gl-item"><b>REFRESH … CONCURRENTLY</b> <span class="ftag f4">Vues</span><p>Rafraîchissement d&#x27;un résultat stocké sans bloquer les lectures ; exige un index unique.</p></div><div class="gl-item"><b>RETURNS TABLE</b> <span class="ftag f5">Fonctions</span><p>Déclare qu&#x27;une fonction renvoie un ensemble de lignes, avec ses colonnes.</p></div><div class="gl-item"><b>ROLLUP</b> <span class="ftag f1">Agrégations</span><p>Extension du regroupement qui ajoute les sous-totaux hiérarchiques et le total général.</p></div><div class="gl-item"><b>Signature</b> <span class="ftag f5">Fonctions</span><p>Nom d&#x27;une fonction et types de ses paramètres, qui l&#x27;identifient de façon unique.</p></div><div class="gl-item"><b>Tableau croisé</b> <span class="ftag f1">Agrégations</span><p>Présentation qui répartit une mesure selon deux dimensions, par exemple les ventes par jeu et par plateforme.</p></div><div class="gl-item"><b>Volatilité</b> <span class="ftag f5">Fonctions</span><p>Promesse faite au moteur sur le comportement d&#x27;une fonction : IMMUTABLE, STABLE ou VOLATILE.</p></div><div class="gl-item"><b>Vue</b> <span class="ftag f4">Vues</span><p>Requête enregistrée sous un nom, interrogeable comme une table, sans stockage de données.</p></div><div class="gl-item"><b>Vue matérialisée</b> <span class="ftag f4">Vues</span><p>Vue dont le résultat est stocké physiquement et mis à jour à la demande.</p></div><div class="gl-item"><b>Vue modifiable</b> <span class="ftag f4">Vues</span><p>Vue simple, sur une seule table et sans agrégat, dans laquelle on peut écrire.</p></div><div class="gl-item"><b>WITH CHECK OPTION</b> <span class="ftag f4">Vues</span><p>Option qui refuse toute écriture produisant une ligne invisible par la vue.</p></div></div></div></section></main>
+<footer>SQL avancé avec PostgreSQL · M1 Tech Lead</footer>
+<script>const TERMS=[["FILTER", "f1", "Clause attachée à un agrégat, qui ne lui fait prendre en compte que les lignes vérifiant une condition."], ["Tableau croisé", "f1", "Présentation qui répartit une mesure selon deux dimensions, par exemple les ventes par jeu et par plateforme."], ["ROLLUP", "f1", "Extension du regroupement qui ajoute les sous-totaux hiérarchiques et le total général."], ["CUBE", "f1", "Extension du regroupement qui calcule les sous-totaux pour toutes les combinaisons de colonnes."], ["GROUPING SETS", "f1", "Extension du regroupement qui liste précisément les regroupements à calculer."], ["GROUPING()", "f1", "Fonction qui vaut 1 quand la ligne est un sous-total sur la colonne indiquée."], ["LATERAL", "f2", "Mot-clé qui permet à une sous-requête du FROM d'utiliser les colonnes des tables placées avant elle."], ["CROSS JOIN LATERAL", "f2", "Exécute la sous-requête pour chaque ligne de gauche et ne garde que les lignes qui ont un résultat."], ["LEFT JOIN LATERAL … ON true", "f2", "Exécute la sous-requête pour chaque ligne de gauche et conserve aussi celles sans résultat."], ["JSON", "f3", "Format texte de données structurées en objets entre accolades et tableaux entre crochets."], ["JSONB", "f3", "Type PostgreSQL qui stocke du JSON en binaire : plus rapide à interroger et indexable."], ["->>", "f3", "Opérateur qui extrait un élément d'un document JSON sous forme de texte."], ["@>", "f3", "Opérateur vrai si le document JSON contient le fragment donné."], ["jsonb_array_elements_text", "f3", "Fonction qui transforme un tableau JSON en une ligne par élément."], ["Vue", "f4", "Requête enregistrée sous un nom, interrogeable comme une table, sans stockage de données."], ["Vue modifiable", "f4", "Vue simple, sur une seule table et sans agrégat, dans laquelle on peut écrire."], ["WITH CHECK OPTION", "f4", "Option qui refuse toute écriture produisant une ligne invisible par la vue."], ["Vue matérialisée", "f4", "Vue dont le résultat est stocké physiquement et mis à jour à la demande."], ["REFRESH … CONCURRENTLY", "f4", "Rafraîchissement d'un résultat stocké sans bloquer les lectures ; exige un index unique."], ["Fonction SQL", "f5", "Fonction dont le corps est composé de requêtes SQL."], ["PL/pgSQL", "f5", "Langage procédural de PostgreSQL : variables, conditions, boucles, exceptions."], ["RETURNS TABLE", "f5", "Déclare qu'une fonction renvoie un ensemble de lignes, avec ses colonnes."], ["Dollar quoting ($$)", "f5", "Délimiteurs du corps d'une fonction, qui évitent d'échapper les apostrophes."], ["Volatilité", "f5", "Promesse faite au moteur sur le comportement d'une fonction : IMMUTABLE, STABLE ou VOLATILE."], ["RAISE EXCEPTION", "f5", "Instruction qui interrompt une fonction avec un message d'erreur."], ["Signature", "f5", "Nom d'une fonction et types de ses paramètres, qui l'identifient de façon unique."]];const GROUPS=[["Agrégat conditionnel (FILTER)", "f1", [["Afficher côte à côte le nombre de commandes payées et annulées de chaque boutique.", false], ["Comparer, en colonnes, le chiffre d'affaires réalisé en France et à l'étranger.", false], ["Compter, pour chaque équipe, les victoires à domicile et à l'extérieur.", false], ["Calculer, pour chaque film, le nombre de notes supérieures ou égales à 4.", false], ["Afficher le total par région, puis le total général, dans le même résultat.", true]], "Des sous-totaux suivis d'un total général : c'est le rôle de ROLLUP, pas d'un agrégat filtré."], ["Sous-totaux (ROLLUP / GROUPING SETS)", "f1", [["Produire un rapport des ventes par pays et par ville, avec un sous-total par pays.", false], ["Afficher le chiffre d'affaires de chaque magasin, puis le total de l'enseigne.", false], ["Croiser ventes par canal et par mois, avec toutes les combinaisons de totaux.", false], ["Afficher les buts par saison et par équipe, avec le total de chaque saison.", false], ["Afficher les 3 dernières commandes de chaque client.", true]], "Un top N par ligne de gauche (chaque client) : c'est un cas typique de LATERAL, ou d'une fonction de fenêtrage."], ["LATERAL", "f2", [["Afficher les 3 derniers messages de chaque conversation.", false], ["Afficher le meilleur score de chaque joueur, avec la date de la partie.", false], ["Déplier la liste de tags JSON de chaque article, une ligne par tag.", false], ["Pour chaque produit, afficher les 2 avis les plus récents.", false], ["Stocker la fiche technique d'une voiture, dont les caractéristiques varient selon le modèle.", true]], "Stocker des attributs variables, c'est un choix de modélisation : une colonne JSONB, pas une requête LATERAL."], ["JSONB", "f3", [["Stocker des attributs qui varient selon le produit : taille pour un vêtement, puissance pour un aspirateur.", false], ["Conserver les préférences d'affichage d'un utilisateur : thème, langue, notifications.", false], ["Archiver la réponse brute d'une API externe pour la retraiter plus tard.", false], ["Enregistrer les statistiques de match d'un prestataire dont le format évolue.", false], ["L'email de chaque utilisateur, obligatoire, unique et utilisé pour la connexion.", true]], "Une information présente partout, obligatoire, unique et très souvent filtrée mérite une vraie colonne avec ses contraintes."], ["Vue matérialisée", "f4", [["Un tableau de bord de direction, mis à jour chaque nuit.", false], ["Le classement mensuel des vendeurs, consulté 10 000 fois par jour.", false], ["Des statistiques annuelles lourdes à calculer, qui ne changent plus.", false], ["Une page « Tendances » rafraîchie toutes les 15 minutes.", false], ["Afficher le solde exact du compte bancaire d'un client au moment où il se connecte.", true]], "Un solde doit être exact à la seconde : un résultat mis en cache serait faux. Une vue classique ou une requête directe s'impose."]];const VF=[["FILTER ne s'applique qu'à l'agrégat auquel il est attaché, contrairement à WHERE.", true, "WHERE retire des lignes pour tous les agrégats ; FILTER n'agit que sur le sien."], ["SUM(x) FILTER (WHERE …) peut renvoyer NULL.", true, "Si aucune ligne ne passe le filtre, la somme porte sur un ensemble vide et vaut NULL."], ["ROLLUP (a, b) calcule aussi un sous-total par b seul.", false, "ROLLUP produit (a, b), (a) et le total. Le sous-total par b seul est fourni par CUBE."], ["Sur une ligne de sous-total, la colonne regroupée vaut NULL.", true, "C'est pourquoi on utilise GROUPING() pour distinguer un sous-total d'un vrai NULL."], ["GROUPING(colonne) vaut 1 sur une ligne de sous-total de cette colonne.", true, "Et 0 sur une ligne de détail."], ["Une sous-requête du FROM peut toujours utiliser les colonnes des tables placées avant elle.", false, "Il faut le mot-clé LATERAL ; sinon, PostgreSQL renvoie une erreur de référence invalide."], ["CROSS JOIN LATERAL écarte les lignes de gauche pour lesquelles la sous-requête ne renvoie rien.", true, "Pour les conserver, on écrit LEFT JOIN LATERAL (…) ON true."], ["L'opérateur ->> renvoie une valeur JSON.", false, "Il renvoie du texte. C'est -> qui renvoie du JSON."], ["details ->> 'pegi' >= '12' compare des nombres.", false, "Il compare des textes : '3' est « plus grand » que '12'. Il faut convertir avec ::INTEGER."], ["Une colonne JSONB peut être indexée.", true, "Avec un index GIN, par exemple : c'est un des avantages de JSONB sur JSON (séance 3)."], ["Il vaut mieux stocker toutes les informations d'une table dans une seule colonne JSONB.", false, "On perd les contraintes, les types et la lisibilité. JSONB est réservé aux données réellement variables."], ["Une vue stocke le résultat de sa requête.", false, "Une vue ne stocke rien : sa requête est réexécutée à chaque lecture."], ["On peut insérer des lignes dans une vue simple portant sur une seule table.", true, "PostgreSQL transmet l'écriture à la table, à condition que la vue soit modifiable (pas d'agrégat, pas de jointure…)."], ["Une vue matérialisée se met à jour automatiquement après chaque INSERT.", false, "Elle reste figée jusqu'au prochain REFRESH MATERIALIZED VIEW."], ["REFRESH MATERIALIZED VIEW CONCURRENTLY exige un index unique sur la vue matérialisée.", true, "Sans cet index, PostgreSQL refuse le rafraîchissement concurrent."], ["CREATE OR REPLACE FUNCTION permet de changer le type de retour d'une fonction.", false, "Il faut d'abord supprimer la fonction avec DROP FUNCTION et sa signature complète."], ["Une fonction qui lit une table peut être déclarée IMMUTABLE sans risque.", false, "PostgreSQL peut alors réutiliser un résultat périmé. Une fonction qui lit une table est STABLE."], ["RAISE EXCEPTION interrompt la fonction et renvoie un message d'erreur.", true, "L'instruction en cours échoue, et le message peut inclure des valeurs grâce aux %."]];const FILMBOX_SQL="-- =====================================================================\n--  FilmBox — complément séance 2\n--  À exécuter sur la base filmbox, APRÈS filmbox.sql.\n--  Ajoute à chaque film une fiche détaillée en JSONB.\n--  Durées indicatives (en minutes) ; tags attribués par la rédaction FilmBox.\n--  Script ré-exécutable : il supprime aussi les objets créés pendant les missions M9 et M10.\n-- =====================================================================\n\nDROP MATERIALIZED VIEW IF EXISTS mv_stats_films CASCADE;\nDROP VIEW IF EXISTS v_fiche_film, v_films_sf CASCADE;\nDROP FUNCTION IF EXISTS duree_texte(INTEGER), note_ponderee(INTEGER, INTEGER), compatibilite(TEXT, TEXT);\nALTER TABLE films DROP COLUMN IF EXISTS details CASCADE;\n\nALTER TABLE films ADD COLUMN details JSONB;\n\nUPDATE films f\nSET details = v.details::JSONB\nFROM (VALUES\n ('Apollo 13',                            '{\"duree\": 140, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"espace\", \"histoire vraie\"]}'),\n ('Mystic River',                         '{\"duree\": 138, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"enquête\", \"drame familial\"]}'),\n ('Des hommes d''honneur',                '{\"duree\": 138, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"procès\", \"armée\"]}'),\n ('X-Men : Le Commencement',              '{\"duree\": 132, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"super-héros\", \"mutants\"]}'),\n ('X-Men : Days of Future Past',          '{\"duree\": 132, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"super-héros\", \"mutants\", \"voyage dans le temps\"]}'),\n ('X-Men : Apocalypse',                   '{\"duree\": 144, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"super-héros\", \"mutants\"]}'),\n ('Forrest Gump',                         '{\"duree\": 142, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"destin\", \"histoire américaine\"], \"oscar_meilleur_film\": true}'),\n ('Seul au monde',                        '{\"duree\": 143, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"survie\", \"île\"]}'),\n ('Il faut sauver le soldat Ryan',        '{\"duree\": 169, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"seconde guerre mondiale\"]}'),\n ('Arrête-moi si tu peux',                '{\"duree\": 141, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"histoire vraie\", \"arnaque\"]}'),\n ('Titanic',                              '{\"duree\": 194, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"romance\", \"naufrage\"], \"oscar_meilleur_film\": true}'),\n ('Inception',                            '{\"duree\": 148, \"pays\": [\"États-Unis\", \"Royaume-Uni\"], \"langue\": \"anglais\", \"tags\": [\"rêves\", \"braquage\"]}'),\n ('Les Infiltrés',                        '{\"duree\": 151, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"mafia\", \"remake\"], \"oscar_meilleur_film\": true}'),\n ('Once Upon a Time… in Hollywood',       '{\"duree\": 161, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"Hollywood\", \"années 60\"]}'),\n ('Le Loup de Wall Street',               '{\"duree\": 180, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"histoire vraie\", \"finance\"]}'),\n ('Fight Club',                           '{\"duree\": 139, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"culte\", \"twist\"]}'),\n ('Ocean''s Eleven',                      '{\"duree\": 116, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"braquage\", \"Las Vegas\"]}'),\n ('Seven',                                '{\"duree\": 127, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"enquête\", \"tueur en série\", \"twist\"]}'),\n ('Batman Begins',                        '{\"duree\": 140, \"pays\": [\"États-Unis\", \"Royaume-Uni\"], \"langue\": \"anglais\", \"tags\": [\"super-héros\", \"Gotham\"]}'),\n ('The Dark Knight',                      '{\"duree\": 152, \"pays\": [\"États-Unis\", \"Royaume-Uni\"], \"langue\": \"anglais\", \"tags\": [\"super-héros\", \"Gotham\", \"culte\"]}'),\n ('The Dark Knight Rises',                '{\"duree\": 164, \"pays\": [\"États-Unis\", \"Royaume-Uni\"], \"langue\": \"anglais\", \"tags\": [\"super-héros\", \"Gotham\"]}'),\n ('Les Évadés',                           '{\"duree\": 142, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"prison\", \"amitié\", \"culte\"]}'),\n ('Intouchables',                         '{\"duree\": 112, \"pays\": [\"France\"], \"langue\": \"français\", \"tags\": [\"histoire vraie\", \"amitié\"]}'),\n ('La Môme',                              '{\"duree\": 140, \"pays\": [\"France\"], \"langue\": \"français\", \"tags\": [\"biopic\", \"musique\"]}'),\n ('The Artist',                           '{\"duree\": 100, \"pays\": [\"France\"], \"langue\": \"muet\", \"tags\": [\"cinéma muet\", \"Hollywood\"], \"oscar_meilleur_film\": true}'),\n ('Le Fabuleux Destin d''Amélie Poulain', '{\"duree\": 122, \"pays\": [\"France\"], \"langue\": \"français\", \"tags\": [\"Paris\", \"culte\"]}'),\n ('La Haine',                             '{\"duree\": 98,  \"pays\": [\"France\"], \"langue\": \"français\", \"tags\": [\"banlieue\", \"noir et blanc\", \"culte\"]}'),\n ('Retour vers le futur',                 '{\"duree\": 116, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"voyage dans le temps\", \"culte\"]}'),\n ('Retour vers le futur II',              '{\"duree\": 108, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"voyage dans le temps\"]}'),\n ('Retour vers le futur III',             '{\"duree\": 118, \"pays\": [\"États-Unis\"], \"langue\": \"anglais\", \"tags\": [\"voyage dans le temps\", \"western\"]}')\n) AS v(titre, details)\nWHERE f.titre = v.titre;\n\nALTER TABLE films ALTER COLUMN details SET NOT NULL;\n\n-- ---------- Contrôle ----------\nSELECT COUNT(*) AS films_avec_fiche,\n       COUNT(*) FILTER (WHERE details ? 'oscar_meilleur_film') AS oscarises\nFROM films;\n";
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+function show(id){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});}
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{const txt=b.closest('.code').querySelector('pre').innerText;
+ const ok=()=>{b.textContent='Copié ✓';b.classList.add('done');setTimeout(()=>{b.textContent='Copier';b.classList.remove('done')},1500)};
+ if(navigator.clipboard){navigator.clipboard.writeText(txt).then(ok).catch(()=>fb(txt,ok))}else fb(txt,ok);}));
+function fb(t,ok){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){}a.remove();}
+const s=document.querySelector('.gl-search');if(s){s.addEventListener('input',()=>{const q=s.value.toLowerCase();
+ document.querySelectorAll('#gl-open .gl-item').forEach(i=>i.style.display=i.innerText.toLowerCase().includes(q)?'':'none');});}
+
+const FORMATEUR = /[?&#]formateur\b/.test(location.search + location.hash);
+if (FORMATEUR) document.body.classList.add('formateur');
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FAM = {f1:'Agrégations',f2:'LATERAL',f3:'JSONB',f4:'Vues',f5:'Fonctions'};
+const done = {c1:false,c2:false,c3:false};
+function setProg(fill, txt, a, b){ document.getElementById(fill).style.width = (b ? a/b*100 : 0) + '%'; document.getElementById(txt).textContent = a + ' / ' + b; }
+function finish(k){ done[k] = true; document.getElementById('lp' + k[1]).classList.add('done'); document.getElementById('lp' + k[1]).textContent = '✅ Cas ' + k[1];
+  if (done.c1 && done.c2 && done.c3){ document.getElementById('gl-locked').hidden = true; document.getElementById('gl-open').hidden = false; document.querySelector('[data-tab="glossaire"]').classList.remove('locked'); } }
+function panel(id, html){ document.getElementById(id).innerHTML = html; }
+
+/* ---------- CAS 1 ---------- */
+let c1 = {};
+function c1Init(){ const all = shuffle(TERMS); c1 = {rounds: [], idx: 0, score: 0, checked: 0};
+  for (let i = 0; i < all.length; i += 10) c1.rounds.push(all.slice(i, i + 10));
+  panel('c1-result',''); c1Render(); }
+function c1Render(){ const r = c1.rounds[c1.idx]; const defs = shuffle(r); const L = 'ABCDEFGHIJ';
+  c1.map = {}; defs.forEach((d, i) => c1.map[d[0]] = L[i]);
+  const opts = '<option value="">—</option>' + defs.map((d, i) => `<option>${L[i]}</option>`).join('');
+  panel('c1-zone', `<div class="term-grid"><div>${r.map(t => `<div class="term-item" data-t="${esc(t[0])}"><span>${esc(t[0])}</span><select aria-label="Définition de ${esc(t[0])}">${opts}</select></div>`).join('')}</div>
+   <div>${defs.map((d, i) => `<div class="def-item"><b>${L[i]}</b><span>${esc(d[2])}</span></div>`).join('')}</div></div>`);
+  document.getElementById('c1-round-lbl').textContent = `Round ${c1.idx + 1} / ${c1.rounds.length}`;
+  document.getElementById('c1-check').disabled = false; document.getElementById('c1-next').hidden = true;
+  setProg('c1-fill','c1-ptxt', c1.checked, TERMS.length); }
+document.getElementById('c1-check').onclick = () => { let ok = 0; const items = document.querySelectorAll('#c1-zone .term-item');
+  if ([...items].some(it => !it.querySelector('select').value)) { panel('c1-result','<div class="instruction-box">Associez une lettre à chaque terme avant de vérifier.</div>'); return; }
+  items.forEach(it => { const good = it.querySelector('select').value === c1.map[it.dataset.t]; it.classList.toggle('ok', good); it.classList.toggle('ko', !good); if (good) ok++; });
+  c1.score += ok; c1.checked += items.length; document.getElementById('c1-check').disabled = true;
+  setProg('c1-fill','c1-ptxt', c1.checked, TERMS.length);
+  const last = c1.idx === c1.rounds.length - 1;
+  panel('c1-result', `<div class="result-panel"><h4>Round ${c1.idx + 1} : <span class="score">${ok} / ${items.length}</span></h4>${last ? `<p>Score total : <span class="score">${c1.score} / ${TERMS.length}</span></p>` : '<p>Les bordures vertes et rouges indiquent vos réponses. Passez au round suivant.</p>'}</div>`);
+  if (last) finish('c1'); else document.getElementById('c1-next').hidden = false; };
+document.getElementById('c1-next').onclick = () => { c1.idx++; panel('c1-result',''); c1Render(); };
+document.getElementById('c1-reveal').onclick = () => document.querySelectorAll('#c1-zone .term-item').forEach(it => it.querySelector('select').value = c1.map[it.dataset.t]);
+document.getElementById('c1-reset').onclick = c1Init;
+
+/* ---------- CAS 2 ---------- */
+let c2sel = {};
+function c2Init(){ c2sel = {}; panel('c2-result','');
+  panel('c2-zone', GROUPS.map((g, gi) => `<div class="group" data-g="${gi}"><h4>Groupe ${gi + 1} · ${esc(g[0])} <span class="ftag ${g[1]}">${FAM[g[1]]}</span></h4>
+   ${shuffle(g[2].map((s, si) => [s, si])).map(([s, si]) => `<button type="button" class="sit" data-s="${si}">${esc(s[0])}</button>`).join('')}<div class="expl" hidden></div></div>`).join(''));
+  document.querySelectorAll('#c2-zone .sit').forEach(b => b.onclick = () => { const g = b.closest('.group'); g.querySelectorAll('.sit').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); c2sel[g.dataset.g] = +b.dataset.s; setProg('c2-fill','c2-ptxt', Object.keys(c2sel).length, GROUPS.length); });
+  document.getElementById('c2-check').disabled = false; setProg('c2-fill','c2-ptxt', 0, GROUPS.length); }
+document.getElementById('c2-check').onclick = () => { if (Object.keys(c2sel).length < GROUPS.length) { panel('c2-result','<div class="instruction-box">Désignez une intruse dans chaque groupe avant de vérifier.</div>'); return; }
+  let ok = 0; document.querySelectorAll('#c2-zone .group').forEach(g => { const G = GROUPS[g.dataset.g]; const intr = G[2].findIndex(s => s[1]);
+    g.querySelectorAll('.sit').forEach(b => { const s = +b.dataset.s; if (s === intr) b.classList.add('good'); else if (s === c2sel[g.dataset.g]) b.classList.add('bad'); });
+    if (c2sel[g.dataset.g] === intr) ok++; const e = g.querySelector('.expl'); e.hidden = false; e.innerHTML = '💡 ' + esc(G[3]); });
+  document.getElementById('c2-check').disabled = true;
+  panel('c2-result', `<div class="result-panel"><h4>Intruses trouvées : <span class="score">${ok} / ${GROUPS.length}</span></h4><p>L'intruse de chaque groupe est encadrée en vert, avec son explication.</p></div>`); finish('c2'); };
+document.getElementById('c2-reveal').onclick = () => document.querySelectorAll('#c2-zone .group').forEach(g => { const intr = GROUPS[g.dataset.g][2].findIndex(s => s[1]); g.querySelector(`.sit[data-s="${intr}"]`).click(); });
+document.getElementById('c2-reset').onclick = c2Init;
+
+/* ---------- CAS 3 ---------- */
+let c3ans = {};
+function c3Init(){ c3ans = {}; panel('c3-result','');
+  panel('c3-zone', shuffle(VF.map((v, i) => [v, i])).map(([v, i], n) => `<div class="vf" data-i="${i}"><div class="vf-row"><p><strong>${n + 1}.</strong> ${esc(v[0])}</p><div class="vf-btns"><button type="button" data-v="1">Vrai</button><button type="button" data-v="0">Faux</button></div></div><div class="expl" hidden></div></div>`).join(''));
+  document.querySelectorAll('#c3-zone .vf-btns button').forEach(b => b.onclick = () => { const q = b.closest('.vf'); q.querySelectorAll('button').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); c3ans[q.dataset.i] = b.dataset.v === '1'; setProg('c3-fill','c3-ptxt', Object.keys(c3ans).length, VF.length); });
+  document.getElementById('c3-check').disabled = false; setProg('c3-fill','c3-ptxt', 0, VF.length); }
+document.getElementById('c3-check').onclick = () => { if (Object.keys(c3ans).length < VF.length) { panel('c3-result','<div class="instruction-box">Répondez à toutes les affirmations avant de vérifier.</div>'); return; }
+  let ok = 0; document.querySelectorAll('#c3-zone .vf').forEach(q => { const v = VF[q.dataset.i]; const good = c3ans[q.dataset.i] === v[1]; if (good) ok++;
+    q.classList.add(good ? 'good' : 'bad'); const e = q.querySelector('.expl'); e.hidden = false; e.innerHTML = `${good ? '✅' : '❌'} <strong>${v[1] ? 'Vrai' : 'Faux'}</strong> — ${esc(v[2])}`; });
+  document.getElementById('c3-check').disabled = true;
+  panel('c3-result', `<div class="result-panel"><h4>Score : <span class="score">${ok} / ${VF.length}</span></h4><p>Relisez les explications des affirmations encadrées en rouge.</p></div>`); finish('c3'); };
+document.getElementById('c3-reveal').onclick = () => document.querySelectorAll('#c3-zone .vf').forEach(q => q.querySelector(`button[data-v="${VF[q.dataset.i][1] ? 1 : 0}"]`).click());
+document.getElementById('c3-reset').onclick = c3Init;
+
+c1Init(); c2Init(); c3Init();
+
+/* ---------- exos : progression + navigation ---------- */
+function exoProg(){ [['exos','.exos-card'],['fb','.fb-card']].forEach(([k, sel]) => { const all = document.querySelectorAll(sel + ' .understood input'); const d = [...all].filter(i => i.checked).length;
+  document.getElementById('pfill-' + k).style.width = (all.length ? d/all.length*100 : 0) + '%'; document.getElementById('ptxt-' + k).textContent = d + ' / ' + all.length; }); }
+function accCount(){ document.querySelectorAll('details.acc').forEach(d => { const all = d.querySelectorAll('.understood input'); const k = [...all].filter(i => i.checked).length; const c = d.querySelector('.acc-count'); c.textContent = k + ' / ' + all.length; c.classList.toggle('full', k === all.length); }); }
+document.querySelectorAll('.exo .understood input').forEach(i => i.addEventListener('change', () => { i.closest('.understood').classList.toggle('done', i.checked); exoProg(); accCount(); }));
+document.querySelectorAll('.chip[data-acc]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const d = document.getElementById(a.dataset.acc); d.open = true; d.scrollIntoView({behavior:'smooth'}); }));
+document.getElementById('acc-open').onclick = () => document.querySelectorAll('details.acc').forEach(d => d.open = true);
+document.getElementById('acc-close').onclick = () => document.querySelectorAll('details.acc').forEach(d => d.open = false);
+exoProg();
+document.querySelectorAll('.chip-m').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.getElementById(a.dataset.anchor).scrollIntoView({behavior:'smooth'}); }));
+document.getElementById('dl-filmbox').addEventListener('click', () => { const b = new Blob([FILMBOX_SQL], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'filmbox-s2.sql'; document.body.appendChild(a); a.click(); a.remove(); });
+</script></body></html>

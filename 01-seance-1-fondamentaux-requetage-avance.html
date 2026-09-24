@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance 1 — Fondamentaux & requêtage avancé</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;
+--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f1f5f9;--card:#fff;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15.5px}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:44px 20px 34px}
+.wrap{max-width:1000px;margin:0 auto}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+header h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.2;margin-bottom:10px}
+header p.lead{color:#cbd5e1;max-width:700px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:13px;font-weight:500}
+.gprog{margin-top:22px;max-width:480px}
+.gprog-label{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:6px}
+.gprog-bar{height:8px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+.gprog-fill{height:100%;width:0;background:#34d399;transition:width .4s}
+.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(15,23,42,.05)}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 10px}
+.tab{background:none;border:none;border-bottom:3px solid transparent;padding:15px 15px;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--primary)} .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+main{padding:28px 14px 60px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;margin-bottom:14px;line-height:1.3}
+.icon-bg{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.ib-blue{background:var(--primary-light)}.ib-green{background:var(--secondary-light)}.ib-amber{background:var(--accent-light)}.ib-red{background:var(--danger-light)}.ib-purple{background:var(--purple-light)}
+.num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--primary);background:var(--primary-light);padding:3px 9px;border-radius:7px}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+p+p{margin-top:8px}
+ul.clean{list-style:none;margin:6px 0}
+ul.clean li{padding:4px 0 4px 22px;position:relative}
+ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--primary);font-weight:700}
+ol.steps{margin:6px 0 6px 22px} ol.steps li{margin:4px 0}
+.objectif-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:14px;color:var(--primary-dark)}
+.instruction-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;margin:14px 0;color:#78350f}
+.warn-box{background:var(--danger-light);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;margin:14px 0;color:#7f1d1d}
+.ok-box{background:var(--secondary-light);border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin:14px 0;color:#064e3b}
+.analogie{background:var(--purple-light);border-left:4px solid var(--purple);border-radius:10px;padding:14px 18px;margin:14px 0;color:#4c1d95}
+.ftag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0}
+.f1{background:#dbeafe;color:#1e40af}.f2{background:#d1fae5;color:#065f46}.f3{background:#fef3c7;color:#92400e}.f4{background:#fee2e2;color:#991b1b}.f5{background:#ede9fe;color:#5b21b6}
+code.inl{background:#e2e8f0;padding:1px 6px;border-radius:5px;font-size:13px}
+.code{margin:10px 0;border-radius:10px;overflow:hidden;background:var(--dark)}
+.code-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#1e293b;color:#94a3b8;font-size:12px;font-family:'JetBrains Mono',monospace}
+.copy{background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.copy:hover{background:#475569}.copy.done{background:var(--secondary)}
+.code pre{color:#e2e8f0;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0}
+pre .c{color:#64748b;font-style:italic} pre .k{color:#93c5fd;font-weight:500} pre .s{color:#86efac} pre .n{color:#fcd34d} pre .m{color:#f9a8d4}
+pre.sh{color:#a7f3d0}
+.res{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:4px 0 12px}
+.res-bar{display:flex;justify-content:space-between;background:#f8fafc;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;font-weight:700;color:var(--secondary)}
+.res-bar span{color:var(--muted);font-weight:500}
+.tbl{overflow-x:auto}
+.tbl table,.grid-table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#f1f5f9;text-align:left;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate,#334155);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 12px;border-bottom:1px solid #f1f5f9;font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap}
+.tbl td.null{color:#94a3b8;font-style:italic}
+.res-note{padding:9px 12px;font-size:13px;color:var(--muted);background:#f8fafc;border-top:1px solid var(--border)}
+.grid-table th{background:var(--dark-2);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:13px}
+.grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.grid-table tr:nth-child(even) td{background:#f8fafc}
+.grid-table td:first-child{font-weight:600}
+.understood{display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.understood input{accent-color:var(--secondary);width:18px;height:18px}
+.understood.done{border-color:var(--secondary);color:var(--secondary);background:var(--secondary-light)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.toc a{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.toc a:hover{border-color:var(--primary)}
+.result-panel{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:var(--radius);padding:22px 24px;margin:6px 0 22px}
+.result-panel h4{color:#fff;font-size:16px;margin-bottom:8px}
+.result-panel .score{color:#34d399;font-weight:800;font-family:'JetBrains Mono',monospace}
+.result-panel ul{margin-left:18px}.result-panel li{margin:3px 0}
+.os-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.os{font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--muted)}
+.os.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.os-panel{display:none}.os-panel.active{display:block}
+.gl-search{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px}
+.gl-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.gl-item b{font-family:'JetBrains Mono',monospace;font-size:14px}
+.gl-item p{font-size:14px;color:#334155;margin-top:2px}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--primary);background:var(--primary);color:#fff}
+.btn:hover{filter:brightness(.95)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 40px}
+@media (max-width:700px){.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style></head><body>
+<header><div class="wrap"><span class="badge">🐘 SQL avancé avec PostgreSQL · Séance 1</span><h1>Fondamentaux & requêtage avancé</h1><p class="lead">Valider les bases de PostgreSQL, puis découvrir les CTE, les CTE récursives et les fonctions de fenêtrage.</p>
+<div class="meta"><span class="pill">📚 9 notions</span><span class="pill">🧪 Exemples testés sur PostgreSQL</span><span class="pill">🗄 Base cours_sql</span><span class="pill">📌 Fiche mémo + glossaire</span></div><div class="gprog"><div class="gprog-label"><span>Notions comprises</span><span id="gprog-txt">0</span></div><div class="gprog-bar"><div class="gprog-fill" id="gprog-fill"></div></div></div></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" role="tablist"><button class="tab active" data-tab="intro" role="tab">🎯 Introduction</button><button class="tab" data-tab="p1" role="tab">1 · Fondamentaux</button><button class="tab" data-tab="p2" role="tab">2 · Requêtage avancé</button><button class="tab" data-tab="memo" role="tab">📌 Fiche mémo</button><button class="tab" data-tab="glossaire" role="tab">📖 Glossaire</button></div></nav>
+<main class="wrap"><section class="panel active" id="intro">
+<div class="card"><div class="section-title"><span class="icon-bg ib-blue">🎯</span>Objectifs de la séance</div>
+<div class="objectif-box">Valider les fondamentaux de PostgreSQL, puis écrire des requêtes analytiques que le <code class="inl">GROUP BY</code> classique ne permet pas : requêtes en étapes, parcours de hiérarchies, classements, cumuls et comparaisons entre lignes.</div>
+<ul class="clean">
+<li><strong>Partie 1 — Fondamentaux</strong> : un parcours rapide pour que chacun, débutant ou non, parte sur les mêmes bases.</li>
+<li><strong>Partie 2 — Requêtage avancé</strong> : CTE, CTE récursives et fonctions de fenêtrage.</li></ul>
+<p>Chaque notion suit la même structure : à quoi ça sert → syntaxe → exemple commenté → piège fréquent. Tous les exemples sont exécutables tels quels sur la base <code class="inl">cours_sql</code> : copiez-les, lancez-les, modifiez-les. Les résultats affichés sont ceux que vous obtiendrez.</p>
+<div class="instruction-box">📌 Prérequis : le support <strong>Avant la séance</strong> est terminé (PostgreSQL installé, base <code class="inl">cours_sql</code> créée, <code class="inl">demo.sql</code> chargé). Pour repartir de zéro à tout moment, relancez <code class="inl">demo.sql</code>.</div>
+</div>
+<div class="card"><div class="section-title"><span class="icon-bg ib-green">🗺</span>Les 9 notions</div>
+<div class="toc">
+<a href="#" data-go="p1" data-anchor="n1"><span class="num">N1</span>Explorer une base avec psql</a>
+<a href="#" data-go="p1" data-anchor="n2"><span class="num">N2</span>Types et contraintes</a>
+<a href="#" data-go="p1" data-anchor="n3"><span class="num">N3</span>SELECT, WHERE, ORDER BY</a>
+<a href="#" data-go="p1" data-anchor="n4"><span class="num">N4</span>Les jointures</a>
+<a href="#" data-go="p1" data-anchor="n5"><span class="num">N5</span>GROUP BY et HAVING</a>
+<a href="#" data-go="p2" data-anchor="n6"><span class="num">N6</span>Les CTE</a>
+<a href="#" data-go="p2" data-anchor="n7"><span class="num">N7</span>Les CTE récursives</a>
+<a href="#" data-go="p2" data-anchor="n8"><span class="num">N8</span>Fenêtrage : classer</a>
+<a href="#" data-go="p2" data-anchor="n9"><span class="num">N9</span>Fenêtrage : cumuler et comparer</a>
+</div></div>
+<div class="card"><div class="section-title"><span class="icon-bg ib-amber">🗄</span>Le jeu de données de démonstration</div>
+<table class="grid-table"><tr><th>Table</th><th>Univers</th><th>Contenu</th><th>Utilisée pour</th></tr>
+<tr><td class="mono">equipes</td><td>⚽ Sport</td><td>6 clubs d'un mini-championnat</td><td>Jointures, agrégats</td></tr>
+<tr><td class="mono">joueurs</td><td>⚽ Sport</td><td>10 joueurs (dont 1 sans club)</td><td>Filtres, LEFT JOIN</td></tr>
+<tr><td class="mono">matchs</td><td>⚽ Sport</td><td>15 matchs sur 5 journées</td><td>CTE, cumuls</td></tr>
+<tr><td class="mono">genres</td><td>🎧 Musique</td><td>12 genres en arbre (parent_id)</td><td>CTE récursives</td></tr>
+<tr><td class="mono">streams</td><td>🎧 Musique</td><td>Écoutes mensuelles de 2 artistes</td><td>Cumuls, LAG/LEAD</td></tr>
+<tr><td class="mono">parties</td><td>🎮 Jeux vidéo</td><td>12 scores sur 2 jeux, avec égalités</td><td>Classements</td></tr></table>
+</div></section><section class="panel" id="p1"><div class="card" id="n1">
+<div class="section-title"><span class="icon-bg ib-blue">🖥️</span><span><span class="num">N1</span>&nbsp; Explorer une base avec psql</span></div>
+<span class="ftag f1">Prise en main</span>
+<h3>🎯 À quoi ça sert</h3><p>Avant d'écrire des requêtes, il faut savoir <strong>où l'on est</strong> et <strong>ce que contient la base</strong>. psql propose des <strong>méta-commandes</strong>, qui commencent par une barre oblique inversée, pour explorer la base sans écrire de SQL.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — psql est la télécommande de PostgreSQL : les requêtes SQL choisissent le programme, les méta-commandes naviguent dans les menus.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\l</span>              <span class="c">-- lister les bases de données</span>
+<span class="m">\c</span> cours_sql    <span class="c">-- se connecter à une base</span>
+<span class="m">\dt</span>             <span class="c">-- lister les tables de la base courante</span>
+<span class="m">\d</span> joueurs      <span class="c">-- décrire une table : colonnes, types, contraintes</span>
+<span class="m">\x</span>              <span class="c">-- basculer en affichage vertical (lignes très longues)</span>
+<span class="m">\q</span>              <span class="c">-- quitter</span></pre></div><p>Les méta-commandes n'ont <strong>pas</strong> de point-virgule. Les requêtes SQL, elles, se terminent <strong>toujours</strong> par <code class='inl'>;</code>.</p>
+<h3>🔬 Exemple commenté</h3><p>Vérifier la base et l'utilisateur courants avec une vraie requête SQL :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> current_database() <span class="k">AS</span> base, current_user <span class="k">AS</span> utilisateur;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>base</th><th>utilisateur</th></tr></thead><tbody><tr><td class="">cours_sql</td><td class="">postgres</td></tr></tbody></table></div></div><p>Puis <code class='inl'>\d joueurs</code> affiche la structure complète de la table : colonnes, types, valeurs par défaut, clé primaire, contrainte <code class='inl'>CHECK</code> sur les buts et clé étrangère vers <code class='inl'>equipes</code>. C'est le premier réflexe face à une base inconnue.</p>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Oublier le <code class='inl'>;</code> : l'invite passe de <code class='inl'>cours_sql=#</code> à <code class='inl'>cours_sql-#</code> et psql attend la suite. Tapez <code class='inl'>;</code> puis Entrée, ou <code class='inl'>Ctrl+C</code> pour annuler.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n2">
+<div class="section-title"><span class="icon-bg ib-green">🏗️</span><span><span class="num">N2</span>&nbsp; Créer une table : types et contraintes</span></div>
+<span class="ftag f2">Structure</span>
+<h3>🎯 À quoi ça sert</h3><p>Une table décrit la <strong>forme</strong> des données. Les <strong>types</strong> disent ce qu'une colonne peut contenir, et les <strong>contraintes</strong> refusent les données incohérentes avant même qu'elles n'entrent dans la base.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — une table, c'est un tableur très strict. Les contraintes sont le videur à l'entrée : un prix négatif ou une ligne sans titre ne rentre pas.</div>
+<h3>🧩 Syntaxe</h3><table class="grid-table"><tr><th>Type</th><th>Pour stocker</th><th>Exemple</th></tr>
+<tr><td class="mono">INTEGER</td><td>Nombres entiers</td><td>buts, quantité</td></tr>
+<tr><td class="mono">NUMERIC(p,s)</td><td>Décimaux exacts : <strong>l'argent</strong></td><td>59.90</td></tr>
+<tr><td class="mono">VARCHAR(n) / TEXT</td><td>Texte limité à n caractères / texte libre</td><td>nom, description</td></tr>
+<tr><td class="mono">BOOLEAN</td><td>Vrai / faux</td><td>disponible</td></tr>
+<tr><td class="mono">DATE / TIMESTAMPTZ</td><td>Date / date + heure avec fuseau</td><td>date de sortie, horodatage</td></tr>
+<tr><td class="mono">INTEGER GENERATED … AS IDENTITY</td><td>Identifiant auto-incrémenté (norme SQL)</td><td>id</td></tr></table><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">TABLE</span> nom_table (
+    colonne  TYPE  [contraintes],
+    ...
+);
+<span class="c">-- Contraintes : PRIMARY KEY, NOT NULL, UNIQUE, CHECK (condition),</span>
+<span class="c">--               DEFAULT valeur, REFERENCES autre_table(colonne)</span></pre></div>
+<h3>🔬 Exemple commenté</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">TABLE</span> test_types (
+    id          <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">ALWAYS</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,  <span class="c">-- id automatique</span>
+    titre       <span class="k">VARCHAR</span>(<span class="n">100</span>) <span class="k">NOT</span> <span class="k">NULL</span>,                            <span class="c">-- obligatoire</span>
+    prix        <span class="k">NUMERIC</span>(<span class="n">6</span>,<span class="n">2</span>) <span class="k">CHECK</span> (prix &gt;= <span class="n">0</span>),                   <span class="c">-- jamais négatif</span>
+    disponible  <span class="k">BOOLEAN</span>      <span class="k">DEFAULT</span> true,                        <span class="c">-- valeur par défaut</span>
+    sortie      <span class="k">DATE</span>,
+    cree_le     <span class="k">TIMESTAMPTZ</span>  <span class="k">DEFAULT</span> now()                        <span class="c">-- horodatage auto</span>
+);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> test_types (titre, prix, sortie)
+<span class="k">VALUES</span> (<span class="s">'Manette sans fil'</span>, <span class="n">59.90</span>, <span class="s">'2026-03-15'</span>);   <span class="c">-- id, disponible, cree_le : automatiques</span>
+
+<span class="k">SELECT</span> id, titre, prix, disponible, sortie <span class="k">FROM</span> test_types;
+
+<span class="k">DROP</span> <span class="k">TABLE</span> test_types;   <span class="c">-- on supprime la table de test</span></pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>id</th><th>titre</th><th>prix</th><th>disponible</th><th>sortie</th></tr></thead><tbody><tr><td class="">1</td><td class="">Manette sans fil</td><td class="">59.90</td><td class="">t</td><td class="">2026-03-15</td></tr></tbody></table></div><div class="res-note"><code>t</code> signifie <em>true</em> : la valeur par défaut a été appliquée.</div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Utiliser <code class='inl'>FLOAT</code> ou <code class='inl'>REAL</code> pour de l'argent : ces types sont approximatifs et produisent des arrondis faux (0.1 + 0.2 ≠ 0.3). Pour les montants, toujours <code class='inl'>NUMERIC</code>.<br><br>Vous croiserez aussi <code class='inl'>SERIAL</code> dans d'anciens tutoriels : il fonctionne, mais <code class='inl'>GENERATED … AS IDENTITY</code> est la syntaxe standard à privilégier.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n3">
+<div class="section-title"><span class="icon-bg ib-amber">🔎</span><span><span class="num">N3</span>&nbsp; Lire et filtrer : SELECT, WHERE, ORDER BY, LIMIT</span></div>
+<span class="ftag f3">Requêtes</span>
+<h3>🎯 À quoi ça sert</h3><p>La requête de base de tout le SQL : choisir des colonnes, filtrer des lignes, les trier et limiter leur nombre.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — c'est une commande au restaurant : <em>SELECT</em> le plat, <em>FROM</em> la carte, <em>WHERE</em> sans gluten, <em>ORDER BY</em> du moins cher au plus cher, <em>LIMIT</em> 3 propositions.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> colonne1, colonne2        <span class="c">-- quelles colonnes</span>
+<span class="k">FROM</span> table                        <span class="c">-- depuis quelle table</span>
+<span class="k">WHERE</span> condition                   <span class="c">-- quelles lignes garder</span>
+<span class="k">ORDER</span> <span class="k">BY</span> colonne [<span class="k">ASC</span> | <span class="k">DESC</span>]     <span class="c">-- dans quel ordre</span>
+<span class="k">LIMIT</span> n;                          <span class="c">-- combien de lignes au maximum</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p>Les 3 meilleurs buteurs parmi les attaquants ayant marqué au moins 4 buts :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom, poste, buts
+<span class="k">FROM</span> joueurs
+<span class="k">WHERE</span> poste = <span class="s">'attaquant'</span> <span class="k">AND</span> buts &gt;= <span class="n">4</span>
+<span class="k">ORDER</span> <span class="k">BY</span> buts <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">3</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>poste</th><th>buts</th></tr></thead><tbody><tr><td class="">Yanis Belkacem</td><td class="">attaquant</td><td class="">7</td></tr><tr><td class="">Ilyes Haddad</td><td class="">attaquant</td><td class="">6</td></tr><tr><td class="">Enzo Rossi</td><td class="">attaquant</td><td class="">5</td></tr></tbody></table></div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box"><strong>1. <code class='inl'>AND</code> est prioritaire sur <code class='inl'>OR</code>.</strong> On veut les attaquants à plus de 3 buts ou les milieux… mais sans parenthèses, la requête ne fait pas ce qu'on croit :<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom <span class="k">FROM</span> joueurs
+<span class="k">WHERE</span> buts &gt; <span class="n">3</span> <span class="k">AND</span> poste = <span class="s">'attaquant'</span> <span class="k">OR</span> poste = <span class="s">'milieu'</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th></tr></thead><tbody><tr><td class="">Yanis Belkacem</td></tr><tr><td class="">Hugo Martin</td></tr><tr><td class="">Enzo Rossi</td></tr><tr><td class="">Lucas Moreau</td></tr><tr><td class="">Noah Petit</td></tr><tr><td class="">Ilyes Haddad</td></tr></tbody></table></div><div class="res-note">Lu par PostgreSQL : <code>(buts > 3 AND attaquant) OR milieu</code>. Mettez toujours des parenthèses quand vous mélangez AND et OR.</div></div><br><strong>2. <code class='inl'>= NULL</code> ne trouve jamais rien.</strong> NULL signifie « inconnu » : on le teste avec <code class='inl'>IS NULL</code> ou <code class='inl'>IS NOT NULL</code>. <code class='inl'>WHERE equipe_id = NULL</code> renvoie 0 ligne, même si Sami Koné n'a pas de club.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n4">
+<div class="section-title"><span class="icon-bg ib-purple">🔗</span><span><span class="num">N4</span>&nbsp; Relier des tables : les jointures</span></div>
+<span class="ftag f3">Requêtes</span>
+<h3>🎯 À quoi ça sert</h3><p>Les données sont réparties dans plusieurs tables pour éviter les doublons : le nom de l'équipe est stocké une seule fois dans <code class='inl'>equipes</code>, et chaque joueur y fait référence par <code class='inl'>equipe_id</code>. La jointure <strong>reconstitue</strong> l'information complète.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — deux listes d'invités. <em>INNER JOIN</em> ne garde que les personnes présentes sur les deux listes. <em>LEFT JOIN</em> garde toute la première liste, et laisse une case vide quand la personne n'est pas sur la seconde.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> a.colonne, b.colonne
+<span class="k">FROM</span> table_a a
+[<span class="k">INNER</span> | <span class="k">LEFT</span>] <span class="k">JOIN</span> table_b b <span class="k">ON</span> b.cle = a.cle;   <span class="c">-- a, b : alias courts</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p><strong>INNER JOIN</strong> : chaque joueur avec le nom de son équipe.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> j.nom <span class="k">AS</span> joueur, e.nom <span class="k">AS</span> equipe
+<span class="k">FROM</span> joueurs j
+<span class="k">INNER</span> <span class="k">JOIN</span> equipes e <span class="k">ON</span> e.id = j.equipe_id
+<span class="k">ORDER</span> <span class="k">BY</span> e.nom, j.nom;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>9 lignes</span></div><div class="tbl"><table><thead><tr><th>joueur</th><th>equipe</th></tr></thead><tbody><tr><td class="">Noah Petit</td><td class="">LOSC</td></tr><tr><td class="">Lucas Moreau</td><td class="">OL</td></tr><tr><td class="">Adam Diallo</td><td class="">OM</td></tr><tr><td class="">Enzo Rossi</td><td class="">OM</td></tr><tr><td class="">Hugo Martin</td><td class="">PSG</td></tr><tr><td class="">Yanis Belkacem</td><td class="">PSG</td></tr><tr><td class="">Ilyes Haddad</td><td class="">RC Lens</td></tr><tr><td class="">Théo Garnier</td><td class="">RC Lens</td></tr><tr><td class="">Rayan Ndiaye</td><td class="">Stade Rennais</td></tr></tbody></table></div><div class="res-note">9 lignes sur 10 joueurs : Sami Koné, sans club, a disparu.</div></div><p><strong>LEFT JOIN</strong> : garder tous les joueurs, puis isoler ceux qui n'ont pas d'équipe.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> j.nom <span class="k">AS</span> joueur, e.nom <span class="k">AS</span> equipe
+<span class="k">FROM</span> joueurs j
+<span class="k">LEFT</span> <span class="k">JOIN</span> equipes e <span class="k">ON</span> e.id = j.equipe_id
+<span class="k">WHERE</span> e.id <span class="k">IS</span> <span class="k">NULL</span>;               <span class="c">-- aucune équipe correspondante</span></pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>joueur</th><th>equipe</th></tr></thead><tbody><tr><td class="">Sami Koné</td><td class="null">NULL</td></tr></tbody></table></div><div class="res-note">Le LEFT JOIN a conservé Sami Koné avec NULL côté équipe.</div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Un <code class='inl'>INNER JOIN</code> fait disparaître <strong>silencieusement</strong> les lignes sans correspondance : aucun message d'erreur, juste des résultats incomplets. Posez-vous toujours la question : <em>ai-je besoin de toutes les lignes de la table de gauche ?</em> Si oui, c'est un <code class='inl'>LEFT JOIN</code>.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n5">
+<div class="section-title"><span class="icon-bg ib-green">📊</span><span><span class="num">N5</span>&nbsp; Regrouper et agréger : GROUP BY, HAVING</span></div>
+<span class="ftag f3">Requêtes</span>
+<h3>🎯 À quoi ça sert</h3><p>Passer du détail à la synthèse : combien de joueurs par équipe, combien de buts au total, quelle moyenne… Les fonctions d'agrégat (<code class='inl'>COUNT</code>, <code class='inl'>SUM</code>, <code class='inl'>AVG</code>, <code class='inl'>MIN</code>, <code class='inl'>MAX</code>) résument un groupe de lignes en une seule.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — trier un paquet de cartes par couleur, puis compter chaque tas. <em>WHERE</em> retire des cartes <strong>avant</strong> de faire les tas, <em>HAVING</em> retire des tas <strong>après</strong> les avoir comptés.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> colonne_de_groupe, AGREGAT(colonne)
+<span class="k">FROM</span> table
+<span class="k">WHERE</span> condition_sur_les_lignes        <span class="c">-- filtre AVANT le regroupement</span>
+<span class="k">GROUP</span> <span class="k">BY</span> colonne_de_groupe
+<span class="k">HAVING</span> condition_sur_les_groupes;     <span class="c">-- filtre APRÈS le regroupement</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p>Nombre de joueurs et total de buts par équipe, en ne gardant que les équipes à 5 buts ou plus :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> e.nom        <span class="k">AS</span> equipe,
+       <span class="k">COUNT</span>(j.id)  <span class="k">AS</span> nb_joueurs,
+       <span class="k">SUM</span>(j.buts)  <span class="k">AS</span> total_buts
+<span class="k">FROM</span> equipes e
+<span class="k">LEFT</span> <span class="k">JOIN</span> joueurs j <span class="k">ON</span> j.equipe_id = e.id
+<span class="k">GROUP</span> <span class="k">BY</span> e.nom
+<span class="k">HAVING</span> <span class="k">SUM</span>(j.buts) &gt;= <span class="n">5</span>
+<span class="k">ORDER</span> <span class="k">BY</span> total_buts <span class="k">DESC</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>nb_joueurs</th><th>total_buts</th></tr></thead><tbody><tr><td class="">PSG</td><td class="">2</td><td class="">9</td></tr><tr><td class="">RC Lens</td><td class="">2</td><td class="">7</td></tr><tr><td class="">OM</td><td class="">2</td><td class="">5</td></tr></tbody></table></div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Toute colonne du <code class='inl'>SELECT</code> qui n'est pas dans un agrégat doit figurer dans le <code class='inl'>GROUP BY</code>. Sinon PostgreSQL refuse, car il ne sait pas quel joueur afficher pour une équipe qui en compte plusieurs :<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> e.nom, j.nom, <span class="k">COUNT</span>(*)
+<span class="k">FROM</span> equipes e <span class="k">JOIN</span> joueurs j <span class="k">ON</span> j.equipe_id = e.id
+<span class="k">GROUP</span> <span class="k">BY</span> e.nom;</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap">ERROR:  column &quot;j.nom&quot; must appear in the GROUP BY clause or be used in an aggregate function</pre></div></div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="result-panel"><h4>🚦 Point de contrôle des prérequis</h4>
+<p>Les notions N1 à N5 sont le socle du module. Si l'une d'elles vous pose problème, <strong>signalez-le maintenant</strong> : tout ce qui suit s'appuie dessus.</p>
+<ul><li>Je sais explorer une base avec psql</li><li>Je sais lire une définition de table et ses contraintes</li>
+<li>Je sais filtrer, trier et limiter</li><li>Je sais choisir entre INNER JOIN et LEFT JOIN</li><li>Je sais distinguer WHERE et HAVING</li></ul></div></section><section class="panel" id="p2"><div class="card" id="n6">
+<div class="section-title"><span class="icon-bg ib-blue">🧱</span><span><span class="num">N6</span>&nbsp; Les CTE : découper une requête en étapes</span></div>
+<span class="ftag f4">CTE</span>
+<h3>🎯 À quoi ça sert</h3><p>Une <strong>CTE</strong> (<em>Common Table Expression</em>) est un résultat intermédiaire nommé, défini avec <code class='inl'>WITH</code>, que la requête principale utilise comme une table. On découpe ainsi un calcul complexe en étapes lisibles, au lieu d'empiler des sous-requêtes illisibles.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — une recette de cuisine. Au lieu d'une seule phrase interminable, on écrit : étape 1, préparer la pâte ; étape 2, préparer la garniture ; étape 3, assembler. Chaque CTE est une étape nommée.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> etape_1 <span class="k">AS</span> (
+    <span class="k">SELECT</span> ...                    <span class="c">-- premier calcul</span>
+),
+etape_2 <span class="k">AS</span> (                      <span class="c">-- virgule entre les CTE, un seul WITH</span>
+    <span class="k">SELECT</span> ... <span class="k">FROM</span> etape_1       <span class="c">-- une CTE peut utiliser la précédente</span>
+)
+<span class="k">SELECT</span> ... <span class="k">FROM</span> etape_2;          <span class="c">-- requête principale</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p>Calculer le classement du championnat à partir des matchs. Difficulté : chaque match concerne deux équipes (domicile et extérieur). On procède en trois étapes :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="c">-- Étape 1 : une ligne par équipe et par match, quel que soit le côté</span>
+<span class="k">WITH</span> resultats <span class="k">AS</span> (
+    <span class="k">SELECT</span> equipe_dom_id <span class="k">AS</span> equipe_id, buts_dom <span class="k">AS</span> pour, buts_ext <span class="k">AS</span> contre <span class="k">FROM</span> matchs
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> equipe_ext_id, buts_ext, buts_dom <span class="k">FROM</span> matchs
+),
+<span class="c">-- Étape 2 : les points obtenus (3 victoire, 1 nul, 0 défaite)</span>
+points <span class="k">AS</span> (
+    <span class="k">SELECT</span> equipe_id, pour, contre,
+           <span class="k">CASE</span> <span class="k">WHEN</span> pour &gt; contre <span class="k">THEN</span> <span class="n">3</span>
+                <span class="k">WHEN</span> pour = contre <span class="k">THEN</span> <span class="n">1</span>
+                <span class="k">ELSE</span> <span class="n">0</span> <span class="k">END</span> <span class="k">AS</span> pts
+    <span class="k">FROM</span> resultats
+)
+<span class="c">-- Étape 3 : le classement</span>
+<span class="k">SELECT</span> e.nom                   <span class="k">AS</span> equipe,
+       <span class="k">SUM</span>(p.pts)              <span class="k">AS</span> points,
+       <span class="k">SUM</span>(p.pour)             <span class="k">AS</span> buts_pour,
+       <span class="k">SUM</span>(p.pour - p.contre)  <span class="k">AS</span> difference
+<span class="k">FROM</span> points p
+<span class="k">JOIN</span> equipes e <span class="k">ON</span> e.id = p.equipe_id
+<span class="k">GROUP</span> <span class="k">BY</span> e.nom
+<span class="k">ORDER</span> <span class="k">BY</span> points <span class="k">DESC</span>, difference <span class="k">DESC</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>points</th><th>buts_pour</th><th>difference</th></tr></thead><tbody><tr><td class="">RC Lens</td><td class="">13</td><td class="">9</td><td class="">6</td></tr><tr><td class="">PSG</td><td class="">10</td><td class="">11</td><td class="">5</td></tr><tr><td class="">OM</td><td class="">8</td><td class="">8</td><td class="">1</td></tr><tr><td class="">OL</td><td class="">6</td><td class="">8</td><td class="">0</td></tr><tr><td class="">LOSC</td><td class="">2</td><td class="">5</td><td class="">-5</td></tr><tr><td class="">Stade Rennais</td><td class="">1</td><td class="">4</td><td class="">-7</td></tr></tbody></table></div><div class="res-note">Chaque étape se teste seule : remplacez la requête finale par <code>SELECT * FROM resultats;</code> pour vérifier l'étape 1.</div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Une CTE n'existe que <strong>le temps de la requête</strong> qui la suit. Après le point-virgule, elle disparaît : <code class='inl'>SELECT * FROM resultats;</code> seul provoque l'erreur <code class='inl'>relation "resultats" does not exist</code>. Autre erreur classique : répéter <code class='inl'>WITH</code> devant chaque CTE, alors qu'un seul <code class='inl'>WITH</code> suffit, les CTE étant séparées par des virgules.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n7">
+<div class="section-title"><span class="icon-bg ib-green">🌳</span><span><span class="num">N7</span>&nbsp; Les CTE récursives : parcourir une hiérarchie</span></div>
+<span class="ftag f4">CTE</span>
+<h3>🎯 À quoi ça sert</h3><p>Certaines données forment une <strong>hiérarchie</strong> : un genre musical a des sous-genres, qui ont eux-mêmes des sous-genres. On ne connaît pas la profondeur à l'avance. Une CTE récursive se rappelle elle-même, niveau après niveau, jusqu'à ce qu'il n'y ait plus rien à trouver.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — un arbre généalogique. On part de l'ancêtre (<strong>ancrage</strong>), on cherche ses enfants, puis les enfants de ses enfants (<strong>étape récursive</strong>), et on s'arrête quand une génération n'a plus de descendants (<strong>condition d'arrêt</strong>).</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> nom_cte <span class="k">AS</span> (
+    <span class="k">SELECT</span> ...                    <span class="c">-- 1. ANCRAGE : le point de départ</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> ...                    <span class="c">-- 2. ÉTAPE RÉCURSIVE : utilise nom_cte</span>
+    <span class="k">FROM</span> table
+    <span class="k">JOIN</span> nom_cte <span class="k">ON</span> ...           <span class="c">--    s'arrête quand elle ne renvoie plus rien</span>
+)
+<span class="k">SELECT</span> * <span class="k">FROM</span> nom_cte;</pre></div><p>Le principe se voit avec un simple compteur :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> compteur <span class="k">AS</span> (
+    <span class="k">SELECT</span> <span class="n">1</span> <span class="k">AS</span> n                  <span class="c">-- ancrage : on part de 1</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> n + <span class="n">1</span> <span class="k">FROM</span> compteur     <span class="c">-- étape : on ajoute 1</span>
+    <span class="k">WHERE</span> n &lt; <span class="n">5</span>                    <span class="c">-- condition d'arrêt</span>
+)
+<span class="k">SELECT</span> n <span class="k">FROM</span> compteur;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>n</th></tr></thead><tbody><tr><td class="">1</td></tr><tr><td class="">2</td></tr><tr><td class="">3</td></tr><tr><td class="">4</td></tr><tr><td class="">5</td></tr></tbody></table></div></div>
+<h3>🔬 Exemple commenté</h3><p>Afficher l'arbre complet des genres musicaux avec leur chemin :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> arbre <span class="k">AS</span> (
+    <span class="c">-- Ancrage : les genres racines (sans parent)</span>
+    <span class="k">SELECT</span> id, nom, parent_id, <span class="n">1</span> <span class="k">AS</span> niveau, nom::<span class="k">TEXT</span> <span class="k">AS</span> chemin
+    <span class="k">FROM</span> genres
+    <span class="k">WHERE</span> parent_id <span class="k">IS</span> <span class="k">NULL</span>
+
+    <span class="k">UNION</span> <span class="k">ALL</span>
+
+    <span class="c">-- Étape : les enfants des genres déjà trouvés</span>
+    <span class="k">SELECT</span> g.id, g.nom, g.parent_id, a.niveau + <span class="n">1</span>, a.chemin || <span class="s">' &gt; '</span> || g.nom
+    <span class="k">FROM</span> genres g
+    <span class="k">JOIN</span> arbre a <span class="k">ON</span> g.parent_id = a.id
+)
+<span class="k">SELECT</span> niveau, chemin
+<span class="k">FROM</span> arbre
+<span class="k">ORDER</span> <span class="k">BY</span> chemin;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>12 lignes</span></div><div class="tbl"><table><thead><tr><th>niveau</th><th>chemin</th></tr></thead><tbody><tr><td class="">1</td><td class="">Hip-hop</td></tr><tr><td class="">2</td><td class="">Hip-hop &gt; Trap</td></tr><tr><td class="">3</td><td class="">Hip-hop &gt; Trap &gt; Drill</td></tr><tr><td class="">1</td><td class="">Rock</td></tr><tr><td class="">2</td><td class="">Rock &gt; Metal</td></tr><tr><td class="">3</td><td class="">Rock &gt; Metal &gt; Heavy metal</td></tr><tr><td class="">3</td><td class="">Rock &gt; Metal &gt; Thrash metal</td></tr><tr><td class="">2</td><td class="">Rock &gt; Punk</td></tr><tr><td class="">1</td><td class="">Électro</td></tr><tr><td class="">2</td><td class="">Électro &gt; House</td></tr><tr><td class="">3</td><td class="">Électro &gt; House &gt; Deep house</td></tr><tr><td class="">2</td><td class="">Électro &gt; Techno</td></tr></tbody></table></div><div class="res-note">L'ordre d'affichage (ici Électro après Rock) peut varier selon la collation de votre installation.</div></div><p>Retrouver tous les descendants d'un genre, quelle que soit la profondeur :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> descendants <span class="k">AS</span> (
+    <span class="k">SELECT</span> id, nom <span class="k">FROM</span> genres <span class="k">WHERE</span> nom = <span class="s">'Rock'</span>           <span class="c">-- ancrage</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> g.id, g.nom
+    <span class="k">FROM</span> genres g
+    <span class="k">JOIN</span> descendants d <span class="k">ON</span> g.parent_id = d.id                <span class="c">-- enfants</span>
+)
+<span class="k">SELECT</span> nom <span class="k">FROM</span> descendants;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th></tr></thead><tbody><tr><td class="">Rock</td></tr><tr><td class="">Metal</td></tr><tr><td class="">Punk</td></tr><tr><td class="">Heavy metal</td></tr><tr><td class="">Thrash metal</td></tr></tbody></table></div></div>
+<div class='instruction-box'>📌 L'expression <code class='inl'>nom::TEXT</code> convertit le nom en texte. Sans elle, PostgreSQL refuse de concaténer au fil des niveaux, car la colonne de l'ancrage est limitée à <code class='inl'>VARCHAR(50)</code>.</div>
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Oublier la condition d'arrêt, ou parcourir des données qui forment une <strong>boucle</strong> (A → B → A), fait tourner la requête indéfiniment. Sur un arbre propre, l'arrêt est naturel ; sur un graphe (réseau d'amis, acteurs ayant tourné ensemble), il faut limiter la profondeur ou mémoriser le chemin parcouru pour ne pas repasser deux fois au même endroit.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n8">
+<div class="section-title"><span class="icon-bg ib-amber">🏆</span><span><span class="num">N8</span>&nbsp; Fonctions de fenêtrage : classer</span></div>
+<span class="ftag f5">Fenêtrage</span>
+<h3>🎯 À quoi ça sert</h3><p>Une fonction de fenêtrage calcule une valeur <strong>en regardant d'autres lignes</strong>, sans les fusionner. Contrairement à <code class='inl'>GROUP BY</code>, qui écrase un groupe en une seule ligne, chaque ligne garde son identité et reçoit une information supplémentaire : son rang, la moyenne de son groupe, etc.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — un classement de course. Chaque coureur reste une personne distincte (pas de fusion), mais on lui colle un dossard « 1er », « 2e »… Le <em>PARTITION BY</em>, c'est faire un classement séparé par catégorie d'âge.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>FONCTION() <span class="k">OVER</span> (
+    <span class="k">PARTITION</span> <span class="k">BY</span> colonne     <span class="c">-- optionnel : un calcul séparé par groupe</span>
+    <span class="k">ORDER</span> <span class="k">BY</span> colonne         <span class="c">-- l'ordre qui détermine le rang</span>
+)</pre></div><table class="grid-table"><tr><th>Fonction</th><th>En cas d'égalité</th><th>Exemple de rangs</th></tr>
+<tr><td class="mono">ROW_NUMBER()</td><td>Numéros uniques, départage arbitraire</td><td class="mono">1, 2, 3, 4</td></tr>
+<tr><td class="mono">RANK()</td><td>Même rang, puis saut</td><td class="mono">1, 1, 3, 4</td></tr>
+<tr><td class="mono">DENSE_RANK()</td><td>Même rang, sans saut</td><td class="mono">1, 1, 2, 3</td></tr></table>
+<h3>🔬 Exemple commenté</h3><p>Les trois fonctions côte à côte, avec un classement séparé par jeu :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> jeu, pseudo, score,
+       <span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> jeu <span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>) <span class="k">AS</span> row_number,
+       <span class="k">RANK</span>()       <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> jeu <span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>) <span class="k">AS</span> rank,
+       <span class="k">DENSE_RANK</span>() <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> jeu <span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>) <span class="k">AS</span> dense_rank
+<span class="k">FROM</span> parties
+<span class="k">ORDER</span> <span class="k">BY</span> jeu, score <span class="k">DESC</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>12 lignes</span></div><div class="tbl"><table><thead><tr><th>jeu</th><th>pseudo</th><th>score</th><th>row_number</th><th>rank</th><th>dense_rank</th></tr></thead><tbody><tr><td class="">Pac-Man</td><td class="">Kenji</td><td class="">9500</td><td class="">1</td><td class="">1</td><td class="">1</td></tr><tr><td class="">Pac-Man</td><td class="">Zed</td><td class="">8000</td><td class="">2</td><td class="">2</td><td class="">2</td></tr><tr><td class="">Pac-Man</td><td class="">Mo</td><td class="">8000</td><td class="">3</td><td class="">2</td><td class="">2</td></tr><tr><td class="">Pac-Man</td><td class="">Sara</td><td class="">7000</td><td class="">4</td><td class="">4</td><td class="">3</td></tr><tr><td class="">Pac-Man</td><td class="">Lyna</td><td class="">6500</td><td class="">5</td><td class="">5</td><td class="">4</td></tr><tr><td class="">Pac-Man</td><td class="">Lyna</td><td class="">5000</td><td class="">6</td><td class="">6</td><td class="">5</td></tr><tr><td class="">Tetris</td><td class="">Mo</td><td class="">15000</td><td class="">1</td><td class="">1</td><td class="">1</td></tr><tr><td class="">Tetris</td><td class="">Lyna</td><td class="">15000</td><td class="">2</td><td class="">1</td><td class="">1</td></tr><tr><td class="">Tetris</td><td class="">Zed</td><td class="">13500</td><td class="">3</td><td class="">3</td><td class="">2</td></tr><tr><td class="">Tetris</td><td class="">Zed</td><td class="">12000</td><td class="">4</td><td class="">4</td><td class="">3</td></tr><tr><td class="">Tetris</td><td class="">Sara</td><td class="">11000</td><td class="">5</td><td class="">5</td><td class="">4</td></tr><tr><td class="">Tetris</td><td class="">Kenji</td><td class="">9000</td><td class="">6</td><td class="">6</td><td class="">5</td></tr></tbody></table></div><div class="res-note">Regardez Zed et Mo à Pac-Man (8000 chacun) : ROW_NUMBER les départage au hasard, RANK leur donne 2 puis saute au 4, DENSE_RANK enchaîne sur 3.</div></div><p>Le podium des 2 meilleurs scores par jeu. Le filtre se fait dans une requête englobante :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> jeu, pseudo, score
+<span class="k">FROM</span> (
+    <span class="k">SELECT</span> jeu, pseudo, score,
+           <span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> jeu <span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>) <span class="k">AS</span> rang
+    <span class="k">FROM</span> parties
+) t
+<span class="k">WHERE</span> rang &lt;= <span class="n">2</span>
+<span class="k">ORDER</span> <span class="k">BY</span> jeu, rang;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>4 lignes</span></div><div class="tbl"><table><thead><tr><th>jeu</th><th>pseudo</th><th>score</th></tr></thead><tbody><tr><td class="">Pac-Man</td><td class="">Kenji</td><td class="">9500</td></tr><tr><td class="">Pac-Man</td><td class="">Zed</td><td class="">8000</td></tr><tr><td class="">Tetris</td><td class="">Mo</td><td class="">15000</td></tr><tr><td class="">Tetris</td><td class="">Lyna</td><td class="">15000</td></tr></tbody></table></div></div><p>Comparer chaque score à la moyenne de son jeu, sans perdre le détail :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> jeu, pseudo, score,
+       <span class="k">ROUND</span>(<span class="k">AVG</span>(score) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> jeu))          <span class="k">AS</span> moyenne_jeu,
+       score - <span class="k">ROUND</span>(<span class="k">AVG</span>(score) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> jeu))  <span class="k">AS</span> ecart
+<span class="k">FROM</span> parties
+<span class="k">WHERE</span> jeu = <span class="s">'Pac-Man'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>jeu</th><th>pseudo</th><th>score</th><th>moyenne_jeu</th><th>ecart</th></tr></thead><tbody><tr><td class="">Pac-Man</td><td class="">Kenji</td><td class="">9500</td><td class="">7333</td><td class="">2167</td></tr><tr><td class="">Pac-Man</td><td class="">Zed</td><td class="">8000</td><td class="">7333</td><td class="">667</td></tr><tr><td class="">Pac-Man</td><td class="">Mo</td><td class="">8000</td><td class="">7333</td><td class="">667</td></tr><tr><td class="">Pac-Man</td><td class="">Sara</td><td class="">7000</td><td class="">7333</td><td class="">-333</td></tr><tr><td class="">Pac-Man</td><td class="">Lyna</td><td class="">6500</td><td class="">7333</td><td class="">-833</td></tr><tr><td class="">Pac-Man</td><td class="">Lyna</td><td class="">5000</td><td class="">7333</td><td class="">-2333</td></tr></tbody></table></div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box"><strong>1. Impossible de filtrer une fonction de fenêtrage dans le WHERE</strong>, car le WHERE est évalué avant le calcul des rangs :<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pseudo
+<span class="k">FROM</span> parties
+<span class="k">WHERE</span> <span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>) &lt;= <span class="n">3</span>;</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap">ERROR:  window functions are not allowed in WHERE</pre></div>Solution : calculer le rang dans une sous-requête ou une CTE, puis filtrer à l'extérieur (voir le podium ci-dessus).<br><br><strong>2. ROW_NUMBER avec des égalités</strong> donne un résultat qui peut changer d'une exécution à l'autre. Ajoutez un critère de départage : <code class='inl'>ORDER BY score DESC, date_partie</code>.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n9">
+<div class="section-title"><span class="icon-bg ib-purple">📈</span><span><span class="num">N9</span>&nbsp; Fonctions de fenêtrage : cumuler et comparer</span></div>
+<span class="ftag f5">Fenêtrage</span>
+<h3>🎯 À quoi ça sert</h3><p>Les fonctions de fenêtrage répondent aussi aux questions d'évolution : total cumulé depuis le début, variation par rapport à la période précédente, moyenne glissante sur les derniers mois.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — en voiture, <em>SUM() OVER</em> est le compteur kilométrique (il cumule), <em>LAG</em> est le rétroviseur (la ligne précédente), <em>LEAD</em> le pare-brise (la ligne suivante), et la moyenne glissante le régulateur qui lisse les à-coups.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SUM</span>(col)  <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> ... <span class="k">ORDER</span> <span class="k">BY</span> ...)          <span class="c">-- cumul</span>
+<span class="k">LAG</span>(col)  <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> ... <span class="k">ORDER</span> <span class="k">BY</span> ...)          <span class="c">-- valeur de la ligne précédente</span>
+<span class="k">LEAD</span>(col) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> ... <span class="k">ORDER</span> <span class="k">BY</span> ...)          <span class="c">-- valeur de la ligne suivante</span>
+<span class="k">AVG</span>(col)  <span class="k">OVER</span> (<span class="k">ORDER</span> <span class="k">BY</span> ...
+                <span class="k">ROWS</span> <span class="k">BETWEEN</span> <span class="n">2</span> <span class="k">PRECEDING</span> <span class="k">AND</span> <span class="k">CURRENT</span> <span class="k">ROW</span>)  <span class="c">-- fenêtre de 3 lignes</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p>Cumul des écoutes et variation mensuelle d'un artiste :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> artiste,
+       <span class="k">TO_CHAR</span>(mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> mois,
+       ecoutes,
+       <span class="k">SUM</span>(ecoutes) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> artiste <span class="k">ORDER</span> <span class="k">BY</span> mois)            <span class="k">AS</span> cumul,
+       ecoutes - <span class="k">LAG</span>(ecoutes) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> artiste <span class="k">ORDER</span> <span class="k">BY</span> mois)  <span class="k">AS</span> variation
+<span class="k">FROM</span> streams
+<span class="k">WHERE</span> artiste = <span class="s">'Nova'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> mois;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>artiste</th><th>mois</th><th>ecoutes</th><th>cumul</th><th>variation</th></tr></thead><tbody><tr><td class="">Nova</td><td class="">2026-01</td><td class="">12000</td><td class="">12000</td><td class="null">NULL</td></tr><tr><td class="">Nova</td><td class="">2026-02</td><td class="">15000</td><td class="">27000</td><td class="">3000</td></tr><tr><td class="">Nova</td><td class="">2026-03</td><td class="">14000</td><td class="">41000</td><td class="">-1000</td></tr><tr><td class="">Nova</td><td class="">2026-04</td><td class="">21000</td><td class="">62000</td><td class="">7000</td></tr><tr><td class="">Nova</td><td class="">2026-05</td><td class="">30000</td><td class="">92000</td><td class="">9000</td></tr><tr><td class="">Nova</td><td class="">2026-06</td><td class="">28000</td><td class="">120000</td><td class="">-2000</td></tr></tbody></table></div><div class="res-note">Le premier mois n'a pas de mois précédent : LAG renvoie NULL, donc la variation aussi.</div></div><p>Moyenne glissante sur 3 mois et aperçu du mois suivant :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> artiste,
+       <span class="k">TO_CHAR</span>(mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> mois,
+       ecoutes,
+       <span class="k">ROUND</span>(<span class="k">AVG</span>(ecoutes) <span class="k">OVER</span> (
+           <span class="k">PARTITION</span> <span class="k">BY</span> artiste <span class="k">ORDER</span> <span class="k">BY</span> mois
+           <span class="k">ROWS</span> <span class="k">BETWEEN</span> <span class="n">2</span> <span class="k">PRECEDING</span> <span class="k">AND</span> <span class="k">CURRENT</span> <span class="k">ROW</span>      <span class="c">-- le mois et les 2 précédents</span>
+       )) <span class="k">AS</span> moyenne_3_mois,
+       <span class="k">LEAD</span>(ecoutes) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> artiste <span class="k">ORDER</span> <span class="k">BY</span> mois) <span class="k">AS</span> mois_suivant
+<span class="k">FROM</span> streams
+<span class="k">WHERE</span> artiste = <span class="s">'Kairo'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> mois;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>artiste</th><th>mois</th><th>ecoutes</th><th>moyenne_3_mois</th><th>mois_suivant</th></tr></thead><tbody><tr><td class="">Kairo</td><td class="">2026-01</td><td class="">8000</td><td class="">8000</td><td class="">9000</td></tr><tr><td class="">Kairo</td><td class="">2026-02</td><td class="">9000</td><td class="">8500</td><td class="">13000</td></tr><tr><td class="">Kairo</td><td class="">2026-03</td><td class="">13000</td><td class="">10000</td><td class="">12500</td></tr><tr><td class="">Kairo</td><td class="">2026-04</td><td class="">12500</td><td class="">11500</td><td class="">12500</td></tr><tr><td class="">Kairo</td><td class="">2026-05</td><td class="">12500</td><td class="">12667</td><td class="">19000</td></tr><tr><td class="">Kairo</td><td class="">2026-06</td><td class="">19000</td><td class="">14667</td><td class="null">NULL</td></tr></tbody></table></div></div><p>Combiner CTE et fenêtrage : l'évolution des points au fil des journées pour les deux premiers du championnat.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> resultats <span class="k">AS</span> (
+    <span class="k">SELECT</span> journee, equipe_dom_id <span class="k">AS</span> equipe_id,
+           <span class="k">CASE</span> <span class="k">WHEN</span> buts_dom &gt; buts_ext <span class="k">THEN</span> <span class="n">3</span>
+                <span class="k">WHEN</span> buts_dom = buts_ext <span class="k">THEN</span> <span class="n">1</span> <span class="k">ELSE</span> <span class="n">0</span> <span class="k">END</span> <span class="k">AS</span> pts
+    <span class="k">FROM</span> matchs
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> journee, equipe_ext_id,
+           <span class="k">CASE</span> <span class="k">WHEN</span> buts_ext &gt; buts_dom <span class="k">THEN</span> <span class="n">3</span>
+                <span class="k">WHEN</span> buts_ext = buts_dom <span class="k">THEN</span> <span class="n">1</span> <span class="k">ELSE</span> <span class="n">0</span> <span class="k">END</span>
+    <span class="k">FROM</span> matchs
+)
+<span class="k">SELECT</span> e.nom <span class="k">AS</span> equipe, r.journee, r.pts,
+       <span class="k">SUM</span>(r.pts) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> r.equipe_id <span class="k">ORDER</span> <span class="k">BY</span> r.journee) <span class="k">AS</span> total
+<span class="k">FROM</span> resultats r
+<span class="k">JOIN</span> equipes e <span class="k">ON</span> e.id = r.equipe_id
+<span class="k">WHERE</span> e.nom <span class="k">IN</span> (<span class="s">'RC Lens'</span>, <span class="s">'PSG'</span>)
+<span class="k">ORDER</span> <span class="k">BY</span> e.nom, r.journee;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>10 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>journee</th><th>pts</th><th>total</th></tr></thead><tbody><tr><td class="">PSG</td><td class="">1</td><td class="">3</td><td class="">3</td></tr><tr><td class="">PSG</td><td class="">2</td><td class="">1</td><td class="">4</td></tr><tr><td class="">PSG</td><td class="">3</td><td class="">3</td><td class="">7</td></tr><tr><td class="">PSG</td><td class="">4</td><td class="">3</td><td class="">10</td></tr><tr><td class="">PSG</td><td class="">5</td><td class="">0</td><td class="">10</td></tr><tr><td class="">RC Lens</td><td class="">1</td><td class="">3</td><td class="">3</td></tr><tr><td class="">RC Lens</td><td class="">2</td><td class="">3</td><td class="">6</td></tr><tr><td class="">RC Lens</td><td class="">3</td><td class="">1</td><td class="">7</td></tr><tr><td class="">RC Lens</td><td class="">4</td><td class="">3</td><td class="">10</td></tr><tr><td class="">RC Lens</td><td class="">5</td><td class="">3</td><td class="">13</td></tr></tbody></table></div><div class="res-note">À égalité après 4 journées, les deux équipes se départagent à la dernière.</div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Avec un <code class='inl'>ORDER BY</code> et sans cadre précisé, PostgreSQL utilise par défaut <code class='inl'>RANGE</code> : les lignes <strong>à égalité</strong> sont cumulées ensemble. Sur des valeurs uniques (des mois), aucun souci ; sur des scores égaux, le cumul surprend :<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> jeu, pseudo, score,
+       <span class="k">SUM</span>(score) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> jeu <span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>) <span class="k">AS</span> cumul_range,
+       <span class="k">SUM</span>(score) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> jeu <span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>
+                        <span class="k">ROWS</span> <span class="k">BETWEEN</span> <span class="k">UNBOUNDED</span> <span class="k">PRECEDING</span> <span class="k">AND</span> <span class="k">CURRENT</span> <span class="k">ROW</span>) <span class="k">AS</span> cumul_rows
+<span class="k">FROM</span> parties
+<span class="k">WHERE</span> jeu = <span class="s">'Tetris'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>, pseudo;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>jeu</th><th>pseudo</th><th>score</th><th>cumul_range</th><th>cumul_rows</th></tr></thead><tbody><tr><td class="">Tetris</td><td class="">Lyna</td><td class="">15000</td><td class="">30000</td><td class="">15000</td></tr><tr><td class="">Tetris</td><td class="">Mo</td><td class="">15000</td><td class="">30000</td><td class="">30000</td></tr><tr><td class="">Tetris</td><td class="">Zed</td><td class="">13500</td><td class="">43500</td><td class="">43500</td></tr><tr><td class="">Tetris</td><td class="">Zed</td><td class="">12000</td><td class="">55500</td><td class="">55500</td></tr><tr><td class="">Tetris</td><td class="">Sara</td><td class="">11000</td><td class="">66500</td><td class="">66500</td></tr><tr><td class="">Tetris</td><td class="">Kenji</td><td class="">9000</td><td class="">75500</td><td class="">75500</td></tr></tbody></table></div><div class="res-note">Lyna et Mo (15000) reçoivent tous les deux 30000 avec le cadre par défaut. Précisez <code>ROWS BETWEEN …</code> pour un vrai cumul ligne par ligne.</div></div></div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div></section><section class="panel" id="memo"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">📌</span>Fiche mémo — Séance 1</div><div class="tbl" style="border:1px solid var(--border);border-radius:10px"><table class="grid-table" style="margin:0"><tr><th>#</th><th>Notion</th><th>Syntaxe clé</th><th>À retenir</th></tr><tr><td class="mono">N1</td><td>Explorer</td><td class="mono" style="font-size:12.5px;font-weight:500">\l · \c base · \dt · \d table · \x · \q</td><td>Méta-commandes sans ;</td></tr><tr><td class="mono">N2</td><td>Créer une table</td><td class="mono" style="font-size:12.5px;font-weight:500">CREATE TABLE t (id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY, …)</td><td>NUMERIC pour l'argent</td></tr><tr><td class="mono">N3</td><td>Lire, filtrer</td><td class="mono" style="font-size:12.5px;font-weight:500">SELECT … FROM … WHERE … ORDER BY … DESC LIMIT n</td><td>Parenthèses AND/OR · IS NULL</td></tr><tr><td class="mono">N4</td><td>Jointures</td><td class="mono" style="font-size:12.5px;font-weight:500">FROM a JOIN b ON b.id = a.b_id · LEFT JOIN</td><td>INNER JOIN perd des lignes</td></tr><tr><td class="mono">N5</td><td>Agréger</td><td class="mono" style="font-size:12.5px;font-weight:500">GROUP BY col HAVING SUM(x) &gt; n</td><td>WHERE avant, HAVING après</td></tr><tr><td class="mono">N6</td><td>CTE</td><td class="mono" style="font-size:12.5px;font-weight:500">WITH a AS (…), b AS (…) SELECT … FROM b</td><td>Un seul WITH, virgules</td></tr><tr><td class="mono">N7</td><td>CTE récursive</td><td class="mono" style="font-size:12.5px;font-weight:500">WITH RECURSIVE r AS (ancrage UNION ALL étape JOIN r) …</td><td>Condition d'arrêt, cycles</td></tr><tr><td class="mono">N8</td><td>Classer</td><td class="mono" style="font-size:12.5px;font-weight:500">ROW_NUMBER() / RANK() / DENSE_RANK() OVER (PARTITION BY … ORDER BY …)</td><td>Pas de fenêtrage dans WHERE</td></tr><tr><td class="mono">N9</td><td>Cumuler, comparer</td><td class="mono" style="font-size:12.5px;font-weight:500">SUM() OVER (…) · LAG() · LEAD() · ROWS BETWEEN 2 PRECEDING AND CURRENT ROW</td><td>Cadre RANGE par défaut</td></tr></table></div>
+<h3>🧭 Ordre d'exécution logique d'une requête</h3>
+<p>PostgreSQL n'exécute pas une requête dans l'ordre où on l'écrit. Cet ordre explique la plupart des erreurs de la séance :</p><div class="code"><div class="code-bar"><span>Ordre d'exécution</span><button class="copy" type="button">Copier</button></div><pre><span class="n">1</span>. <span class="k">FROM</span> / <span class="k">JOIN</span>      <span class="c">-- quelles tables, reliées comment</span>
+<span class="n">2</span>. <span class="k">WHERE</span>            <span class="c">-- filtrer les lignes</span>
+<span class="n">3</span>. <span class="k">GROUP</span> <span class="k">BY</span>         <span class="c">-- former les groupes</span>
+<span class="n">4</span>. <span class="k">HAVING</span>           <span class="c">-- filtrer les groupes</span>
+<span class="n">5</span>. <span class="k">SELECT</span>           <span class="c">-- calculer les colonnes (dont les fonctions de fenêtrage)</span>
+<span class="n">6</span>. <span class="k">ORDER</span> <span class="k">BY</span>         <span class="c">-- trier</span>
+<span class="n">7</span>. <span class="k">LIMIT</span>            <span class="c">-- couper</span></pre></div>
+<div class="instruction-box">💡 C'est pour cela qu'on ne peut pas utiliser un alias du SELECT dans le WHERE, ni une fonction de fenêtrage dans le WHERE : au moment du filtre, ils n'existent pas encore.</div></div></section><section class="panel" id="glossaire"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">📖</span>Glossaire — Séance 1</div><div><span class="ftag f1">Prise en main</span><span class="ftag f2">Structure</span><span class="ftag f3">Requêtes</span><span class="ftag f4">CTE</span><span class="ftag f5">Fenêtrage</span></div><br><input class="gl-search" type="search" placeholder="Rechercher un terme…" aria-label="Rechercher un terme"><div class="gl-item"><b>Agrégat</b> <span class="ftag f3">Requêtes</span><p>Fonction qui résume plusieurs lignes en une valeur : COUNT, SUM, AVG, MIN, MAX.</p></div><div class="gl-item"><b>Alias</b> <span class="ftag f3">Requêtes</span><p>Nom court donné à une table ou une colonne (FROM joueurs j, SUM(buts) AS total).</p></div><div class="gl-item"><b>Ancrage</b> <span class="ftag f4">CTE</span><p>Première partie d&#x27;une CTE récursive : le point de départ du parcours.</p></div><div class="gl-item"><b>Base de données</b> <span class="ftag f1">Prise en main</span><p>Ensemble de tables et d&#x27;objets regroupés sous un nom (ex. cours_sql). Un serveur peut en héberger plusieurs.</p></div><div class="gl-item"><b>Cadre (frame)</b> <span class="ftag f5">Fenêtrage</span><p>Sous-ensemble de la partition pris en compte pour le calcul, défini par ROWS ou RANGE BETWEEN…</p></div><div class="gl-item"><b>Clé primaire</b> <span class="ftag f2">Structure</span><p>Colonne (ou groupe de colonnes) qui identifie chaque ligne de façon unique.</p></div><div class="gl-item"><b>Clé étrangère</b> <span class="ftag f2">Structure</span><p>Colonne qui fait référence à la clé primaire d&#x27;une autre table et garantit que la référence existe.</p></div><div class="gl-item"><b>Collation</b> <span class="ftag f5">Fenêtrage</span><p>Règles de tri et de comparaison du texte (ordre alphabétique, accents), qui dépendent de la configuration du serveur.</p></div><div class="gl-item"><b>Contrainte</b> <span class="ftag f2">Structure</span><p>Règle vérifiée par la base à chaque écriture : NOT NULL, UNIQUE, CHECK, clé primaire, clé étrangère.</p></div><div class="gl-item"><b>CTE</b> <span class="ftag f4">CTE</span><p>Common Table Expression : résultat intermédiaire nommé défini avec WITH et utilisé par la requête qui suit.</p></div><div class="gl-item"><b>CTE récursive</b> <span class="ftag f4">CTE</span><p>CTE qui s&#x27;appelle elle-même pour parcourir une hiérarchie ou un graphe (WITH RECURSIVE).</p></div><div class="gl-item"><b>Fonction de fenêtrage</b> <span class="ftag f5">Fenêtrage</span><p>Fonction qui calcule une valeur à partir d&#x27;un ensemble de lignes liées, sans les fusionner (mot-clé OVER).</p></div><div class="gl-item"><b>HAVING</b> <span class="ftag f3">Requêtes</span><p>Filtre appliqué aux groupes après le GROUP BY, contrairement à WHERE qui filtre les lignes avant.</p></div><div class="gl-item"><b>IDENTITY</b> <span class="ftag f2">Structure</span><p>Colonne dont la valeur est générée automatiquement (1, 2, 3…), syntaxe standard pour les identifiants.</p></div><div class="gl-item"><b>Jointure</b> <span class="ftag f3">Requêtes</span><p>Opération qui relie les lignes de deux tables selon une condition. INNER garde les correspondances, LEFT garde toute la table de gauche.</p></div><div class="gl-item"><b>LAG / LEAD</b> <span class="ftag f5">Fenêtrage</span><p>Renvoient la valeur de la ligne précédente / suivante dans l&#x27;ordre de la fenêtre.</p></div><div class="gl-item"><b>Méta-commande</b> <span class="ftag f1">Prise en main</span><p>Commande propre à psql, commençant par \ (ex. \dt). Ce n&#x27;est pas du SQL et elle ne prend pas de point-virgule.</p></div><div class="gl-item"><b>NULL</b> <span class="ftag f3">Requêtes</span><p>Absence de valeur, « inconnu ». Se teste avec IS NULL, jamais avec = NULL.</p></div><div class="gl-item"><b>PARTITION BY</b> <span class="ftag f5">Fenêtrage</span><p>Découpe les lignes en groupes indépendants pour une fonction de fenêtrage.</p></div><div class="gl-item"><b>PostgreSQL</b> <span class="ftag f1">Prise en main</span><p>Système de gestion de bases de données relationnelles, libre et open source.</p></div><div class="gl-item"><b>psql</b> <span class="ftag f1">Prise en main</span><p>Client en ligne de commande officiel de PostgreSQL.</p></div><div class="gl-item"><b>SGBD</b> <span class="ftag f1">Prise en main</span><p>Système de gestion de base de données : le logiciel qui stocke les données et exécute les requêtes.</p></div><div class="gl-item"><b>Table</b> <span class="ftag f2">Structure</span><p>Structure qui stocke les données en lignes et en colonnes.</p></div><div class="gl-item"><b>Type de données</b> <span class="ftag f2">Structure</span><p>Nature des valeurs acceptées par une colonne : INTEGER, NUMERIC, TEXT, DATE…</p></div><div class="gl-item"><b>UNION ALL</b> <span class="ftag f4">CTE</span><p>Assemble les résultats de deux requêtes, doublons compris. UNION seul supprime les doublons, ce qui coûte plus cher.</p></div><div class="gl-item"><b>Étape récursive</b> <span class="ftag f4">CTE</span><p>Seconde partie d&#x27;une CTE récursive, qui trouve le niveau suivant à partir des lignes déjà obtenues.</p></div></div></section></main>
+<footer>SQL avancé avec PostgreSQL · M1 Tech Lead</footer>
+<script>
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+function show(id){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});}
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.go);
+if(a.dataset.anchor){setTimeout(()=>document.getElementById(a.dataset.anchor).scrollIntoView({behavior:'smooth'}),60);}}));
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{
+ const txt=b.closest('.code').querySelector('pre').innerText;
+ const done=()=>{b.textContent='Copié ✓';b.classList.add('done');setTimeout(()=>{b.textContent='Copier';b.classList.remove('done')},1500)};
+ if(navigator.clipboard){navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(txt,done))}else fallback(txt,done);}));
+function fallback(t,done){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){}a.remove();}
+function refresh(){const all=document.querySelectorAll('.understood input');const d=[...all].filter(i=>i.checked).length;
+ const f=document.getElementById('gprog-fill');if(!f)return;f.style.width=(all.length?d/all.length*100:0)+'%';
+ document.getElementById('gprog-txt').textContent=d+' / '+all.length;}
+document.querySelectorAll('.understood input').forEach(i=>i.addEventListener('change',()=>{i.closest('.understood').classList.toggle('done',i.checked);refresh();}));
+refresh();
+document.querySelectorAll('.os-tabs').forEach(g=>g.querySelectorAll('.os').forEach(b=>b.addEventListener('click',()=>{
+ const box=g.parentElement;g.querySelectorAll('.os').forEach(x=>x.classList.toggle('active',x===b));
+ box.querySelectorAll(':scope > .os-panel').forEach(p=>p.classList.toggle('active',p.dataset.os===b.dataset.os));})));
+const s=document.querySelector('.gl-search');if(s){s.addEventListener('input',()=>{const q=s.value.toLowerCase();
+ document.querySelectorAll('.gl-item').forEach(i=>i.style.display=i.innerText.toLowerCase().includes(q)?'':'none');});}
+</script></body></html>

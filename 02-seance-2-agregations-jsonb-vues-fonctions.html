@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance 2 — Agrégations avancées, JSONB, vues & fonctions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;
+--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f1f5f9;--card:#fff;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15.5px}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:44px 20px 34px}
+.wrap{max-width:1000px;margin:0 auto}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+header h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.2;margin-bottom:10px}
+header p.lead{color:#cbd5e1;max-width:700px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:13px;font-weight:500}
+.gprog{margin-top:22px;max-width:480px}
+.gprog-label{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:6px}
+.gprog-bar{height:8px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+.gprog-fill{height:100%;width:0;background:#34d399;transition:width .4s}
+.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(15,23,42,.05)}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 10px}
+.tab{background:none;border:none;border-bottom:3px solid transparent;padding:15px 15px;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--primary)} .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+main{padding:28px 14px 60px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;margin-bottom:14px;line-height:1.3}
+.icon-bg{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.ib-blue{background:var(--primary-light)}.ib-green{background:var(--secondary-light)}.ib-amber{background:var(--accent-light)}.ib-red{background:var(--danger-light)}.ib-purple{background:var(--purple-light)}
+.num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--primary);background:var(--primary-light);padding:3px 9px;border-radius:7px}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+p+p{margin-top:8px}
+ul.clean{list-style:none;margin:6px 0}
+ul.clean li{padding:4px 0 4px 22px;position:relative}
+ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--primary);font-weight:700}
+ol.steps{margin:6px 0 6px 22px} ol.steps li{margin:4px 0}
+.objectif-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:14px;color:var(--primary-dark)}
+.instruction-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;margin:14px 0;color:#78350f}
+.warn-box{background:var(--danger-light);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;margin:14px 0;color:#7f1d1d}
+.ok-box{background:var(--secondary-light);border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin:14px 0;color:#064e3b}
+.analogie{background:var(--purple-light);border-left:4px solid var(--purple);border-radius:10px;padding:14px 18px;margin:14px 0;color:#4c1d95}
+.ftag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0}
+.f1{background:#dbeafe;color:#1e40af}.f2{background:#d1fae5;color:#065f46}.f3{background:#fef3c7;color:#92400e}.f4{background:#fee2e2;color:#991b1b}.f5{background:#ede9fe;color:#5b21b6}
+code.inl{background:#e2e8f0;padding:1px 6px;border-radius:5px;font-size:13px}
+.code{margin:10px 0;border-radius:10px;overflow:hidden;background:var(--dark)}
+.code-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#1e293b;color:#94a3b8;font-size:12px;font-family:'JetBrains Mono',monospace}
+.copy{background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.copy:hover{background:#475569}.copy.done{background:var(--secondary)}
+.code pre{color:#e2e8f0;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0}
+pre .c{color:#64748b;font-style:italic} pre .k{color:#93c5fd;font-weight:500} pre .s{color:#86efac} pre .n{color:#fcd34d} pre .m{color:#f9a8d4}
+pre.sh{color:#a7f3d0}
+.res{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:4px 0 12px}
+.res-bar{display:flex;justify-content:space-between;background:#f8fafc;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;font-weight:700;color:var(--secondary)}
+.res-bar span{color:var(--muted);font-weight:500}
+.tbl{overflow-x:auto}
+.tbl table,.grid-table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#f1f5f9;text-align:left;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate,#334155);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 12px;border-bottom:1px solid #f1f5f9;font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap}
+.tbl td.null{color:#94a3b8;font-style:italic}
+.res-note{padding:9px 12px;font-size:13px;color:var(--muted);background:#f8fafc;border-top:1px solid var(--border)}
+.grid-table th{background:var(--dark-2);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:13px}
+.grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.grid-table tr:nth-child(even) td{background:#f8fafc}
+.grid-table td:first-child{font-weight:600}
+.understood{display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.understood input{accent-color:var(--secondary);width:18px;height:18px}
+.understood.done{border-color:var(--secondary);color:var(--secondary);background:var(--secondary-light)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.toc a{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.toc a:hover{border-color:var(--primary)}
+.result-panel{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:var(--radius);padding:22px 24px;margin:6px 0 22px}
+.result-panel h4{color:#fff;font-size:16px;margin-bottom:8px}
+.result-panel .score{color:#34d399;font-weight:800;font-family:'JetBrains Mono',monospace}
+.result-panel ul{margin-left:18px}.result-panel li{margin:3px 0}
+.os-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.os{font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--muted)}
+.os.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.os-panel{display:none}.os-panel.active{display:block}
+.gl-search{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px}
+.gl-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.gl-item b{font-family:'JetBrains Mono',monospace;font-size:14px}
+.gl-item p{font-size:14px;color:#334155;margin-top:2px}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--primary);background:var(--primary);color:#fff}
+.btn:hover{filter:brightness(.95)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 40px}
+@media (max-width:700px){.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style></head><body>
+<header><div class="wrap"><span class="badge">🐘 SQL avancé avec PostgreSQL · Séance 2</span><h1>Agrégations avancées, JSONB, vues & fonctions</h1><p class="lead">Produire des rapports en une requête, interroger du JSONB, puis enregistrer la logique dans la base avec des vues et des fonctions.</p>
+<div class="meta"><span class="pill">📚 8 notions (N10 → N17)</span><span class="pill">🧪 Exemples testés sur PostgreSQL</span><span class="pill">🗄 Base cours_sql + demo-s2.sql</span><span class="pill">📌 Fiche mémo + glossaire</span></div><div class="gprog"><div class="gprog-label"><span>Notions comprises</span><span id="gprog-txt">0</span></div><div class="gprog-bar"><div class="gprog-fill" id="gprog-fill"></div></div></div></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" role="tablist"><button class="tab active" data-tab="intro" role="tab">🎯 Introduction</button><button class="tab" data-tab="p1" role="tab">1 · Agrégations & JSONB</button><button class="tab" data-tab="p2" role="tab">2 · Vues & fonctions</button><button class="tab" data-tab="memo" role="tab">📌 Fiche mémo</button><button class="tab" data-tab="glossaire" role="tab">📖 Glossaire</button></div></nav>
+<main class="wrap"><section class="panel active" id="intro">
+<div class="card"><div class="section-title"><span class="icon-bg ib-blue">🎯</span>Objectifs de la séance</div>
+<div class="objectif-box">Produire des rapports complets en une seule requête, exploiter des données semi-structurées, puis enregistrer la logique dans la base avec des vues et des fonctions réutilisables.</div>
+<ul class="clean">
+<li><strong>Partie 1 — Agrégations & JSONB</strong> : agrégats conditionnels, sous-totaux, LATERAL et JSONB.</li>
+<li><strong>Partie 2 — Vues & fonctions</strong> : vues, vues matérialisées, fonctions SQL et PL/pgSQL.</li></ul>
+<p>Même structure qu'en séance 1 : à quoi ça sert → syntaxe → exemple commenté → piège fréquent. La numérotation continue (N10 à N17) pour que chaque notion garde un repère unique jusqu'à la fin du module.</p></div>
+
+<div class="card"><div class="section-title"><span class="icon-bg ib-green">🔗</span>Ce que l'on réutilise de la séance 1</div>
+<table class="grid-table"><tr><th>Notion</th><th>Réutilisée dans</th></tr>
+<tr><td>N5 · GROUP BY</td><td>N10 (FILTER) et N11 (ROLLUP) l'étendent</td></tr>
+<tr><td>N6 · CTE</td><td>N15 : le classement du championnat devient une vue matérialisée</td></tr>
+<tr><td>N8 · Fenêtrage</td><td>N12 : LATERAL, une autre façon de faire un top N par groupe</td></tr></table></div>
+
+<div class="card" id="setup"><div class="section-title"><span class="icon-bg ib-amber">📥</span>Avant de commencer : charger le complément de données</div>
+<p>Cette séance ajoute deux tables à la base <code class="inl">cours_sql</code> : un catalogue de <strong>jeux vidéo</strong> dont la fiche est stockée en JSONB, et leurs <strong>ventes</strong> mensuelles par plateforme.</p>
+<p><button class="btn" type="button" id="dl-demo2">⬇️ Télécharger demo-s2.sql</button></p>
+<div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\c</span> cours_sql
+<span class="m">\i</span> C:/chemin/vers/demo-s2.sql</pre></div>
+<p>Contrôle attendu :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="s">'jeux'</span> <span class="k">AS</span> table_name, <span class="k">COUNT</span>(*) <span class="k">AS</span> lignes <span class="k">FROM</span> jeux
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'ventes'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> ventes;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>2 lignes</span></div><div class="tbl"><table><thead><tr><th>table_name</th><th>lignes</th></tr></thead><tbody><tr><td class="">jeux</td><td class="">8</td></tr><tr><td class="">ventes</td><td class="">108</td></tr></tbody></table></div></div>
+<table class="grid-table"><tr><th>Table</th><th>Contenu</th><th>Utilisée pour</th></tr>
+<tr><td class="mono">jeux</td><td>8 jeux, fiche en JSONB (éditeur, genres, plateformes, PEGI, prix, DLC éventuel)</td><td>JSONB</td></tr>
+<tr><td class="mono">ventes</td><td>108 lignes : ventes mensuelles de janvier à juin 2026, par jeu et par plateforme</td><td>FILTER, ROLLUP, LATERAL</td></tr></table>
+<div class="instruction-box">📌 Les tables de la séance 1 (équipes, joueurs, matchs…) restent utilisées. Si vous avez un doute sur leur état, relancez <code class="inl">demo.sql</code> puis <code class="inl">demo-s2.sql</code>, dans cet ordre.</div>
+<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Voir le contenu de demo-s2.sql</summary><div class="code"><div class="code-bar"><span>demo-s2.sql</span><button class="copy" type="button">Copier</button></div><pre><span class="c">-- =====================================================================</span>
+<span class="c">--  Complément séance 2 — SQL avancé avec PostgreSQL</span>
+<span class="c">--  À exécuter sur la base cours_sql, APRÈS demo.sql.</span>
+<span class="c">--  Ajoute un catalogue de jeux vidéo (JSONB) et leurs ventes.</span>
+<span class="c">--  Script ré-exécutable : il supprime puis recrée ses tables.</span>
+<span class="c">--  Données simplifiées : plateformes non exhaustives, ventes fictives.</span>
+<span class="c">-- =====================================================================</span>
+
+<span class="k">DROP</span> <span class="k">TABLE</span> <span class="k">IF</span> <span class="k">EXISTS</span> ventes, jeux <span class="k">CASCADE</span>;
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> jeux (
+    id       <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">BY</span> <span class="k">DEFAULT</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    titre    <span class="k">VARCHAR</span>(<span class="n">80</span>) <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">UNIQUE</span>,
+    details  JSONB       <span class="k">NOT</span> <span class="k">NULL</span>             <span class="c">-- fiche du jeu, structure variable</span>
+);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> jeux (titre, details) <span class="k">VALUES</span>
+ (<span class="s">'Rocket League'</span>,       <span class="s">'{"editeur": "Psyonix", "genres": ["sport", "course"], "plateformes": ["PC", "PS5", "Switch"], "pegi": 3, "multijoueur": true, "prix": 19.99}'</span>),
+ (<span class="s">'EA Sports FC 25'</span>,     <span class="s">'{"editeur": "EA Sports", "genres": ["sport"], "plateformes": ["PC", "PS5", "Xbox"], "pegi": 3, "multijoueur": true, "prix": 69.99}'</span>),
+ (<span class="s">'Mario Kart 8 Deluxe'</span>, <span class="s">'{"editeur": "Nintendo", "genres": ["course"], "plateformes": ["Switch"], "pegi": 3, "multijoueur": true, "prix": 59.99}'</span>),
+ (<span class="s">'Elden Ring'</span>,          <span class="s">'{"editeur": "Bandai Namco", "genres": ["action", "rpg"], "plateformes": ["PC", "PS5", "Xbox"], "pegi": 16, "multijoueur": false, "prix": 59.99, "dlc": {"nom": "Shadow of the Erdtree", "prix": 39.99}}'</span>),
+ (<span class="s">'Hades'</span>,               <span class="s">'{"editeur": "Supergiant Games", "genres": ["action", "roguelike"], "plateformes": ["PC", "Switch"], "pegi": 12, "multijoueur": false, "prix": 24.99}'</span>),
+ (<span class="s">'Tetris Effect'</span>,       <span class="s">'{"editeur": "Enhance", "genres": ["puzzle"], "plateformes": ["PC", "PS5", "Switch"], "pegi": 3, "multijoueur": true, "prix": 39.99}'</span>),
+ (<span class="s">'Stardew Valley'</span>,      <span class="s">'{"editeur": "ConcernedApe", "genres": ["simulation", "rpg"], "plateformes": ["PC", "Switch"], "pegi": 7, "multijoueur": true, "prix": 13.99}'</span>),
+ (<span class="s">'Gran Turismo 7'</span>,      <span class="s">'{"editeur": "Sony Interactive Entertainment", "genres": ["course", "simulation"], "plateformes": ["PS5"], "pegi": 3, "multijoueur": true, "prix": 79.99}'</span>);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> ventes (
+    id             <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">BY</span> <span class="k">DEFAULT</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    jeu_id         <span class="k">INTEGER</span>      <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> jeux(id),
+    plateforme     <span class="k">VARCHAR</span>(<span class="n">10</span>)  <span class="k">NOT</span> <span class="k">NULL</span>,
+    mois           <span class="k">DATE</span>         <span class="k">NOT</span> <span class="k">NULL</span>,            <span class="c">-- 1er jour du mois</span>
+    quantite       <span class="k">INTEGER</span>      <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">CHECK</span> (quantite &gt;= <span class="n">0</span>),
+    prix_unitaire  <span class="k">NUMERIC</span>(<span class="n">6</span>,<span class="n">2</span>) <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">CHECK</span> (prix_unitaire &gt;= <span class="n">0</span>)
+);
+
+<span class="c">-- Une ligne par jeu, par plateforme et par mois (janvier à juin 2026)</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> ventes (jeu_id, plateforme, mois, quantite, prix_unitaire)
+<span class="k">SELECT</span> j.id, p.plateforme, m.mois::<span class="k">DATE</span>,
+       <span class="n">100</span> + ((<span class="s">'x'</span> || substr(md5(j.id || p.plateforme || to_char(m.mois, <span class="s">'YYYY-MM'</span>)), <span class="n">1</span>, <span class="n">6</span>))::bit(<span class="n">24</span>)::int % <span class="n">400</span>),
+       (j.details -&gt;&gt; <span class="s">'prix'</span>)::<span class="k">NUMERIC</span>
+<span class="k">FROM</span> jeux j
+<span class="k">CROSS</span> <span class="k">JOIN</span> LATERAL jsonb_array_elements_text(j.details -&gt; <span class="s">'plateformes'</span>) <span class="k">AS</span> p(plateforme)
+<span class="k">CROSS</span> <span class="k">JOIN</span> generate_series(<span class="s">'2026-01-01'</span>::<span class="k">DATE</span>, <span class="s">'2026-06-01'</span>::<span class="k">DATE</span>, INTERVAL <span class="s">'1 month'</span>) <span class="k">AS</span> m(mois)
+<span class="k">ORDER</span> <span class="k">BY</span> j.id, p.plateforme, m.mois;
+
+<span class="c">-- ---------- Contrôle ----------</span>
+<span class="k">SELECT</span> <span class="s">'jeux'</span> <span class="k">AS</span> table_name, <span class="k">COUNT</span>(*) <span class="k">AS</span> lignes <span class="k">FROM</span> jeux
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'ventes'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> ventes;</pre></div></details></div>
+
+<div class="card"><div class="section-title"><span class="icon-bg ib-purple">🗺</span>Les 8 notions</div>
+<div class="toc">
+<a href="#" data-go="p1" data-anchor="n10"><span class="num">N10</span>Agrégats conditionnels : FILTER</a>
+<a href="#" data-go="p1" data-anchor="n11"><span class="num">N11</span>Sous-totaux : ROLLUP</a>
+<a href="#" data-go="p1" data-anchor="n12"><span class="num">N12</span>LATERAL</a>
+<a href="#" data-go="p1" data-anchor="n13"><span class="num">N13</span>JSONB</a>
+<a href="#" data-go="p2" data-anchor="n14"><span class="num">N14</span>Les vues</a>
+<a href="#" data-go="p2" data-anchor="n15"><span class="num">N15</span>Les vues matérialisées</a>
+<a href="#" data-go="p2" data-anchor="n16"><span class="num">N16</span>Fonctions SQL</a>
+<a href="#" data-go="p2" data-anchor="n17"><span class="num">N17</span>Fonctions PL/pgSQL</a>
+</div></div></section><section class="panel" id="p1"><div class="card" id="n10">
+<div class="section-title"><span class="icon-bg ib-blue">🎛️</span><span><span class="num">N10</span>&nbsp; Agrégats conditionnels : FILTER</span></div>
+<span class="ftag f1">Agrégations</span>
+<h3>🎯 À quoi ça sert</h3><p>Calculer <strong>plusieurs agrégats différents dans une même requête</strong>, chacun sur un sous-ensemble de lignes : ventes PC, ventes PS5 et ventes totales côte à côte. C'est ainsi qu'on construit un tableau croisé en une seule lecture de la table.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — un caissier qui tient plusieurs compteurs en même temps : un pour les paiements par carte, un pour les espèces, un pour le total. Un seul passage en caisse, trois totaux.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>AGREGAT(colonne) FILTER (<span class="k">WHERE</span> condition)
+
+<span class="c">-- Équivalent plus ancien, encore très répandu :</span>
+<span class="k">SUM</span>(<span class="k">CASE</span> <span class="k">WHEN</span> condition <span class="k">THEN</span> colonne <span class="k">ELSE</span> <span class="n">0</span> <span class="k">END</span>)</pre></div>
+<h3>🔬 Exemple commenté</h3><p>Ventes de chaque jeu, réparties par plateforme, avec le total :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> j.titre,
+       <span class="k">SUM</span>(v.quantite) FILTER (<span class="k">WHERE</span> v.plateforme = <span class="s">'PC'</span>)     <span class="k">AS</span> pc,
+       <span class="k">SUM</span>(v.quantite) FILTER (<span class="k">WHERE</span> v.plateforme = <span class="s">'PS5'</span>)    <span class="k">AS</span> ps5,
+       <span class="k">SUM</span>(v.quantite) FILTER (<span class="k">WHERE</span> v.plateforme = <span class="s">'Switch'</span>) <span class="k">AS</span> switch,
+       <span class="k">SUM</span>(v.quantite)                                        <span class="k">AS</span> total
+<span class="k">FROM</span> ventes v
+<span class="k">JOIN</span> jeux j <span class="k">ON</span> j.id = v.jeu_id
+<span class="k">GROUP</span> <span class="k">BY</span> j.titre
+<span class="k">ORDER</span> <span class="k">BY</span> total <span class="k">DESC</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>pc</th><th>ps5</th><th>switch</th><th>total</th></tr></thead><tbody><tr><td class="">Tetris Effect</td><td class="">2200</td><td class="">1680</td><td class="">2219</td><td class="">6099</td></tr><tr><td class="">Rocket League</td><td class="">2249</td><td class="">1812</td><td class="">1387</td><td class="">5448</td></tr><tr><td class="">Elden Ring</td><td class="">1515</td><td class="">1696</td><td class="null">NULL</td><td class="">5265</td></tr><tr><td class="">EA Sports FC 25</td><td class="">1683</td><td class="">1731</td><td class="null">NULL</td><td class="">4959</td></tr><tr><td class="">Stardew Valley</td><td class="">2191</td><td class="null">NULL</td><td class="">1947</td><td class="">4138</td></tr><tr><td class="">Hades</td><td class="">1852</td><td class="null">NULL</td><td class="">1897</td><td class="">3749</td></tr><tr><td class="">Gran Turismo 7</td><td class="null">NULL</td><td class="">2165</td><td class="null">NULL</td><td class="">2165</td></tr><tr><td class="">Mario Kart 8 Deluxe</td><td class="null">NULL</td><td class="null">NULL</td><td class="">2057</td><td class="">2057</td></tr></tbody></table></div><div class="res-note">NULL signifie que le jeu n'est pas vendu sur cette plateforme : aucune ligne ne passe le filtre.</div></div><p>Bilan domicile / extérieur du championnat, avec des <code class='inl'>COUNT</code> filtrés :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">COUNT</span>(*)                                     <span class="k">AS</span> matchs,
+       <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> buts_dom &gt; buts_ext)  <span class="k">AS</span> victoires_domicile,
+       <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> buts_dom = buts_ext)  <span class="k">AS</span> nuls,
+       <span class="k">COUNT</span>(*) FILTER (<span class="k">WHERE</span> buts_dom &lt; buts_ext)  <span class="k">AS</span> victoires_exterieur
+<span class="k">FROM</span> matchs;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>matchs</th><th>victoires_domicile</th><th>nuls</th><th>victoires_exterieur</th></tr></thead><tbody><tr><td class="">15</td><td class="">6</td><td class="">5</td><td class="">4</td></tr></tbody></table></div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Confondre <code class='inl'>FILTER</code> et <code class='inl'>WHERE</code>. Le <code class='inl'>WHERE</code> retire des lignes pour <strong>tous</strong> les agrégats de la requête ; <code class='inl'>FILTER</code> ne concerne que l'agrégat auquel il est attaché. Si vous ajoutez <code class='inl'>WHERE plateforme = 'PC'</code> à la requête ci-dessus, les colonnes PS5, Switch et total ne compteront plus que… le PC.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n11">
+<div class="section-title"><span class="icon-bg ib-green">🧮</span><span><span class="num">N11</span>&nbsp; Sous-totaux : ROLLUP et GROUPING SETS</span></div>
+<span class="ftag f1">Agrégations</span>
+<h3>🎯 À quoi ça sert</h3><p>Obtenir <strong>le détail, les sous-totaux et le total général dans un seul résultat</strong>, comme dans un rapport financier. Sans ces outils, il faudrait écrire plusieurs requêtes et les assembler avec <code class='inl'>UNION ALL</code>.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — un ticket de caisse détaillé : chaque article, puis un sous-total par rayon, puis le total à payer en bas.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">GROUP</span> <span class="k">BY</span> ROLLUP (a, b)            <span class="c">-- (a, b), puis (a), puis () : détail → sous-totaux → total</span>
+<span class="k">GROUP</span> <span class="k">BY</span> CUBE (a, b)              <span class="c">-- toutes les combinaisons : (a, b), (a), (b), ()</span>
+<span class="k">GROUP</span> <span class="k">BY</span> GROUPING SETS ((a), (b), ())   <span class="c">-- exactement les regroupements listés</span>
+
+GROUPING(colonne)                 <span class="c">-- 1 si la ligne est un sous-total sur cette colonne</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p>Ventes par plateforme et par trimestre, avec sous-totaux par plateforme et total général :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">CASE</span> <span class="k">WHEN</span> GROUPING(plateforme) = <span class="n">1</span> <span class="k">THEN</span> <span class="s">'TOTAL'</span> <span class="k">ELSE</span> plateforme <span class="k">END</span> <span class="k">AS</span> plateforme,
+       <span class="k">CASE</span> <span class="k">WHEN</span> GROUPING(trimestre)  = <span class="n">1</span> <span class="k">THEN</span> <span class="s">'Tous'</span>  <span class="k">ELSE</span> trimestre  <span class="k">END</span> <span class="k">AS</span> trimestre,
+       <span class="k">SUM</span>(quantite) <span class="k">AS</span> ventes
+<span class="k">FROM</span> (
+    <span class="k">SELECT</span> plateforme, <span class="s">'T'</span> || EXTRACT(QUARTER <span class="k">FROM</span> mois) <span class="k">AS</span> trimestre, quantite
+    <span class="k">FROM</span> ventes
+) v
+<span class="k">GROUP</span> <span class="k">BY</span> ROLLUP (plateforme, trimestre)
+<span class="k">ORDER</span> <span class="k">BY</span> GROUPING(plateforme), plateforme, GROUPING(trimestre), trimestre;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>13 lignes</span></div><div class="tbl"><table><thead><tr><th>plateforme</th><th>trimestre</th><th>ventes</th></tr></thead><tbody><tr><td class="">PC</td><td class="">T1</td><td class="">6146</td></tr><tr><td class="">PC</td><td class="">T2</td><td class="">5544</td></tr><tr><td class="">PC</td><td class="">Tous</td><td class="">11690</td></tr><tr><td class="">PS5</td><td class="">T1</td><td class="">4250</td></tr><tr><td class="">PS5</td><td class="">T2</td><td class="">4834</td></tr><tr><td class="">PS5</td><td class="">Tous</td><td class="">9084</td></tr><tr><td class="">Switch</td><td class="">T1</td><td class="">5219</td></tr><tr><td class="">Switch</td><td class="">T2</td><td class="">4288</td></tr><tr><td class="">Switch</td><td class="">Tous</td><td class="">9507</td></tr><tr><td class="">Xbox</td><td class="">T1</td><td class="">1941</td></tr><tr><td class="">Xbox</td><td class="">T2</td><td class="">1658</td></tr><tr><td class="">Xbox</td><td class="">Tous</td><td class="">3599</td></tr><tr><td class="">TOTAL</td><td class="">Tous</td><td class="">33880</td></tr></tbody></table></div><div class="res-note">Les lignes « Tous » sont les sous-totaux par plateforme ; la dernière ligne est le total général.</div></div><p>Avec <code class='inl'>GROUPING SETS</code>, on choisit précisément les regroupements voulus : ici un total par plateforme et un total par trimestre, sans le détail croisé.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> plateforme, trimestre, <span class="k">SUM</span>(quantite) <span class="k">AS</span> ventes
+<span class="k">FROM</span> (
+    <span class="k">SELECT</span> plateforme, <span class="s">'T'</span> || EXTRACT(QUARTER <span class="k">FROM</span> mois) <span class="k">AS</span> trimestre, quantite
+    <span class="k">FROM</span> ventes
+) v
+<span class="k">GROUP</span> <span class="k">BY</span> GROUPING SETS ((plateforme), (trimestre))
+<span class="k">ORDER</span> <span class="k">BY</span> plateforme, trimestre;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>plateforme</th><th>trimestre</th><th>ventes</th></tr></thead><tbody><tr><td class="">PC</td><td class="null">NULL</td><td class="">11690</td></tr><tr><td class="">PS5</td><td class="null">NULL</td><td class="">9084</td></tr><tr><td class="">Switch</td><td class="null">NULL</td><td class="">9507</td></tr><tr><td class="">Xbox</td><td class="null">NULL</td><td class="">3599</td></tr><tr><td class="null">NULL</td><td class="">T1</td><td class="">17556</td></tr><tr><td class="null">NULL</td><td class="">T2</td><td class="">16324</td></tr></tbody></table></div><div class="res-note">Chaque ligne n'a qu'une des deux colonnes renseignée : l'autre vaut NULL.</div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Sur une ligne de sous-total, la colonne regroupée vaut <code class='inl'>NULL</code>. Si vos données contiennent de vrais <code class='inl'>NULL</code>, les deux se confondent. Utilisez <code class='inl'>GROUPING(colonne)</code>, et non <code class='inl'>colonne IS NULL</code>, pour reconnaître une ligne de sous-total.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n12">
+<div class="section-title"><span class="icon-bg ib-amber">🔁</span><span><span class="num">N12</span>&nbsp; LATERAL : une sous-requête pour chaque ligne</span></div>
+<span class="ftag f2">LATERAL</span>
+<h3>🎯 À quoi ça sert</h3><p>Une sous-requête placée dans le <code class='inl'>FROM</code> ne peut normalement pas voir les autres tables de la requête. Avec <code class='inl'>LATERAL</code>, elle est exécutée <strong>pour chaque ligne</strong> de la table de gauche et peut utiliser ses colonnes. C'est l'outil idéal pour « les N meilleurs éléments de chaque groupe ».</p>
+<div class="analogie">💡 <strong>Analogie</strong> — un serveur qui passe à chaque table du restaurant : pour chacune, il regarde qui est assis là et propose les desserts adaptés. La sous-requête LATERAL est cette tournée, table par table.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> ...
+<span class="k">FROM</span> table_a a
+<span class="k">CROSS</span> <span class="k">JOIN</span> LATERAL (
+    <span class="k">SELECT</span> ... <span class="k">FROM</span> table_b b
+    <span class="k">WHERE</span> b.a_id = a.id          <span class="c">-- utilise une colonne de la table de gauche</span>
+    <span class="k">ORDER</span> <span class="k">BY</span> ... <span class="k">LIMIT</span> n
+) sous_requete;
+
+<span class="c">-- Pour garder les lignes de gauche sans résultat :</span>
+<span class="k">LEFT</span> <span class="k">JOIN</span> LATERAL ( ... ) sous_requete <span class="k">ON</span> true</pre></div>
+<h3>🔬 Exemple commenté</h3><p>Le meilleur mois de ventes de chaque jeu :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> j.titre, <span class="k">TO_CHAR</span>(m.mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> meilleur_mois, m.ventes
+<span class="k">FROM</span> jeux j
+<span class="k">CROSS</span> <span class="k">JOIN</span> LATERAL (
+    <span class="k">SELECT</span> v.mois, <span class="k">SUM</span>(v.quantite) <span class="k">AS</span> ventes
+    <span class="k">FROM</span> ventes v
+    <span class="k">WHERE</span> v.jeu_id = j.id               <span class="c">-- la sous-requête voit le jeu courant</span>
+    <span class="k">GROUP</span> <span class="k">BY</span> v.mois
+    <span class="k">ORDER</span> <span class="k">BY</span> ventes <span class="k">DESC</span>
+    <span class="k">LIMIT</span> <span class="n">1</span>
+) m
+<span class="k">ORDER</span> <span class="k">BY</span> m.ventes <span class="k">DESC</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>meilleur_mois</th><th>ventes</th></tr></thead><tbody><tr><td class="">Tetris Effect</td><td class="">2026-01</td><td class="">1184</td></tr><tr><td class="">Elden Ring</td><td class="">2026-06</td><td class="">1155</td></tr><tr><td class="">Rocket League</td><td class="">2026-01</td><td class="">1122</td></tr><tr><td class="">EA Sports FC 25</td><td class="">2026-03</td><td class="">1101</td></tr><tr><td class="">Stardew Valley</td><td class="">2026-02</td><td class="">954</td></tr><tr><td class="">Hades</td><td class="">2026-05</td><td class="">776</td></tr><tr><td class="">Mario Kart 8 Deluxe</td><td class="">2026-01</td><td class="">487</td></tr><tr><td class="">Gran Turismo 7</td><td class="">2026-06</td><td class="">478</td></tr></tbody></table></div></div><p>Le meilleur buteur de chaque équipe, en gardant les équipes même sans buteur (<code class='inl'>LEFT JOIN LATERAL</code>) :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> e.nom <span class="k">AS</span> equipe, b.nom <span class="k">AS</span> meilleur_buteur, b.buts
+<span class="k">FROM</span> equipes e
+<span class="k">LEFT</span> <span class="k">JOIN</span> LATERAL (
+    <span class="k">SELECT</span> j.nom, j.buts
+    <span class="k">FROM</span> joueurs j
+    <span class="k">WHERE</span> j.equipe_id = e.id
+    <span class="k">ORDER</span> <span class="k">BY</span> j.buts <span class="k">DESC</span>
+    <span class="k">LIMIT</span> <span class="n">1</span>
+) b <span class="k">ON</span> true
+<span class="k">ORDER</span> <span class="k">BY</span> b.buts <span class="k">DESC</span> NULLS LAST;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>meilleur_buteur</th><th>buts</th></tr></thead><tbody><tr><td class="">PSG</td><td class="">Yanis Belkacem</td><td class="">7</td></tr><tr><td class="">RC Lens</td><td class="">Ilyes Haddad</td><td class="">6</td></tr><tr><td class="">OM</td><td class="">Enzo Rossi</td><td class="">5</td></tr><tr><td class="">OL</td><td class="">Lucas Moreau</td><td class="">4</td></tr><tr><td class="">Stade Rennais</td><td class="">Rayan Ndiaye</td><td class="">2</td></tr><tr><td class="">LOSC</td><td class="">Noah Petit</td><td class="">1</td></tr></tbody></table></div></div>
+<div class='instruction-box'>📌 LATERAL ou fonction de fenêtrage (N8) ? Pour un top N par groupe, les deux fonctionnent. LATERAL est souvent plus efficace quand il y a peu de groupes et un index adapté (séance 3) ; le fenêtrage est plus simple quand on veut aussi le rang.</div>
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Sans le mot-clé <code class='inl'>LATERAL</code>, la sous-requête ne voit pas la table de gauche :<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> j.titre, m.mois
+<span class="k">FROM</span> jeux j
+<span class="k">CROSS</span> <span class="k">JOIN</span> (
+    <span class="k">SELECT</span> mois <span class="k">FROM</span> ventes v <span class="k">WHERE</span> v.jeu_id = j.id <span class="k">LIMIT</span> <span class="n">1</span>
+) m;</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap">ERROR:  invalid reference to FROM-clause entry for table &quot;j&quot;
+LINE 4:     SELECT mois FROM ventes v WHERE v.jeu_id = j.id LIMIT 1
+                                                       ^
+DETAIL:  There is an entry for table &quot;j&quot;, but it cannot be referenced from this part of the query.
+HINT:  To reference that table, you must mark this subquery with LATERAL.</pre></div></div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n13">
+<div class="section-title"><span class="icon-bg ib-purple">🧬</span><span><span class="num">N13</span>&nbsp; JSONB : des données semi-structurées</span></div>
+<span class="ftag f3">JSONB</span>
+<h3>🎯 À quoi ça sert</h3><p>Certaines informations n'ont pas la même forme d'une ligne à l'autre : un jeu a un DLC, un autre non ; l'un sort sur 3 plateformes, l'autre sur une seule. Plutôt que de multiplier les colonnes vides, PostgreSQL stocke ces données dans une colonne <strong>JSONB</strong> : du JSON au format binaire, que l'on peut interroger, filtrer et indexer.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — une fiche produit avec une partie fixe (le titre, imprimé) et une zone « caractéristiques » libre, où chaque produit liste ce qui le concerne.</div>
+<h3>🧩 Syntaxe</h3><table class="grid-table"><tr><th>Opérateur</th><th>Renvoie</th><th>Exemple</th></tr>
+<tr><td class="mono">-&gt;</td><td>Un élément JSON (pour continuer à naviguer)</td><td class="mono">details -&gt; 'dlc'</td></tr>
+<tr><td class="mono">-&gt;&gt;</td><td>Un élément sous forme de <strong>texte</strong></td><td class="mono">details -&gt;&gt; 'editeur'</td></tr>
+<tr><td class="mono">#&gt;&gt;</td><td>Un élément imbriqué, en texte, par son chemin</td><td class="mono">details #&gt;&gt; '{dlc,nom}'</td></tr>
+<tr><td class="mono">@&gt;</td><td>Vrai si le JSON contient le fragment</td><td class="mono">details @&gt; '{"multijoueur": true}'</td></tr>
+<tr><td class="mono">?</td><td>Vrai si la clé existe</td><td class="mono">details ? 'dlc'</td></tr>
+<tr><td class="mono">jsonb_array_elements_text()</td><td>Une ligne par élément d'un tableau</td><td class="mono">(details -&gt; 'plateformes')</td></tr></table>
+<h3>🔬 Exemple commenté</h3><p>Extraire des valeurs, y compris imbriquées, et les convertir :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre,
+       details -&gt;&gt; <span class="s">'editeur'</span>              <span class="k">AS</span> editeur,
+       (details -&gt;&gt; <span class="s">'pegi'</span>)::<span class="k">INTEGER</span>      <span class="k">AS</span> pegi,          <span class="c">-- conversion en nombre</span>
+       details #&gt;&gt; <span class="s">'{dlc,nom}'</span>            <span class="k">AS</span> dlc            <span class="c">-- chemin imbriqué</span>
+<span class="k">FROM</span> jeux
+<span class="k">ORDER</span> <span class="k">BY</span> pegi <span class="k">DESC</span>, titre;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>editeur</th><th>pegi</th><th>dlc</th></tr></thead><tbody><tr><td class="">Elden Ring</td><td class="">Bandai Namco</td><td class="">16</td><td class="">Shadow of the Erdtree</td></tr><tr><td class="">Hades</td><td class="">Supergiant Games</td><td class="">12</td><td class="null">NULL</td></tr><tr><td class="">Stardew Valley</td><td class="">ConcernedApe</td><td class="">7</td><td class="null">NULL</td></tr><tr><td class="">EA Sports FC 25</td><td class="">EA Sports</td><td class="">3</td><td class="null">NULL</td></tr><tr><td class="">Gran Turismo 7</td><td class="">Sony Interactive Entertainment</td><td class="">3</td><td class="null">NULL</td></tr><tr><td class="">Mario Kart 8 Deluxe</td><td class="">Nintendo</td><td class="">3</td><td class="null">NULL</td></tr><tr><td class="">Rocket League</td><td class="">Psyonix</td><td class="">3</td><td class="null">NULL</td></tr><tr><td class="">Tetris Effect</td><td class="">Enhance</td><td class="">3</td><td class="null">NULL</td></tr></tbody></table></div></div><p>Filtrer : les jeux multijoueurs qui ont le genre « course » :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre
+<span class="k">FROM</span> jeux
+<span class="k">WHERE</span> details @&gt; <span class="s">'{"multijoueur": true}'</span>
+  <span class="k">AND</span> details -&gt; <span class="s">'genres'</span> ? <span class="s">'course'</span>        <span class="c">-- ? teste aussi la présence dans un tableau</span>
+<span class="k">ORDER</span> <span class="k">BY</span> titre;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th></tr></thead><tbody><tr><td class="">Gran Turismo 7</td></tr><tr><td class="">Mario Kart 8 Deluxe</td></tr><tr><td class="">Rocket League</td></tr></tbody></table></div></div><p>Déplier un tableau pour compter les jeux par plateforme :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> p.plateforme, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_jeux
+<span class="k">FROM</span> jeux j
+<span class="k">CROSS</span> <span class="k">JOIN</span> LATERAL jsonb_array_elements_text(j.details -&gt; <span class="s">'plateformes'</span>) <span class="k">AS</span> p(plateforme)
+<span class="k">GROUP</span> <span class="k">BY</span> p.plateforme
+<span class="k">ORDER</span> <span class="k">BY</span> nb_jeux <span class="k">DESC</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>4 lignes</span></div><div class="tbl"><table><thead><tr><th>plateforme</th><th>nb_jeux</th></tr></thead><tbody><tr><td class="">PC</td><td class="">6</td></tr><tr><td class="">PS5</td><td class="">5</td></tr><tr><td class="">Switch</td><td class="">5</td></tr><tr><td class="">Xbox</td><td class="">2</td></tr></tbody></table></div><div class="res-note">jsonb_array_elements_text dans le FROM est une application directe de LATERAL (N12).</div></div><p>Ajouter ou modifier une clé : l'opérateur <code class='inl'>||</code> fusionne deux objets JSON.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">UPDATE</span> jeux
+<span class="k">SET</span> details = details || <span class="s">'{"note_presse": 96}'</span>
+<span class="k">WHERE</span> titre = <span class="s">'Elden Ring'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre, details -&gt;&gt; <span class="s">'note_presse'</span> <span class="k">AS</span> note_presse
+<span class="k">FROM</span> jeux
+<span class="k">WHERE</span> details ? <span class="s">'note_presse'</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>note_presse</th></tr></thead><tbody><tr><td class="">Elden Ring</td><td class="">96</td></tr></tbody></table></div></div>
+<div class='instruction-box'>📌 JSON ou JSONB ? <code class='inl'>JSON</code> conserve le texte tel quel (espaces, ordre des clés, doublons) ; <code class='inl'>JSONB</code> le convertit en binaire, plus rapide à interroger et indexable. En pratique, on choisit JSONB.</div>
+<h3>⚠️ Piège fréquent</h3><div class="warn-box"><code class='inl'>->></code> renvoie du <strong>texte</strong>. Comparer du texte à du texte suit l'ordre alphabétique, où <code class='inl'>'3'</code> est plus grand que <code class='inl'>'12'</code> :<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre, details -&gt;&gt; <span class="s">'pegi'</span> <span class="k">AS</span> pegi
+<span class="k">FROM</span> jeux
+<span class="k">WHERE</span> details -&gt;&gt; <span class="s">'pegi'</span> &gt;= <span class="s">'12'</span>        <span class="c">-- comparaison de textes !</span>
+<span class="k">ORDER</span> <span class="k">BY</span> titre;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>pegi</th></tr></thead><tbody><tr><td class="">EA Sports FC 25</td><td class="">3</td></tr><tr><td class="">Elden Ring</td><td class="">16</td></tr><tr><td class="">Gran Turismo 7</td><td class="">3</td></tr><tr><td class="">Hades</td><td class="">12</td></tr><tr><td class="">Mario Kart 8 Deluxe</td><td class="">3</td></tr><tr><td class="">Rocket League</td><td class="">3</td></tr><tr><td class="">Stardew Valley</td><td class="">7</td></tr><tr><td class="">Tetris Effect</td><td class="">3</td></tr></tbody></table></div><div class="res-note">Les 8 jeux ressortent, y compris les PEGI 3 et 7 : en texte, '3' et '7' sont « plus grands » que '12'. Écrivez <code>(details ->> 'pegi')::INTEGER >= 12</code>.</div></div><br>Autre piège : JSONB n'est pas une excuse pour tout y mettre. Une information présente partout, filtrée souvent ou liée à une autre table (un éditeur, une plateforme) mérite une vraie colonne ou une vraie table.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="result-panel"><h4>🚦 Point d'étape</h4>
+<p>Vous savez maintenant produire des rapports complets en une requête (FILTER, ROLLUP), interroger ligne par ligne (LATERAL) et exploiter des données semi-structurées (JSONB). La partie 2 apprend à <strong>ranger</strong> ces requêtes dans la base pour les réutiliser.</p></div></section><section class="panel" id="p2"><div class="card" id="n14">
+<div class="section-title"><span class="icon-bg ib-blue">🪟</span><span><span class="num">N14</span>&nbsp; Les vues : une requête enregistrée</span></div>
+<span class="ftag f4">Vues</span>
+<h3>🎯 À quoi ça sert</h3><p>Une <strong>vue</strong> est une requête à laquelle on donne un nom. On l'interroge ensuite comme une table, sans réécrire les jointures. Elle sert aussi de <strong>contrat</strong> entre la base et les applications : on peut réorganiser les tables en interne sans casser le code qui lit la vue, et n'exposer que les colonnes autorisées.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — une vitrine de magasin : on y présente une sélection mise en forme du stock, sans montrer la réserve. La vitrine ne stocke rien : elle montre ce qui est en rayon à cet instant.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> [<span class="k">OR</span> REPLACE] VIEW nom_vue <span class="k">AS</span>
+<span class="k">SELECT</span> ...;
+
+<span class="k">SELECT</span> * <span class="k">FROM</span> nom_vue <span class="k">WHERE</span> ...;          <span class="c">-- s'utilise comme une table</span>
+
+<span class="k">CREATE</span> VIEW nom_vue <span class="k">AS</span>
+<span class="k">SELECT</span> ... <span class="k">FROM</span> une_table <span class="k">WHERE</span> condition
+<span class="k">WITH</span> <span class="k">CHECK</span> OPTION;                        <span class="c">-- refuse les écritures hors du périmètre de la vue</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p>Une fiche joueur prête à l'emploi, qui masque la jointure :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> VIEW v_fiche_joueur <span class="k">AS</span>
+<span class="k">SELECT</span> j.id, j.nom, j.poste, j.buts,
+       e.nom   <span class="k">AS</span> equipe,
+       e.ville
+<span class="k">FROM</span> joueurs j
+<span class="k">LEFT</span> <span class="k">JOIN</span> equipes e <span class="k">ON</span> e.id = j.equipe_id;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom, poste, buts, ville
+<span class="k">FROM</span> v_fiche_joueur
+<span class="k">WHERE</span> equipe = <span class="s">'RC Lens'</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>2 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>poste</th><th>buts</th><th>ville</th></tr></thead><tbody><tr><td class="">Ilyes Haddad</td><td class="">attaquant</td><td class="">6</td><td class="">Lens</td></tr><tr><td class="">Théo Garnier</td><td class="">défenseur</td><td class="">1</td><td class="">Lens</td></tr></tbody></table></div></div><p>Une vue simple (une seule table, pas d'agrégat) est <strong>modifiable</strong> : les écritures sont transmises à la table. <code class='inl'>WITH CHECK OPTION</code> empêche d'écrire une ligne qui sortirait de la vue :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> VIEW v_attaquants <span class="k">AS</span>
+<span class="k">SELECT</span> id, nom, poste, buts, equipe_id
+<span class="k">FROM</span> joueurs
+<span class="k">WHERE</span> poste = <span class="s">'attaquant'</span>
+<span class="k">WITH</span> <span class="k">CHECK</span> OPTION;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> v_attaquants (nom, poste, buts, equipe_id)
+<span class="k">VALUES</span> (<span class="s">'Léo Blanc'</span>, <span class="s">'défenseur'</span>, <span class="n">0</span>, <span class="n">3</span>);</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap">ERROR:  new row violates check option for view &quot;v_attaquants&quot;
+DETAIL:  Failing row contains (12, Léo Blanc, 3, défenseur, 0).</pre></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Une vue <strong>ne stocke pas</strong> de données : sa requête est réexécutée à chaque lecture. Une vue lente reste lente, et empiler des vues qui appellent d'autres vues cache des requêtes énormes. Autre piège : <code class='inl'>SELECT *</code> dans une vue fige la liste des colonnes au moment de sa création ; une colonne ajoutée ensuite à la table n'y apparaît pas.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n15">
+<div class="section-title"><span class="icon-bg ib-green">📸</span><span><span class="num">N15</span>&nbsp; Les vues matérialisées : un résultat mis en cache</span></div>
+<span class="ftag f4">Vues</span>
+<h3>🎯 À quoi ça sert</h3><p>Une <strong>vue matérialisée</strong> exécute sa requête une fois et <strong>stocke le résultat</strong>, comme une table. La lecture devient instantanée, même si la requête est coûteuse. En contrepartie, le résultat n'est à jour qu'après un <code class='inl'>REFRESH</code>. On l'utilise pour les tableaux de bord, classements et statistiques qui n'ont pas besoin d'être à la seconde près.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — une photo du tableau des scores : on la consulte instantanément, mais elle ne change pas tant qu'on n'en reprend pas une nouvelle.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> MATERIALIZED VIEW nom <span class="k">AS</span>
+<span class="k">SELECT</span> ...;
+
+REFRESH MATERIALIZED VIEW nom;                 <span class="c">-- recalcule (bloque les lectures pendant le calcul)</span>
+
+<span class="k">CREATE</span> <span class="k">UNIQUE</span> INDEX <span class="k">ON</span> nom (colonne);          <span class="c">-- prérequis pour CONCURRENTLY</span>
+REFRESH MATERIALIZED VIEW CONCURRENTLY nom;    <span class="c">-- recalcule sans bloquer les lectures</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p>Le classement du championnat (requête vue en N6), calculé une fois pour toutes :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> MATERIALIZED VIEW mv_classement <span class="k">AS</span>
+<span class="k">WITH</span> resultats <span class="k">AS</span> (
+    <span class="k">SELECT</span> equipe_dom_id <span class="k">AS</span> equipe_id, buts_dom <span class="k">AS</span> pour, buts_ext <span class="k">AS</span> contre <span class="k">FROM</span> matchs
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> equipe_ext_id, buts_ext, buts_dom <span class="k">FROM</span> matchs
+)
+<span class="k">SELECT</span> e.nom <span class="k">AS</span> equipe,
+       <span class="k">SUM</span>(<span class="k">CASE</span> <span class="k">WHEN</span> r.pour &gt; r.contre <span class="k">THEN</span> <span class="n">3</span> <span class="k">WHEN</span> r.pour = r.contre <span class="k">THEN</span> <span class="n">1</span> <span class="k">ELSE</span> <span class="n">0</span> <span class="k">END</span>) <span class="k">AS</span> points,
+       <span class="k">SUM</span>(r.pour - r.contre) <span class="k">AS</span> difference
+<span class="k">FROM</span> resultats r
+<span class="k">JOIN</span> equipes e <span class="k">ON</span> e.id = r.equipe_id
+<span class="k">GROUP</span> <span class="k">BY</span> e.nom;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> * <span class="k">FROM</span> mv_classement <span class="k">ORDER</span> <span class="k">BY</span> points <span class="k">DESC</span>, difference <span class="k">DESC</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>points</th><th>difference</th></tr></thead><tbody><tr><td class="">RC Lens</td><td class="">13</td><td class="">6</td></tr><tr><td class="">PSG</td><td class="">10</td><td class="">5</td></tr><tr><td class="">OM</td><td class="">8</td><td class="">1</td></tr><tr><td class="">OL</td><td class="">6</td><td class="">0</td></tr><tr><td class="">LOSC</td><td class="">2</td><td class="">-5</td></tr><tr><td class="">Stade Rennais</td><td class="">1</td><td class="">-7</td></tr></tbody></table></div></div><p>Une 6e journée est jouée : Stade Rennais bat RC Lens 3 à 0. La vue matérialisée, elle, n'a pas bougé :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> matchs (journee, equipe_dom_id, equipe_ext_id, buts_dom, buts_ext)
+<span class="k">VALUES</span> (<span class="n">6</span>, <span class="n">5</span>, <span class="n">6</span>, <span class="n">3</span>, <span class="n">0</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> * <span class="k">FROM</span> mv_classement
+<span class="k">WHERE</span> equipe <span class="k">IN</span> (<span class="s">'RC Lens'</span>, <span class="s">'Stade Rennais'</span>);</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>2 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>points</th><th>difference</th></tr></thead><tbody><tr><td class="">RC Lens</td><td class="">13</td><td class="">6</td></tr><tr><td class="">Stade Rennais</td><td class="">1</td><td class="">-7</td></tr></tbody></table></div><div class="res-note">Toujours 13 points pour Lens et 1 pour Rennes : c'est la photo prise à la création.</div></div><p>Après un rafraîchissement, le résultat est à jour :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">UNIQUE</span> INDEX <span class="k">ON</span> mv_classement (equipe);
+REFRESH MATERIALIZED VIEW CONCURRENTLY mv_classement;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> * <span class="k">FROM</span> mv_classement
+<span class="k">WHERE</span> equipe <span class="k">IN</span> (<span class="s">'RC Lens'</span>, <span class="s">'Stade Rennais'</span>);</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>2 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>points</th><th>difference</th></tr></thead><tbody><tr><td class="">RC Lens</td><td class="">13</td><td class="">3</td></tr><tr><td class="">Stade Rennais</td><td class="">4</td><td class="">-4</td></tr></tbody></table></div></div><p>On supprime ce match fictif pour garder les données de démonstration intactes :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">DELETE</span> <span class="k">FROM</span> matchs <span class="k">WHERE</span> journee = <span class="n">6</span>;
+REFRESH MATERIALIZED VIEW CONCURRENTLY mv_classement;</pre></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Oublier que les données sont <strong>figées</strong> : une vue matérialisée jamais rafraîchie affiche des chiffres faux sans aucun message d'erreur. Il faut décider qui la rafraîchit et quand (tâche planifiée, après un import…). Et <code class='inl'>CONCURRENTLY</code> exige un index unique :<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">DROP</span> INDEX mv_classement_equipe_idx;
+REFRESH MATERIALIZED VIEW CONCURRENTLY mv_classement;</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap">ERROR:  cannot refresh materialized view &quot;public.mv_classement&quot; concurrently
+HINT:  Create a unique index with no WHERE clause on one or more columns of the materialized view.</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">UNIQUE</span> INDEX <span class="k">ON</span> mv_classement (equipe);</pre></div></div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n16">
+<div class="section-title"><span class="icon-bg ib-amber">🧰</span><span><span class="num">N16</span>&nbsp; Fonctions SQL : réutiliser un calcul</span></div>
+<span class="ftag f5">Fonctions</span>
+<h3>🎯 À quoi ça sert</h3><p>Une fonction enregistre un calcul <strong>paramétré</strong> dans la base : on l'appelle avec des arguments, où que l'on soit (requêtes, vues, autres fonctions). Une fonction en <code class='inl'>LANGUAGE sql</code> contient simplement une ou plusieurs requêtes SQL. Elle peut renvoyer une valeur, ou une table entière avec <code class='inl'>RETURNS TABLE</code>.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — une recette enregistrée dans un robot de cuisine : on choisit les ingrédients (les paramètres), on appuie sur un bouton, le robot applique toujours la même recette.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> [<span class="k">OR</span> REPLACE] FUNCTION nom(param1 TYPE, param2 TYPE)
+RETURNS type_retour                <span class="c">-- ou RETURNS TABLE (col1 TYPE, col2 TYPE)</span>
+LANGUAGE sql
+IMMUTABLE | STABLE | VOLATILE      <span class="c">-- voir N17</span>
+<span class="k">AS</span> $$
+    <span class="k">SELECT</span> ...;                    <span class="c">-- le corps, entre $$ … $$</span>
+$$;
+
+<span class="k">SELECT</span> nom(valeur1, valeur2);      <span class="c">-- appel d'une fonction scalaire</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> nom(valeur);         <span class="c">-- appel d'une fonction qui renvoie une table</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p>Une fonction qui calcule les points d'un match, utilisable dans n'importe quelle requête :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION points(pour <span class="k">INTEGER</span>, contre <span class="k">INTEGER</span>)
+RETURNS <span class="k">INTEGER</span>
+LANGUAGE sql
+IMMUTABLE                          <span class="c">-- même entrée = même résultat, sans lire de table</span>
+<span class="k">AS</span> $$
+    <span class="k">SELECT</span> <span class="k">CASE</span> <span class="k">WHEN</span> pour &gt; contre <span class="k">THEN</span> <span class="n">3</span>
+                <span class="k">WHEN</span> pour = contre <span class="k">THEN</span> <span class="n">1</span>
+                <span class="k">ELSE</span> <span class="n">0</span> <span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> journee, buts_dom, buts_ext,
+       points(buts_dom, buts_ext) <span class="k">AS</span> pts_domicile,
+       points(buts_ext, buts_dom) <span class="k">AS</span> pts_exterieur
+<span class="k">FROM</span> matchs
+<span class="k">WHERE</span> journee = <span class="n">1</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>journee</th><th>buts_dom</th><th>buts_ext</th><th>pts_domicile</th><th>pts_exterieur</th></tr></thead><tbody><tr><td class="">1</td><td class="">3</td><td class="">1</td><td class="">3</td><td class="">0</td></tr><tr><td class="">1</td><td class="">2</td><td class="">2</td><td class="">1</td><td class="">1</td></tr><tr><td class="">1</td><td class="">0</td><td class="">1</td><td class="">0</td><td class="">3</td></tr></tbody></table></div></div><p>Une fonction qui renvoie une table : tous les matchs d'une équipe, vus de son côté.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION matchs_equipe(p_equipe <span class="k">TEXT</span>)
+RETURNS <span class="k">TABLE</span> (journee <span class="k">INTEGER</span>, adversaire <span class="k">VARCHAR</span>, score <span class="k">TEXT</span>, pts <span class="k">INTEGER</span>)
+LANGUAGE sql
+STABLE                             <span class="c">-- lit des tables : jamais IMMUTABLE</span>
+<span class="k">AS</span> $$
+    <span class="k">SELECT</span> m.journee, adv.nom,
+           <span class="k">CASE</span> <span class="k">WHEN</span> e.id = m.equipe_dom_id <span class="k">THEN</span> m.buts_dom || <span class="s">'-'</span> || m.buts_ext
+                <span class="k">ELSE</span> m.buts_ext || <span class="s">'-'</span> || m.buts_dom <span class="k">END</span>,
+           <span class="k">CASE</span> <span class="k">WHEN</span> e.id = m.equipe_dom_id <span class="k">THEN</span> points(m.buts_dom, m.buts_ext)
+                <span class="k">ELSE</span> points(m.buts_ext, m.buts_dom) <span class="k">END</span>
+    <span class="k">FROM</span> matchs m
+    <span class="k">JOIN</span> equipes e   <span class="k">ON</span> e.id <span class="k">IN</span> (m.equipe_dom_id, m.equipe_ext_id)
+    <span class="k">JOIN</span> equipes adv <span class="k">ON</span> adv.id <span class="k">IN</span> (m.equipe_dom_id, m.equipe_ext_id) <span class="k">AND</span> adv.id &lt;&gt; e.id
+    <span class="k">WHERE</span> e.nom = p_equipe
+    <span class="k">ORDER</span> <span class="k">BY</span> m.journee;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> * <span class="k">FROM</span> matchs_equipe(<span class="s">'PSG'</span>);</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>journee</th><th>adversaire</th><th>score</th><th>pts</th></tr></thead><tbody><tr><td class="">1</td><td class="">OM</td><td class="">3-1</td><td class="">3</td></tr><tr><td class="">2</td><td class="">OL</td><td class="">1-1</td><td class="">1</td></tr><tr><td class="">3</td><td class="">LOSC</td><td class="">2-0</td><td class="">3</td></tr><tr><td class="">4</td><td class="">Stade Rennais</td><td class="">4-2</td><td class="">3</td></tr><tr><td class="">5</td><td class="">RC Lens</td><td class="">1-2</td><td class="">0</td></tr></tbody></table></div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box"><code class='inl'>CREATE OR REPLACE</code> remplace le corps d'une fonction, mais <strong>pas son type de retour</strong> :<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION points(pour <span class="k">INTEGER</span>, contre <span class="k">INTEGER</span>)
+RETURNS <span class="k">NUMERIC</span>
+LANGUAGE sql IMMUTABLE
+<span class="k">AS</span> $$ <span class="k">SELECT</span> <span class="n">3.0</span>; $$;</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap">ERROR:  cannot change return type of existing function
+HINT:  Use DROP FUNCTION points(integer,integer) first.</pre></div>Il faut d'abord supprimer la fonction avec sa signature complète : <code class='inl'>DROP FUNCTION points(INTEGER, INTEGER);</code>. La signature compte, car PostgreSQL autorise plusieurs fonctions de même nom avec des paramètres différents.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n17">
+<div class="section-title"><span class="icon-bg ib-purple">⚙️</span><span><span class="num">N17</span>&nbsp; Fonctions PL/pgSQL : de la logique dans la base</span></div>
+<span class="ftag f5">Fonctions</span>
+<h3>🎯 À quoi ça sert</h3><p>Quand une requête ne suffit plus (variables, conditions, boucles, messages d'erreur métier), on écrit la fonction en <strong>PL/pgSQL</strong>, le langage procédural de PostgreSQL. Il ajoute au SQL les structures d'un langage de programmation classique.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — la fonction SQL est une recette en une étape ; la fonction PL/pgSQL est un chef qui goûte, ajuste et refuse d'envoyer un plat raté (RAISE EXCEPTION).</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION nom(p_param TYPE)
+RETURNS type_retour
+LANGUAGE plpgsql
+STABLE
+<span class="k">AS</span> $$
+DECLARE
+    v_variable TYPE := valeur_initiale;   <span class="c">-- variables locales</span>
+BEGIN
+    <span class="k">SELECT</span> ... <span class="k">INTO</span> v_variable <span class="k">FROM</span> ...;  <span class="c">-- stocker un résultat</span>
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span>                     <span class="c">-- aucune ligne trouvée</span>
+        RAISE EXCEPTION <span class="s">'Message : %'</span>, p_param;
+    <span class="k">END</span> <span class="k">IF</span>;
+    FOR r <span class="k">IN</span> <span class="k">SELECT</span> ... LOOP              <span class="c">-- parcourir un résultat</span>
+        ...
+    <span class="k">END</span> LOOP;
+    RETURN v_variable;
+<span class="k">END</span>;
+$$;</pre></div><table class="grid-table"><tr><th>Volatilité</th><th>Promesse faite à PostgreSQL</th><th>Exemple</th></tr>
+<tr><td class="mono">IMMUTABLE</td><td>Mêmes arguments = même résultat, pour toujours. Ne lit aucune table.</td><td>points(3, 1)</td></tr>
+<tr><td class="mono">STABLE</td><td>Même résultat pendant une requête. Peut lire des tables.</td><td>matchs_equipe('PSG')</td></tr>
+<tr><td class="mono">VOLATILE</td><td>Aucune promesse (valeur par défaut). Peut écrire.</td><td>random(), une insertion</td></tr></table>
+<h3>🔬 Exemple commenté</h3><p>La forme d'une équipe sur ses derniers matchs, au format « V N D » :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION forme(p_equipe <span class="k">TEXT</span>, p_nb <span class="k">INTEGER</span> <span class="k">DEFAULT</span> <span class="n">3</span>)
+RETURNS <span class="k">TEXT</span>
+LANGUAGE plpgsql
+STABLE
+<span class="k">AS</span> $$
+DECLARE
+    v_id     <span class="k">INTEGER</span>;
+    v_forme  <span class="k">TEXT</span> := <span class="s">''</span>;
+    r        RECORD;
+BEGIN
+    <span class="c">-- 1. Vérifier que l'équipe existe</span>
+    <span class="k">SELECT</span> id <span class="k">INTO</span> v_id <span class="k">FROM</span> equipes <span class="k">WHERE</span> nom = p_equipe;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Équipe inconnue : %'</span>, p_equipe;
+    <span class="k">END</span> <span class="k">IF</span>;
+
+    <span class="c">-- 2. Parcourir ses derniers matchs, du plus récent au plus ancien</span>
+    FOR r <span class="k">IN</span>
+        <span class="k">SELECT</span> pts <span class="k">FROM</span> matchs_equipe(p_equipe) <span class="k">ORDER</span> <span class="k">BY</span> journee <span class="k">DESC</span> <span class="k">LIMIT</span> p_nb
+    LOOP
+        v_forme := v_forme || <span class="k">CASE</span> r.pts <span class="k">WHEN</span> <span class="n">3</span> <span class="k">THEN</span> <span class="s">'V'</span> <span class="k">WHEN</span> <span class="n">1</span> <span class="k">THEN</span> <span class="s">'N'</span> <span class="k">ELSE</span> <span class="s">'D'</span> <span class="k">END</span>;
+    <span class="k">END</span> LOOP;
+
+    RETURN v_forme;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom, forme(nom) <span class="k">AS</span> trois_derniers, forme(nom, <span class="n">5</span>) <span class="k">AS</span> cinq_derniers
+<span class="k">FROM</span> equipes
+<span class="k">ORDER</span> <span class="k">BY</span> nom;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>trois_derniers</th><th>cinq_derniers</th></tr></thead><tbody><tr><td class="">LOSC</td><td class="">NDD</td><td class="">NDDDN</td></tr><tr><td class="">OL</td><td class="">NDV</td><td class="">NDVNN</td></tr><tr><td class="">OM</td><td class="">NVN</td><td class="">NVNVD</td></tr><tr><td class="">PSG</td><td class="">DVV</td><td class="">DVVNV</td></tr><tr><td class="">RC Lens</td><td class="">VVN</td><td class="">VVNVV</td></tr><tr><td class="">Stade Rennais</td><td class="">NDD</td><td class="">NDDDD</td></tr></tbody></table></div><div class="res-note">Lecture de gauche à droite : du match le plus récent au plus ancien.</div></div><p>Et le message d'erreur métier quand l'équipe n'existe pas :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> forme(<span class="s">'FC Barcelone'</span>);</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap">ERROR:  Équipe inconnue : FC Barcelone
+CONTEXT:  PL/pgSQL function forme(text,integer) line 10 at RAISE</pre></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Déclarer <code class='inl'>IMMUTABLE</code> une fonction qui lit une table. PostgreSQL vous croit sur parole : il peut mettre le résultat en cache ou l'utiliser dans un index, et renvoyer une valeur périmée après une modification des données. Aucun message ne vous prévient. En cas de doute : <code class='inl'>STABLE</code> pour une fonction qui lit, <code class='inl'>VOLATILE</code> pour une fonction qui écrit.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div></section><section class="panel" id="memo"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">📌</span>Fiche mémo — Séance 2</div><div class="tbl" style="border:1px solid var(--border);border-radius:10px"><table class="grid-table" style="margin:0"><tr><th>#</th><th>Notion</th><th>Syntaxe clé</th><th>À retenir</th></tr><tr><td class="mono">N10</td><td>Agrégat conditionnel</td><td class="mono" style="font-size:12.5px;font-weight:500">SUM(x) FILTER (WHERE condition)</td><td>FILTER ≠ WHERE</td></tr><tr><td class="mono">N11</td><td>Sous-totaux</td><td class="mono" style="font-size:12.5px;font-weight:500">GROUP BY ROLLUP (a, b) · CUBE · GROUPING SETS ((a), (b)) · GROUPING(a)</td><td>NULL de sous-total</td></tr><tr><td class="mono">N12</td><td>LATERAL</td><td class="mono" style="font-size:12.5px;font-weight:500">CROSS JOIN LATERAL (… WHERE b.a_id = a.id LIMIT n) · LEFT JOIN LATERAL (…) ON true</td><td>Sans LATERAL : erreur</td></tr><tr><td class="mono">N13</td><td>JSONB</td><td class="mono" style="font-size:12.5px;font-weight:500">-&gt; · -&gt;&gt; · #&gt;&gt; &#x27;{a,b}&#x27; · @&gt; &#x27;{…}&#x27; · ? &#x27;cle&#x27; · jsonb_array_elements_text() · ||</td><td>->> renvoie du texte</td></tr><tr><td class="mono">N14</td><td>Vue</td><td class="mono" style="font-size:12.5px;font-weight:500">CREATE VIEW v AS SELECT … [WITH CHECK OPTION]</td><td>Rien n'est stocké</td></tr><tr><td class="mono">N15</td><td>Vue matérialisée</td><td class="mono" style="font-size:12.5px;font-weight:500">CREATE MATERIALIZED VIEW mv AS … · REFRESH MATERIALIZED VIEW CONCURRENTLY mv</td><td>Données figées</td></tr><tr><td class="mono">N16</td><td>Fonction SQL</td><td class="mono" style="font-size:12.5px;font-weight:500">CREATE FUNCTION f(p TYPE) RETURNS … LANGUAGE sql STABLE AS $$ … $$</td><td>Type de retour figé</td></tr><tr><td class="mono">N17</td><td>Fonction PL/pgSQL</td><td class="mono" style="font-size:12.5px;font-weight:500">DECLARE … BEGIN … SELECT … INTO · IF NOT FOUND · RAISE EXCEPTION · FOR … LOOP · RETURN … END</td><td>IMMUTABLE mensonger</td></tr></table></div>
+<h3>🧭 Vue, vue matérialisée ou fonction : laquelle choisir ?</h3>
+<table class="grid-table"><tr><th>Besoin</th><th>Outil</th><th>Pourquoi</th></tr>
+<tr><td>Simplifier une requête souvent écrite, données toujours à jour</td><td>Vue</td><td>Aucun stockage, résultat toujours frais</td></tr>
+<tr><td>Afficher vite un résultat coûteux qui peut dater de quelques minutes</td><td>Vue matérialisée</td><td>Résultat stocké, rafraîchi à la demande</td></tr>
+<tr><td>Un calcul qui dépend de paramètres</td><td>Fonction SQL</td><td>Réutilisable partout, avec des arguments</td></tr>
+<tr><td>Des règles métier : conditions, boucles, erreurs explicites</td><td>Fonction PL/pgSQL</td><td>La logique d'un langage de programmation</td></tr></table>
+<div class="instruction-box">💡 Pour lister ce que vous avez créé dans psql : <code class="inl">\dv</code> (vues), <code class="inl">\dm</code> (vues matérialisées), <code class="inl">\df</code> (fonctions), <code class="inl">\sf nom_fonction</code> (afficher le code d'une fonction).</div></div></section><section class="panel" id="glossaire"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">📖</span>Glossaire — Séance 2</div><div><span class="ftag f1">Agrégations</span><span class="ftag f2">LATERAL</span><span class="ftag f3">JSONB</span><span class="ftag f4">Vues</span><span class="ftag f5">Fonctions</span></div><br><input class="gl-search" type="search" placeholder="Rechercher un terme…" aria-label="Rechercher un terme"><div class="gl-item"><b>@&gt; (contient)</b> <span class="ftag f3">JSONB</span><p>Opérateur vrai si le JSON contient le fragment donné.</p></div><div class="gl-item"><b>-&gt;&gt; / -&gt;</b> <span class="ftag f3">JSONB</span><p>Opérateurs d&#x27;extraction : -&gt;&gt; renvoie du texte, -&gt; renvoie du JSON pour continuer à naviguer.</p></div><div class="gl-item"><b>CROSS JOIN LATERAL</b> <span class="ftag f2">LATERAL</span><p>Exécute la sous-requête pour chaque ligne de gauche et ne garde que les lignes ayant un résultat.</p></div><div class="gl-item"><b>CUBE</b> <span class="ftag f1">Agrégations</span><p>Extension du GROUP BY qui calcule les sous-totaux pour toutes les combinaisons de colonnes.</p></div><div class="gl-item"><b>Dollar quoting ($$)</b> <span class="ftag f5">Fonctions</span><p>Délimiteurs du corps d&#x27;une fonction, qui évitent d&#x27;échapper les apostrophes à l&#x27;intérieur.</p></div><div class="gl-item"><b>FILTER</b> <span class="ftag f1">Agrégations</span><p>Clause attachée à un agrégat, qui ne lui fait prendre en compte que les lignes vérifiant une condition.</p></div><div class="gl-item"><b>Fonction SQL</b> <span class="ftag f5">Fonctions</span><p>Fonction dont le corps est composé de requêtes SQL (LANGUAGE sql).</p></div><div class="gl-item"><b>GROUPING SETS</b> <span class="ftag f1">Agrégations</span><p>Extension du GROUP BY qui liste précisément les regroupements à calculer.</p></div><div class="gl-item"><b>GROUPING()</b> <span class="ftag f1">Agrégations</span><p>Fonction qui vaut 1 quand la ligne est un sous-total sur la colonne indiquée.</p></div><div class="gl-item"><b>JSON</b> <span class="ftag f3">JSONB</span><p>Format texte de données structurées en objets { } et tableaux [ ].</p></div><div class="gl-item"><b>JSONB</b> <span class="ftag f3">JSONB</span><p>Type PostgreSQL qui stocke du JSON en binaire : plus rapide à interroger et indexable.</p></div><div class="gl-item"><b>jsonb_array_elements_text</b> <span class="ftag f3">JSONB</span><p>Fonction qui transforme un tableau JSON en une ligne par élément.</p></div><div class="gl-item"><b>LATERAL</b> <span class="ftag f2">LATERAL</span><p>Mot-clé qui permet à une sous-requête du FROM d&#x27;utiliser les colonnes des tables placées avant elle.</p></div><div class="gl-item"><b>LEFT JOIN LATERAL … ON true</b> <span class="ftag f2">LATERAL</span><p>Comme CROSS JOIN LATERAL, mais conserve les lignes de gauche sans résultat.</p></div><div class="gl-item"><b>PL/pgSQL</b> <span class="ftag f5">Fonctions</span><p>Langage procédural de PostgreSQL : variables, conditions, boucles, exceptions.</p></div><div class="gl-item"><b>RAISE EXCEPTION</b> <span class="ftag f5">Fonctions</span><p>Instruction PL/pgSQL qui interrompt la fonction avec un message d&#x27;erreur.</p></div><div class="gl-item"><b>REFRESH … CONCURRENTLY</b> <span class="ftag f4">Vues</span><p>Rafraîchissement d&#x27;une vue matérialisée sans bloquer les lectures ; exige un index unique.</p></div><div class="gl-item"><b>RETURNS TABLE</b> <span class="ftag f5">Fonctions</span><p>Déclare qu&#x27;une fonction renvoie un ensemble de lignes, avec ses colonnes.</p></div><div class="gl-item"><b>ROLLUP</b> <span class="ftag f1">Agrégations</span><p>Extension du GROUP BY qui ajoute les sous-totaux hiérarchiques et le total général.</p></div><div class="gl-item"><b>Signature</b> <span class="ftag f5">Fonctions</span><p>Nom d&#x27;une fonction et types de ses paramètres ; deux fonctions peuvent avoir le même nom si leurs signatures diffèrent.</p></div><div class="gl-item"><b>Tableau croisé</b> <span class="ftag f1">Agrégations</span><p>Présentation qui répartit une mesure selon deux dimensions (ex. ventes par jeu et par plateforme).</p></div><div class="gl-item"><b>Volatilité</b> <span class="ftag f5">Fonctions</span><p>Promesse faite à PostgreSQL sur le comportement d&#x27;une fonction : IMMUTABLE, STABLE ou VOLATILE.</p></div><div class="gl-item"><b>Vue</b> <span class="ftag f4">Vues</span><p>Requête enregistrée sous un nom, interrogeable comme une table, sans stockage de données.</p></div><div class="gl-item"><b>Vue matérialisée</b> <span class="ftag f4">Vues</span><p>Vue dont le résultat est stocké physiquement et mis à jour par REFRESH.</p></div><div class="gl-item"><b>Vue modifiable</b> <span class="ftag f4">Vues</span><p>Vue simple (une table, sans agrégat) dans laquelle on peut insérer ou modifier des lignes.</p></div><div class="gl-item"><b>WITH CHECK OPTION</b> <span class="ftag f4">Vues</span><p>Option qui refuse toute écriture produisant une ligne invisible par la vue.</p></div></div></section></main>
+<footer>SQL avancé avec PostgreSQL · M1 Tech Lead</footer>
+<script>
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+function show(id){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});}
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.go);
+if(a.dataset.anchor){setTimeout(()=>document.getElementById(a.dataset.anchor).scrollIntoView({behavior:'smooth'}),60);}}));
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{
+ const txt=b.closest('.code').querySelector('pre').innerText;
+ const done=()=>{b.textContent='Copié ✓';b.classList.add('done');setTimeout(()=>{b.textContent='Copier';b.classList.remove('done')},1500)};
+ if(navigator.clipboard){navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(txt,done))}else fallback(txt,done);}));
+function fallback(t,done){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){}a.remove();}
+function refresh(){const all=document.querySelectorAll('.understood input');const d=[...all].filter(i=>i.checked).length;
+ const f=document.getElementById('gprog-fill');if(!f)return;f.style.width=(all.length?d/all.length*100:0)+'%';
+ document.getElementById('gprog-txt').textContent=d+' / '+all.length;}
+document.querySelectorAll('.understood input').forEach(i=>i.addEventListener('change',()=>{i.closest('.understood').classList.toggle('done',i.checked);refresh();}));
+refresh();
+document.querySelectorAll('.os-tabs').forEach(g=>g.querySelectorAll('.os').forEach(b=>b.addEventListener('click',()=>{
+ const box=g.parentElement;g.querySelectorAll('.os').forEach(x=>x.classList.toggle('active',x===b));
+ box.querySelectorAll(':scope > .os-panel').forEach(p=>p.classList.toggle('active',p.dataset.os===b.dataset.os));})));
+const s=document.querySelector('.gl-search');if(s){s.addEventListener('input',()=>{const q=s.value.toLowerCase();
+ document.querySelectorAll('.gl-item').forEach(i=>i.style.display=i.innerText.toLowerCase().includes(q)?'':'none');});}
+const DEMO2_SQL="-- =====================================================================\n--  Compl\u00e9ment s\u00e9ance 2 \u2014 SQL avanc\u00e9 avec PostgreSQL\n--  \u00c0 ex\u00e9cuter sur la base cours_sql, APR\u00c8S demo.sql.\n--  Ajoute un catalogue de jeux vid\u00e9o (JSONB) et leurs ventes.\n--  Script r\u00e9-ex\u00e9cutable : il supprime puis recr\u00e9e ses tables.\n--  Donn\u00e9es simplifi\u00e9es : plateformes non exhaustives, ventes fictives.\n-- =====================================================================\n\nDROP TABLE IF EXISTS ventes, jeux CASCADE;\n\nCREATE TABLE jeux (\n    id       INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    titre    VARCHAR(80) NOT NULL UNIQUE,\n    details  JSONB       NOT NULL             -- fiche du jeu, structure variable\n);\n\nINSERT INTO jeux (titre, details) VALUES\n ('Rocket League',       '{\"editeur\": \"Psyonix\", \"genres\": [\"sport\", \"course\"], \"plateformes\": [\"PC\", \"PS5\", \"Switch\"], \"pegi\": 3, \"multijoueur\": true, \"prix\": 19.99}'),\n ('EA Sports FC 25',     '{\"editeur\": \"EA Sports\", \"genres\": [\"sport\"], \"plateformes\": [\"PC\", \"PS5\", \"Xbox\"], \"pegi\": 3, \"multijoueur\": true, \"prix\": 69.99}'),\n ('Mario Kart 8 Deluxe', '{\"editeur\": \"Nintendo\", \"genres\": [\"course\"], \"plateformes\": [\"Switch\"], \"pegi\": 3, \"multijoueur\": true, \"prix\": 59.99}'),\n ('Elden Ring',          '{\"editeur\": \"Bandai Namco\", \"genres\": [\"action\", \"rpg\"], \"plateformes\": [\"PC\", \"PS5\", \"Xbox\"], \"pegi\": 16, \"multijoueur\": false, \"prix\": 59.99, \"dlc\": {\"nom\": \"Shadow of the Erdtree\", \"prix\": 39.99}}'),\n ('Hades',               '{\"editeur\": \"Supergiant Games\", \"genres\": [\"action\", \"roguelike\"], \"plateformes\": [\"PC\", \"Switch\"], \"pegi\": 12, \"multijoueur\": false, \"prix\": 24.99}'),\n ('Tetris Effect',       '{\"editeur\": \"Enhance\", \"genres\": [\"puzzle\"], \"plateformes\": [\"PC\", \"PS5\", \"Switch\"], \"pegi\": 3, \"multijoueur\": true, \"prix\": 39.99}'),\n ('Stardew Valley',      '{\"editeur\": \"ConcernedApe\", \"genres\": [\"simulation\", \"rpg\"], \"plateformes\": [\"PC\", \"Switch\"], \"pegi\": 7, \"multijoueur\": true, \"prix\": 13.99}'),\n ('Gran Turismo 7',      '{\"editeur\": \"Sony Interactive Entertainment\", \"genres\": [\"course\", \"simulation\"], \"plateformes\": [\"PS5\"], \"pegi\": 3, \"multijoueur\": true, \"prix\": 79.99}');\n\nCREATE TABLE ventes (\n    id             INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    jeu_id         INTEGER      NOT NULL REFERENCES jeux(id),\n    plateforme     VARCHAR(10)  NOT NULL,\n    mois           DATE         NOT NULL,            -- 1er jour du mois\n    quantite       INTEGER      NOT NULL CHECK (quantite >= 0),\n    prix_unitaire  NUMERIC(6,2) NOT NULL CHECK (prix_unitaire >= 0)\n);\n\n-- Une ligne par jeu, par plateforme et par mois (janvier \u00e0 juin 2026)\nINSERT INTO ventes (jeu_id, plateforme, mois, quantite, prix_unitaire)\nSELECT j.id, p.plateforme, m.mois::DATE,\n       100 + (('x' || substr(md5(j.id || p.plateforme || to_char(m.mois, 'YYYY-MM')), 1, 6))::bit(24)::int % 400),\n       (j.details ->> 'prix')::NUMERIC\nFROM jeux j\nCROSS JOIN LATERAL jsonb_array_elements_text(j.details -> 'plateformes') AS p(plateforme)\nCROSS JOIN generate_series('2026-01-01'::DATE, '2026-06-01'::DATE, INTERVAL '1 month') AS m(mois)\nORDER BY j.id, p.plateforme, m.mois;\n\n-- ---------- Contr\u00f4le ----------\nSELECT 'jeux' AS table_name, COUNT(*) AS lignes FROM jeux\nUNION ALL SELECT 'ventes', COUNT(*) FROM ventes;\n";
+document.getElementById('dl-demo2').addEventListener('click',()=>{const b=new Blob([DEMO2_SQL],{type:'text/plain'});
+const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='demo-s2.sql';document.body.appendChild(a);a.click();a.remove();});</script></body></html>

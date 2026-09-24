@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance 1 — Cas pratiques · SQL avancé avec PostgreSQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;
+--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f1f5f9;--card:#fff;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15.5px}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:44px 20px 34px}
+.wrap{max-width:1000px;margin:0 auto}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+header h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.2;margin-bottom:10px}
+header p.lead{color:#cbd5e1;max-width:700px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:13px;font-weight:500}
+.gprog{margin-top:22px;max-width:480px}
+.gprog-label{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:6px}
+.gprog-bar{height:8px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+.gprog-fill{height:100%;width:0;background:#34d399;transition:width .4s}
+.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(15,23,42,.05)}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 10px}
+.tab{background:none;border:none;border-bottom:3px solid transparent;padding:15px 15px;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--primary)} .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+main{padding:28px 14px 60px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;margin-bottom:14px;line-height:1.3}
+.icon-bg{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.ib-blue{background:var(--primary-light)}.ib-green{background:var(--secondary-light)}.ib-amber{background:var(--accent-light)}.ib-red{background:var(--danger-light)}.ib-purple{background:var(--purple-light)}
+.num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--primary);background:var(--primary-light);padding:3px 9px;border-radius:7px}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+p+p{margin-top:8px}
+ul.clean{list-style:none;margin:6px 0}
+ul.clean li{padding:4px 0 4px 22px;position:relative}
+ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--primary);font-weight:700}
+ol.steps{margin:6px 0 6px 22px} ol.steps li{margin:4px 0}
+.objectif-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:14px;color:var(--primary-dark)}
+.instruction-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;margin:14px 0;color:#78350f}
+.warn-box{background:var(--danger-light);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;margin:14px 0;color:#7f1d1d}
+.ok-box{background:var(--secondary-light);border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin:14px 0;color:#064e3b}
+.analogie{background:var(--purple-light);border-left:4px solid var(--purple);border-radius:10px;padding:14px 18px;margin:14px 0;color:#4c1d95}
+.ftag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0}
+.f1{background:#dbeafe;color:#1e40af}.f2{background:#d1fae5;color:#065f46}.f3{background:#fef3c7;color:#92400e}.f4{background:#fee2e2;color:#991b1b}.f5{background:#ede9fe;color:#5b21b6}
+code.inl{background:#e2e8f0;padding:1px 6px;border-radius:5px;font-size:13px}
+.code{margin:10px 0;border-radius:10px;overflow:hidden;background:var(--dark)}
+.code-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#1e293b;color:#94a3b8;font-size:12px;font-family:'JetBrains Mono',monospace}
+.copy{background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.copy:hover{background:#475569}.copy.done{background:var(--secondary)}
+.code pre{color:#e2e8f0;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0}
+pre .c{color:#64748b;font-style:italic} pre .k{color:#93c5fd;font-weight:500} pre .s{color:#86efac} pre .n{color:#fcd34d} pre .m{color:#f9a8d4}
+pre.sh{color:#a7f3d0}
+.res{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:4px 0 12px}
+.res-bar{display:flex;justify-content:space-between;background:#f8fafc;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;font-weight:700;color:var(--secondary)}
+.res-bar span{color:var(--muted);font-weight:500}
+.tbl{overflow-x:auto}
+.tbl table,.grid-table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#f1f5f9;text-align:left;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate,#334155);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 12px;border-bottom:1px solid #f1f5f9;font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap}
+.tbl td.null{color:#94a3b8;font-style:italic}
+.res-note{padding:9px 12px;font-size:13px;color:var(--muted);background:#f8fafc;border-top:1px solid var(--border)}
+.grid-table th{background:var(--dark-2);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:13px}
+.grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.grid-table tr:nth-child(even) td{background:#f8fafc}
+.grid-table td:first-child{font-weight:600}
+.understood{display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.understood input{accent-color:var(--secondary);width:18px;height:18px}
+.understood.done{border-color:var(--secondary);color:var(--secondary);background:var(--secondary-light)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.toc a{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.toc a:hover{border-color:var(--primary)}
+.result-panel{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:var(--radius);padding:22px 24px;margin:6px 0 22px}
+.result-panel h4{color:#fff;font-size:16px;margin-bottom:8px}
+.result-panel .score{color:#34d399;font-weight:800;font-family:'JetBrains Mono',monospace}
+.result-panel ul{margin-left:18px}.result-panel li{margin:3px 0}
+.os-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.os{font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--muted)}
+.os.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.os-panel{display:none}.os-panel.active{display:block}
+.gl-search{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px}
+.gl-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.gl-item b{font-family:'JetBrains Mono',monospace;font-size:14px}
+.gl-item p{font-size:14px;color:#334155;margin-top:2px}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--primary);background:var(--primary);color:#fff}
+.btn:hover{filter:brightness(.95)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 40px}
+@media (max-width:700px){.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.actions-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn.ghost{background:#fff;color:var(--primary)}
+.term-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.term-grid{grid-template-columns:1fr}}
+.term-item{display:flex;align-items:center;gap:10px;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:13.5px;border:2px solid transparent}
+.term-item span{flex:1}
+.term-item select{font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:7px;padding:5px 6px;border:none;background:#1e293b;color:#fff}
+.term-item.ok{border-color:#34d399}.term-item.ko{border-color:#f87171}
+.def-item{display:flex;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;font-size:14px;background:#fff}
+.def-item b{font-family:'JetBrains Mono',monospace;color:var(--primary)}
+.group{border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.group h4{font-size:15px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sit{display:block;width:100%;text-align:left;font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:#fff;margin-bottom:7px;cursor:pointer;color:var(--text)}
+.sit:hover{border-color:var(--primary)}
+.sit.sel{border-color:var(--accent);background:var(--accent-light)}
+.sit.good{border-color:var(--secondary);background:var(--secondary-light)}
+.sit.bad{border-color:var(--danger);background:var(--danger-light)}
+.expl{font-size:13.5px;margin-top:8px;padding:10px 12px;border-radius:9px;background:#f8fafc;color:#334155}
+.vf{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:9px}
+.vf-row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.vf-row p{flex:1;min-width:220px;font-size:14.5px}
+.vf-btns{display:flex;gap:6px}
+.vf-btns button{font-family:inherit;font-weight:600;font-size:13px;border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 14px;cursor:pointer}
+.vf-btns button.sel{background:var(--primary);border-color:var(--primary);color:#fff}
+.vf.good{border-color:var(--secondary)}.vf.bad{border-color:var(--danger)}
+.exo{border-top:1px solid var(--border);padding-top:16px;margin-top:16px}
+.exo-head{display:flex;gap:10px;align-items:center;font-size:15px}
+.enonce{margin:8px 0}
+details.hint summary,details.corrige summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--accent);margin:6px 0}
+details.corrige summary{color:var(--secondary)}
+details.hint p{font-size:14px;background:var(--accent-light);padding:10px 12px;border-radius:9px;color:#78350f}
+pre.errmsg{padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap;margin:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--border);text-decoration:none;color:var(--primary);background:#fff}
+.chip:hover{border-color:var(--primary)}
+.chip-m{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.chip-m:hover{border-color:var(--primary)}
+.acc{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.acc>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;font-weight:700;font-size:16px}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary:hover{background:#f8fafc}
+.acc>summary:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.acc-title{flex:1}
+.acc-count{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);background:#f1f5f9;padding:3px 10px;border-radius:999px}
+.acc-count.full{background:var(--secondary-light);color:#065f46}
+.chev{color:var(--muted);transition:transform .25s}
+.acc[open] .chev{transform:rotate(180deg)}
+.acc[open]>summary{border-bottom:1px solid var(--border)}
+.acc-body{padding:0 20px 20px}
+.acc-body .exo:first-child{border-top:none;margin-top:4px}
+@media (max-width:600px){.acc>summary{flex-wrap:wrap}.acc-title{flex-basis:60%}}
+.prog{margin:10px 0 14px}.prog-label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.prog-bar{height:8px;background:var(--border);border-radius:999px;overflow:hidden}.prog-fill{height:100%;width:0;background:var(--secondary);transition:width .35s}
+.lock-pills{display:flex;gap:8px;flex-wrap:wrap}
+.lock-pill{font-weight:600;font-size:13px;padding:6px 14px;border-radius:999px;background:#f1f5f9;color:var(--muted)}
+.lock-pill.done{background:var(--secondary-light);color:#065f46}
+.tab.locked::after{content:" 🔒"}
+body:not(.formateur) .formateur-only{display:none!important}
+.mode-flag{display:none}body.formateur .mode-flag{display:inline-block;background:#fbbf24;color:#0f172a}
+</style></head><body>
+<header><div class="wrap"><span class="badge">🐘 SQL avancé avec PostgreSQL · Séance 1 · Cas pratiques</span>
+<h1>Fondamentaux & requêtage avancé en pratique</h1>
+<p class="lead">Trois cas pour vérifier les notions, 27 mini-exos pour s'entraîner, puis le projet fil rouge FilmBox.</p>
+<div class="meta"><span class="pill">🧩 26 termes</span><span class="pill">🔀 Ordre aléatoire</span><span class="pill">🛠 27 mini-exos</span><span class="pill">🎬 6 missions</span><span class="pill">🔒 Glossaire verrouillé</span><span class="pill mode-flag">👩‍🏫 Mode formateur</span></div></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" role="tablist"><button class="tab active" data-tab="intro" role="tab">🎯 Vue d'ensemble</button><button class="tab" data-tab="cas1" role="tab">🧩 Cas 1</button><button class="tab" data-tab="cas2" role="tab">🔍 Cas 2</button><button class="tab" data-tab="cas3" role="tab">✅ Cas 3</button><button class="tab" data-tab="exos" role="tab">🛠 Mini-exos</button><button class="tab" data-tab="filmbox" role="tab">🎬 FilmBox</button><button class="tab locked" data-tab="glossaire" role="tab">📖 Glossaire</button></div></nav>
+<main class="wrap"><section class="panel active" id="intro"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🎯</span>Cas pratiques de la séance 1</div>
+<div class="objectif-box">Vérifier la compréhension des notions N1 à N9, s'entraîner sur des exercices courts, puis les appliquer au projet fil rouge FilmBox.</div>
+<table class="grid-table"><tr><th>Étape</th><th>Contenu</th><th>Base</th></tr>
+<tr><td>🧩 Cas 1</td><td>26 termes à associer à leur définition</td><td>—</td></tr>
+<tr><td>🔍 Cas 2</td><td>5 groupes de situations, 1 intruse par groupe</td><td>—</td></tr>
+<tr><td>✅ Cas 3</td><td>18 affirmations vrai / faux</td><td>—</td></tr>
+<tr><td>🛠 Mini-exos</td><td>27 exercices SQL, 3 par notion</td><td class="mono">cours_sql</td></tr>
+<tr><td>🎬 FilmBox</td><td>6 missions, 25 tâches</td><td class="mono">filmbox</td></tr>
+<tr><td>📖 Glossaire</td><td>Débloqué après les 3 cas</td><td>—</td></tr></table>
+<div class="instruction-box">📌 Tous les résultats attendus ont été obtenus en exécutant les corrigés sur PostgreSQL. Si votre résultat diffère, c'est votre requête qu'il faut réinterroger.</div></div></section><section class="panel" id="cas1"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🧩</span>Cas 1 — Correspondance termes / définitions</div><div class="objectif-box">🎯 Associer chaque terme clé de la séance à sa définition.</div><div class="instruction-box">📌 Pour chaque terme, choisissez la lettre de la bonne définition, puis cliquez sur Vérifier. 26 termes répartis en 3 rounds, dans un ordre différent à chaque session.</div>
+<div class="prog"><div class="prog-label"><span id="c1-round-lbl">Round 1</span><span id="c1-ptxt">0 / 26</span></div><div class="prog-bar"><div class="prog-fill" id="c1-fill"></div></div></div>
+<div id="c1-zone"></div>
+<div class="actions-row"><button class="btn" id="c1-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c1-reveal" type="button">Révéler</button><button class="btn ghost" id="c1-next" type="button" hidden>Round suivant</button><button class="btn ghost" id="c1-reset" type="button">Recommencer</button></div>
+<div id="c1-result"></div></div></section><section class="panel" id="cas2"><div class="card"><div class="section-title"><span class="icon-bg ib-green">🔍</span>Cas 2 — Identification de situations</div><div class="objectif-box">🎯 Reconnaître la notion SQL qui répond à un besoin concret.</div><div class="instruction-box">📌 Dans chaque groupe, 4 situations relèvent de la notion indiquée et 1 est une intruse. Cliquez sur l'intruse de chaque groupe, puis vérifiez.</div>
+<div class="prog"><div class="prog-label"><span>Groupes complétés</span><span id="c2-ptxt">0 / 5</span></div><div class="prog-bar"><div class="prog-fill" id="c2-fill"></div></div></div>
+<div id="c2-zone"></div>
+<div class="actions-row"><button class="btn" id="c2-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c2-reveal" type="button">Révéler</button><button class="btn ghost" id="c2-reset" type="button">Recommencer</button></div>
+<div id="c2-result"></div></div></section><section class="panel" id="cas3"><div class="card"><div class="section-title"><span class="icon-bg ib-amber">✅</span>Cas 3 — Vrai ou faux ?</div><div class="objectif-box">🎯 Repérer les idées reçues et les pièges de la séance.</div><div class="instruction-box">📌 Répondez aux 18 affirmations, puis vérifiez : chaque réponse est accompagnée de son explication.</div>
+<div class="prog"><div class="prog-label"><span>Réponses données</span><span id="c3-ptxt">0 / 18</span></div><div class="prog-bar"><div class="prog-fill" id="c3-fill"></div></div></div>
+<div id="c3-zone"></div>
+<div class="actions-row"><button class="btn" id="c3-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c3-reveal" type="button">Révéler</button><button class="btn ghost" id="c3-reset" type="button">Recommencer</button></div>
+<div id="c3-result"></div></div></section><section class="panel" id="exos"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🛠</span>Mini-exos · base cours_sql</div>
+<div class="objectif-box">3 exercices courts par notion pour s'entraîner avant d'attaquer le projet FilmBox. Écrivez votre requête dans psql ou DBeaver, puis comparez votre résultat au <strong>résultat attendu</strong>.</div>
+<div class="instruction-box">📌 Travaillez sur la base <code class="inl">cours_sql</code>. Les exercices N2 créent des tables : pour repartir de zéro, relancez <code class="inl">demo.sql</code>. L'ordre des lignes peut légèrement différer si votre requête ne précise pas d'<code class="inl">ORDER BY</code>.</div>
+<div class="prog"><div class="prog-label"><span>Exercices réussis</span><span class="ptxt" id="ptxt-exos">0</span></div><div class="prog-bar"><div class="prog-fill" id="pfill-exos"></div></div></div>
+<div class="chips"><a href="#" class="chip" data-acc="exn-N1">N1</a><a href="#" class="chip" data-acc="exn-N2">N2</a><a href="#" class="chip" data-acc="exn-N3">N3</a><a href="#" class="chip" data-acc="exn-N4">N4</a><a href="#" class="chip" data-acc="exn-N5">N5</a><a href="#" class="chip" data-acc="exn-N6">N6</a><a href="#" class="chip" data-acc="exn-N7">N7</a><a href="#" class="chip" data-acc="exn-N8">N8</a><a href="#" class="chip" data-acc="exn-N9">N9</a></div>
+<div class="actions-row"><button class="btn ghost" type="button" id="acc-open">Tout déplier</button><button class="btn ghost" type="button" id="acc-close">Tout replier</button></div></div>
+<div class="exos-card"><details class="acc" id="exn-N1"><summary><span class="num">N1</span><span class="acc-title">Explorer une base avec psql</span><span class="ftag f1">Prise en main</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-1-1">
+<div class="exo-head"><span class="num">1.1</span><strong>Lister et se connecter</strong></div>
+<p class="enonce">Affichez la liste des bases de données du serveur, puis connectez-vous à la base <code class='inl'>cours_sql</code>.</p>
+<div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> La base <code>cours_sql</code> apparaît dans la liste, puis l'invite devient <code>cours_sql=#</code>.</div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\l</span>
+<span class="m">\c</span> cours_sql</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-1-2">
+<div class="exo-head"><span class="num">1.2</span><strong>Décrire une table</strong></div>
+<p class="enonce">Affichez la structure de la table <code class='inl'>matchs</code>. Combien de contraintes <code class='inl'>CHECK</code> et de clés étrangères comporte-t-elle ?</p>
+<div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> 1 clé primaire (<code>id</code>), 2 contraintes CHECK (<code>buts_dom >= 0</code>, <code>buts_ext >= 0</code>) et 2 clés étrangères vers <code>equipes</code>.</div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\d</span> matchs</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-1-3">
+<div class="exo-head"><span class="num">1.3</span><strong>Où suis-je ?</strong></div>
+<p class="enonce">En une seule requête SQL, affichez le nom de la base courante, l'utilisateur connecté et la version de PostgreSQL.</p><details class="hint"><summary>💡 Indice</summary><p>Les fonctions <code>current_database()</code>, <code>current_user</code> et <code>version()</code>.</p></details>
+<div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Une ligne : <code>cours_sql | postgres | PostgreSQL 16.x (ou 17.x) …</code></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> current_database() <span class="k">AS</span> base,
+       current_user     <span class="k">AS</span> utilisateur,
+       version()        <span class="k">AS</span> version;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N2"><summary><span class="num">N2</span><span class="acc-title">Créer une table : types et contraintes</span><span class="ftag f2">Structure</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-2-1">
+<div class="exo-head"><span class="num">2.1</span><strong>La table tournois</strong></div>
+<p class="enonce">Créez une table <code class='inl'>tournois</code> : un identifiant généré automatiquement, un nom obligatoire et unique (80 caractères max), une date de début obligatoire et une dotation (montant en euros) positive, à 0 par défaut.</p><details class="hint"><summary>💡 Indice</summary><p>Un montant se stocke en <code>NUMERIC</code>, jamais en <code>FLOAT</code>.</p></details>
+<div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> <code>CREATE TABLE</code>, puis <code>\d tournois</code> affiche les 4 colonnes et leurs contraintes.</div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">TABLE</span> tournois (
+    id          <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">ALWAYS</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    nom         <span class="k">VARCHAR</span>(<span class="n">80</span>)   <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">UNIQUE</span>,
+    date_debut  <span class="k">DATE</span>          <span class="k">NOT</span> <span class="k">NULL</span>,
+    dotation    <span class="k">NUMERIC</span>(<span class="n">10</span>,<span class="n">2</span>) <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="n">0</span> <span class="k">CHECK</span> (dotation &gt;= <span class="n">0</span>)
+);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-2-2">
+<div class="exo-head"><span class="num">2.2</span><strong>Tester une contrainte</strong></div>
+<p class="enonce">Tentez d'insérer un tournoi « Summer Rush » avec une dotation de -500 €. Lisez le message d'erreur : quelle contrainte a bloqué l'insertion ?</p>
+<div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> La contrainte <code>tournois_dotation_check</code> refuse la ligne : rien n'est inséré.</div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur attendue</div><pre class="errmsg">ERROR:  new row for relation &quot;tournois&quot; violates check constraint &quot;tournois_dotation_check&quot;
+DETAIL:  Failing row contains (1, Summer Rush, 2027-06-01, -500.00).</pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> tournois (nom, date_debut, dotation)
+<span class="k">VALUES</span> (<span class="s">'Summer Rush'</span>, <span class="s">'2027-06-01'</span>, -<span class="n">500</span>);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-2-3">
+<div class="exo-head"><span class="num">2.3</span><strong>Une table liée</strong></div>
+<p class="enonce">Créez une table <code class='inl'>inscriptions</code> (tournoi, pseudo du joueur, date d'inscription à aujourd'hui par défaut) où un même pseudo ne peut s'inscrire qu'une fois par tournoi, et où le tournoi doit exister. Vérifiez en inscrivant un joueur au tournoi n°99, qui n'existe pas.</p><details class="hint"><summary>💡 Indice</summary><p>Une clé primaire peut porter sur deux colonnes.</p></details>
+<div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur attendue</div><pre class="errmsg">ERROR:  insert or update on table &quot;inscriptions&quot; violates foreign key constraint &quot;inscriptions_tournoi_id_fkey&quot;
+DETAIL:  Key (tournoi_id)=(99) is not present in table &quot;tournois&quot;.</pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">TABLE</span> inscriptions (
+    tournoi_id  <span class="k">INTEGER</span>     <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> tournois(id),
+    pseudo      <span class="k">VARCHAR</span>(<span class="n">30</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    inscrit_le  <span class="k">DATE</span>        <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> CURRENT_DATE,
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> (tournoi_id, pseudo)          <span class="c">-- une inscription par joueur et par tournoi</span>
+);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> inscriptions (tournoi_id, pseudo) <span class="k">VALUES</span> (<span class="n">99</span>, <span class="s">'Zed'</span>);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N3"><summary><span class="num">N3</span><span class="acc-title">Lire et filtrer</span><span class="ftag f3">Requêtes</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-3-1">
+<div class="exo-head"><span class="num">3.1</span><strong>Buteurs réguliers</strong></div>
+<p class="enonce">Affichez les joueurs ayant marqué entre 1 et 5 buts, du plus grand nombre de buts au plus petit, puis par ordre alphabétique en cas d'égalité.</p><details class="hint"><summary>💡 Indice</summary><p><code>BETWEEN a AND b</code> inclut les deux bornes.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>poste</th><th>buts</th></tr></thead><tbody><tr><td class="">Enzo Rossi</td><td class="">attaquant</td><td class="">5</td></tr><tr><td class="">Lucas Moreau</td><td class="">attaquant</td><td class="">4</td></tr><tr><td class="">Hugo Martin</td><td class="">milieu</td><td class="">2</td></tr><tr><td class="">Rayan Ndiaye</td><td class="">attaquant</td><td class="">2</td></tr><tr><td class="">Noah Petit</td><td class="">milieu</td><td class="">1</td></tr><tr><td class="">Théo Garnier</td><td class="">défenseur</td><td class="">1</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom, poste, buts
+<span class="k">FROM</span> joueurs
+<span class="k">WHERE</span> buts <span class="k">BETWEEN</span> <span class="n">1</span> <span class="k">AND</span> <span class="n">5</span>
+<span class="k">ORDER</span> <span class="k">BY</span> buts <span class="k">DESC</span>, nom;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-3-2">
+<div class="exo-head"><span class="num">3.2</span><strong>Matchs spectaculaires</strong></div>
+<p class="enonce">Affichez les matchs où au moins 4 buts ont été marqués au total, avec une colonne <code class='inl'>total</code>, du plus prolifique au moins prolifique.</p><details class="hint"><summary>💡 Indice</summary><p>On ne peut pas utiliser l'alias <code>total</code> dans le WHERE : répétez le calcul.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>journee</th><th>equipe_dom_id</th><th>equipe_ext_id</th><th>buts_dom</th><th>buts_ext</th><th>total</th></tr></thead><tbody><tr><td class="">4</td><td class="">1</td><td class="">5</td><td class="">4</td><td class="">2</td><td class="">6</td></tr><tr><td class="">1</td><td class="">1</td><td class="">2</td><td class="">3</td><td class="">1</td><td class="">4</td></tr><tr><td class="">1</td><td class="">3</td><td class="">4</td><td class="">2</td><td class="">2</td><td class="">4</td></tr><tr><td class="">2</td><td class="">4</td><td class="">6</td><td class="">1</td><td class="">3</td><td class="">4</td></tr><tr><td class="">3</td><td class="">3</td><td class="">5</td><td class="">3</td><td class="">1</td><td class="">4</td></tr><tr><td class="">5</td><td class="">2</td><td class="">3</td><td class="">2</td><td class="">2</td><td class="">4</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> journee, equipe_dom_id, equipe_ext_id, buts_dom, buts_ext,
+       buts_dom + buts_ext <span class="k">AS</span> total
+<span class="k">FROM</span> matchs
+<span class="k">WHERE</span> buts_dom + buts_ext &gt;= <span class="n">4</span>
+<span class="k">ORDER</span> <span class="k">BY</span> total <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-3-3">
+<div class="exo-head"><span class="num">3.3</span><strong>Corriger puis chercher les NULL</strong></div>
+<p class="enonce">On veut les attaquants et les milieux ayant marqué plus d'un but. Cette requête renvoie aussi un attaquant à 0 but : <code class='inl'>WHERE poste = 'attaquant' OR poste = 'milieu' AND buts > 1</code>. Corrigez-la, puis trouvez les joueurs sans club.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>poste</th><th>buts</th></tr></thead><tbody><tr><td class="">Yanis Belkacem</td><td class="">attaquant</td><td class="">7</td></tr><tr><td class="">Hugo Martin</td><td class="">milieu</td><td class="">2</td></tr><tr><td class="">Enzo Rossi</td><td class="">attaquant</td><td class="">5</td></tr><tr><td class="">Lucas Moreau</td><td class="">attaquant</td><td class="">4</td></tr><tr><td class="">Rayan Ndiaye</td><td class="">attaquant</td><td class="">2</td></tr><tr><td class="">Ilyes Haddad</td><td class="">attaquant</td><td class="">6</td></tr></tbody></table></div></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>nom</th></tr></thead><tbody><tr><td class="">Sami Koné</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom, poste, buts
+<span class="k">FROM</span> joueurs
+<span class="k">WHERE</span> (poste = <span class="s">'attaquant'</span> <span class="k">OR</span> poste = <span class="s">'milieu'</span>) <span class="k">AND</span> buts &gt; <span class="n">1</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom
+<span class="k">FROM</span> joueurs
+<span class="k">WHERE</span> equipe_id <span class="k">IS</span> <span class="k">NULL</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N4"><summary><span class="num">N4</span><span class="acc-title">Relier des tables : les jointures</span><span class="ftag f3">Requêtes</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-4-1">
+<div class="exo-head"><span class="num">4.1</span><strong>La feuille de match</strong></div>
+<p class="enonce">Affichez chaque match avec le nom de l'équipe à domicile et celui de l'équipe à l'extérieur, triés par journée.</p><details class="hint"><summary>💡 Indice</summary><p>On peut joindre deux fois la même table, avec deux alias différents.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>15 lignes</span></div><div class="tbl"><table><thead><tr><th>journee</th><th>domicile</th><th>buts_dom</th><th>buts_ext</th><th>exterieur</th></tr></thead><tbody><tr><td class="">1</td><td class="">PSG</td><td class="">3</td><td class="">1</td><td class="">OM</td></tr><tr><td class="">1</td><td class="">OL</td><td class="">2</td><td class="">2</td><td class="">LOSC</td></tr><tr><td class="">1</td><td class="">Stade Rennais</td><td class="">0</td><td class="">1</td><td class="">RC Lens</td></tr><tr><td class="">2</td><td class="">PSG</td><td class="">1</td><td class="">1</td><td class="">OL</td></tr><tr><td class="">2</td><td class="">OM</td><td class="">2</td><td class="">0</td><td class="">Stade Rennais</td></tr><tr><td class="">2</td><td class="">LOSC</td><td class="">1</td><td class="">3</td><td class="">RC Lens</td></tr></tbody></table></div><div class="res-note">… 15 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> m.journee,
+       d.nom <span class="k">AS</span> domicile, m.buts_dom,
+       m.buts_ext, x.nom <span class="k">AS</span> exterieur
+<span class="k">FROM</span> matchs m
+<span class="k">JOIN</span> equipes d <span class="k">ON</span> d.id = m.equipe_dom_id      <span class="c">-- 1re jointure : l'équipe à domicile</span>
+<span class="k">JOIN</span> equipes x <span class="k">ON</span> x.id = m.equipe_ext_id      <span class="c">-- 2e jointure, même table : l'extérieur</span>
+<span class="k">ORDER</span> <span class="k">BY</span> m.journee, m.id;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-4-2">
+<div class="exo-head"><span class="num">4.2</span><strong>Une équipe sans joueurs</strong></div>
+<p class="enonce">Ajoutez l'équipe « FC Nantes » (Nantes), qui n'a encore aucun joueur. Affichez ensuite toutes les équipes avec leurs joueurs, y compris Nantes. Supprimez enfin Nantes pour garder la base propre.</p><details class="hint"><summary>💡 Indice</summary><p>La table dont on veut garder toutes les lignes se place à gauche du LEFT JOIN.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>10 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>joueur</th></tr></thead><tbody><tr><td class="">FC Nantes</td><td class="null">NULL</td></tr><tr><td class="">LOSC</td><td class="">Noah Petit</td></tr><tr><td class="">OL</td><td class="">Lucas Moreau</td></tr><tr><td class="">OM</td><td class="">Adam Diallo</td></tr><tr><td class="">OM</td><td class="">Enzo Rossi</td></tr><tr><td class="">PSG</td><td class="">Hugo Martin</td></tr></tbody></table></div><div class="res-note">… 10 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> equipes (nom, ville) <span class="k">VALUES</span> (<span class="s">'FC Nantes'</span>, <span class="s">'Nantes'</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> e.nom <span class="k">AS</span> equipe, j.nom <span class="k">AS</span> joueur
+<span class="k">FROM</span> equipes e
+<span class="k">LEFT</span> <span class="k">JOIN</span> joueurs j <span class="k">ON</span> j.equipe_id = e.id
+<span class="k">ORDER</span> <span class="k">BY</span> e.nom, j.nom;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">DELETE</span> <span class="k">FROM</span> equipes <span class="k">WHERE</span> nom = <span class="s">'FC Nantes'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-4-3">
+<div class="exo-head"><span class="num">4.3</span><strong>Genre et genre parent</strong></div>
+<p class="enonce">Affichez chaque genre musical avec le nom de son genre parent. Les genres racines doivent apparaître aussi.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>12 lignes</span></div><div class="tbl"><table><thead><tr><th>genre</th><th>parent</th></tr></thead><tbody><tr><td class="">Rock</td><td class="null">NULL</td></tr><tr><td class="">Metal</td><td class="">Rock</td></tr><tr><td class="">Heavy metal</td><td class="">Metal</td></tr><tr><td class="">Thrash metal</td><td class="">Metal</td></tr><tr><td class="">Punk</td><td class="">Rock</td></tr><tr><td class="">Électro</td><td class="null">NULL</td></tr></tbody></table></div><div class="res-note">… 12 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> g.nom <span class="k">AS</span> genre, p.nom <span class="k">AS</span> parent
+<span class="k">FROM</span> genres g
+<span class="k">LEFT</span> <span class="k">JOIN</span> genres p <span class="k">ON</span> p.id = g.parent_id     <span class="c">-- auto-jointure : la table avec elle-même</span>
+<span class="k">ORDER</span> <span class="k">BY</span> g.id;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N5"><summary><span class="num">N5</span><span class="acc-title">Regrouper et agréger</span><span class="ftag f3">Requêtes</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-5-1">
+<div class="exo-head"><span class="num">5.1</span><strong>Buts par poste</strong></div>
+<p class="enonce">Pour chaque poste, affichez le nombre de joueurs et le total de buts, du poste le plus prolifique au moins prolifique.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>poste</th><th>nb_joueurs</th><th>total_buts</th></tr></thead><tbody><tr><td class="">attaquant</td><td class="">6</td><td class="">24</td></tr><tr><td class="">milieu</td><td class="">2</td><td class="">3</td></tr><tr><td class="">défenseur</td><td class="">2</td><td class="">1</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> poste, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_joueurs, <span class="k">SUM</span>(buts) <span class="k">AS</span> total_buts
+<span class="k">FROM</span> joueurs
+<span class="k">GROUP</span> <span class="k">BY</span> poste
+<span class="k">ORDER</span> <span class="k">BY</span> total_buts <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-5-2">
+<div class="exo-head"><span class="num">5.2</span><strong>Fiche joueur</strong></div>
+<p class="enonce">Pour chaque pseudo, affichez le nombre de parties jouées et le meilleur score, tous jeux confondus.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>nb_parties</th><th>meilleur_score</th></tr></thead><tbody><tr><td class="">Lyna</td><td class="">3</td><td class="">15000</td></tr><tr><td class="">Mo</td><td class="">2</td><td class="">15000</td></tr><tr><td class="">Zed</td><td class="">3</td><td class="">13500</td></tr><tr><td class="">Sara</td><td class="">2</td><td class="">11000</td></tr><tr><td class="">Kenji</td><td class="">2</td><td class="">9500</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pseudo, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_parties, <span class="k">MAX</span>(score) <span class="k">AS</span> meilleur_score
+<span class="k">FROM</span> parties
+<span class="k">GROUP</span> <span class="k">BY</span> pseudo
+<span class="k">ORDER</span> <span class="k">BY</span> meilleur_score <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-5-3">
+<div class="exo-head"><span class="num">5.3</span><strong>Effectifs fournis</strong></div>
+<p class="enonce">Affichez les équipes qui comptent plus d'un joueur.</p><details class="hint"><summary>💡 Indice</summary><p>La condition porte sur un groupe : c'est un HAVING.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>nb_joueurs</th></tr></thead><tbody><tr><td class="">OM</td><td class="">2</td></tr><tr><td class="">PSG</td><td class="">2</td></tr><tr><td class="">RC Lens</td><td class="">2</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> e.nom <span class="k">AS</span> equipe, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_joueurs
+<span class="k">FROM</span> equipes e
+<span class="k">JOIN</span> joueurs j <span class="k">ON</span> j.equipe_id = e.id
+<span class="k">GROUP</span> <span class="k">BY</span> e.nom
+<span class="k">HAVING</span> <span class="k">COUNT</span>(*) &gt; <span class="n">1</span>
+<span class="k">ORDER</span> <span class="k">BY</span> e.nom;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N6"><summary><span class="num">N6</span><span class="acc-title">Les CTE</span><span class="ftag f4">CTE</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-6-1">
+<div class="exo-head"><span class="num">6.1</span><strong>Les recordmen</strong></div>
+<p class="enonce">Trouvez le record de chaque jeu, puis le ou les joueurs qui l'ont réalisé. Procédez en deux étapes avec une CTE.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>jeu</th><th>pseudo</th><th>score</th></tr></thead><tbody><tr><td class="">Pac-Man</td><td class="">Kenji</td><td class="">9500</td></tr><tr><td class="">Tetris</td><td class="">Lyna</td><td class="">15000</td></tr><tr><td class="">Tetris</td><td class="">Mo</td><td class="">15000</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> records <span class="k">AS</span> (
+    <span class="k">SELECT</span> jeu, <span class="k">MAX</span>(score) <span class="k">AS</span> record       <span class="c">-- étape 1 : le record de chaque jeu</span>
+    <span class="k">FROM</span> parties
+    <span class="k">GROUP</span> <span class="k">BY</span> jeu
+)
+<span class="k">SELECT</span> p.jeu, p.pseudo, p.score           <span class="c">-- étape 2 : qui l'a réalisé</span>
+<span class="k">FROM</span> parties p
+<span class="k">JOIN</span> records r <span class="k">ON</span> r.jeu = p.jeu <span class="k">AND</span> r.record = p.score
+<span class="k">ORDER</span> <span class="k">BY</span> p.jeu, p.pseudo;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-6-2">
+<div class="exo-head"><span class="num">6.2</span><strong>Les rois du domicile</strong></div>
+<p class="enonce">Établissez le classement des équipes en ne comptant que leurs matchs à domicile : points (3/1/0) et nombre de matchs joués.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>equipe</th><th>points</th><th>matchs_joues</th></tr></thead><tbody><tr><td class="">PSG</td><td class="">10</td><td class="">5</td></tr><tr><td class="">OM</td><td class="">8</td><td class="">4</td></tr><tr><td class="">OL</td><td class="">4</td><td class="">3</td></tr><tr><td class="">LOSC</td><td class="">1</td><td class="">2</td></tr><tr><td class="">Stade Rennais</td><td class="">0</td><td class="">1</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> domicile <span class="k">AS</span> (
+    <span class="k">SELECT</span> equipe_dom_id <span class="k">AS</span> equipe_id,
+           <span class="k">CASE</span> <span class="k">WHEN</span> buts_dom &gt; buts_ext <span class="k">THEN</span> <span class="n">3</span>
+                <span class="k">WHEN</span> buts_dom = buts_ext <span class="k">THEN</span> <span class="n">1</span>
+                <span class="k">ELSE</span> <span class="n">0</span> <span class="k">END</span> <span class="k">AS</span> pts
+    <span class="k">FROM</span> matchs
+)
+<span class="k">SELECT</span> e.nom <span class="k">AS</span> equipe, <span class="k">SUM</span>(d.pts) <span class="k">AS</span> points, <span class="k">COUNT</span>(*) <span class="k">AS</span> matchs_joues
+<span class="k">FROM</span> domicile d
+<span class="k">JOIN</span> equipes e <span class="k">ON</span> e.id = d.equipe_id
+<span class="k">GROUP</span> <span class="k">BY</span> e.nom
+<span class="k">ORDER</span> <span class="k">BY</span> points <span class="k">DESC</span>, e.nom;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-6-3">
+<div class="exo-head"><span class="num">6.3</span><strong>Au-dessus de la moyenne</strong></div>
+<p class="enonce">Affichez les joueurs qui ont marqué plus que la moyenne des buts de tous les joueurs, avec cette moyenne à côté.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>4 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>buts</th><th>moyenne</th></tr></thead><tbody><tr><td class="">Yanis Belkacem</td><td class="">7</td><td class="">2.80</td></tr><tr><td class="">Ilyes Haddad</td><td class="">6</td><td class="">2.80</td></tr><tr><td class="">Enzo Rossi</td><td class="">5</td><td class="">2.80</td></tr><tr><td class="">Lucas Moreau</td><td class="">4</td><td class="">2.80</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> moyenne <span class="k">AS</span> (
+    <span class="k">SELECT</span> <span class="k">AVG</span>(buts) <span class="k">AS</span> m <span class="k">FROM</span> joueurs
+)
+<span class="k">SELECT</span> j.nom, j.buts, <span class="k">ROUND</span>(mo.m, <span class="n">2</span>) <span class="k">AS</span> moyenne
+<span class="k">FROM</span> joueurs j
+<span class="k">CROSS</span> <span class="k">JOIN</span> moyenne mo            <span class="c">-- une seule ligne : on l'accole à chaque joueur</span>
+<span class="k">WHERE</span> j.buts &gt; mo.m
+<span class="k">ORDER</span> <span class="k">BY</span> j.buts <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N7"><summary><span class="num">N7</span><span class="acc-title">Les CTE récursives</span><span class="ftag f4">CTE</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-7-1">
+<div class="exo-head"><span class="num">7.1</span><strong>Les nombres pairs</strong></div>
+<p class="enonce">Avec une CTE récursive, affichez les nombres pairs de 2 à 20.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>10 lignes</span></div><div class="tbl"><table><thead><tr><th>n</th></tr></thead><tbody><tr><td class="">2</td></tr><tr><td class="">4</td></tr><tr><td class="">6</td></tr><tr><td class="">8</td></tr><tr><td class="">10</td></tr><tr><td class="">12</td></tr></tbody></table></div><div class="res-note">… 10 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> pairs <span class="k">AS</span> (
+    <span class="k">SELECT</span> <span class="n">2</span> <span class="k">AS</span> n                  <span class="c">-- ancrage</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> n + <span class="n">2</span> <span class="k">FROM</span> pairs        <span class="c">-- étape</span>
+    <span class="k">WHERE</span> n &lt; <span class="n">20</span>                   <span class="c">-- arrêt</span>
+)
+<span class="k">SELECT</span> n <span class="k">FROM</span> pairs;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-7-2">
+<div class="exo-head"><span class="num">7.2</span><strong>Remonter l'arbre</strong></div>
+<p class="enonce">Retrouvez tous les ancêtres du genre « Drill », avec leur distance (0 pour Drill lui-même).</p><details class="hint"><summary>💡 Indice</summary><p>Pour descendre, on joint sur <code>g.parent_id = a.id</code>. Pour remonter, on inverse.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>distance</th></tr></thead><tbody><tr><td class="">Drill</td><td class="">0</td></tr><tr><td class="">Trap</td><td class="">1</td></tr><tr><td class="">Hip-hop</td><td class="">2</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> ancetres <span class="k">AS</span> (
+    <span class="k">SELECT</span> id, nom, parent_id, <span class="n">0</span> <span class="k">AS</span> distance
+    <span class="k">FROM</span> genres
+    <span class="k">WHERE</span> nom = <span class="s">'Drill'</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> g.id, g.nom, g.parent_id, a.distance + <span class="n">1</span>
+    <span class="k">FROM</span> genres g
+    <span class="k">JOIN</span> ancetres a <span class="k">ON</span> g.id = a.parent_id     <span class="c">-- on remonte : le parent de la ligne trouvée</span>
+)
+<span class="k">SELECT</span> nom, distance <span class="k">FROM</span> ancetres;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-7-3">
+<div class="exo-head"><span class="num">7.3</span><strong>Taille des familles</strong></div>
+<p class="enonce">Pour chaque genre racine, comptez le nombre total de sous-genres, tous niveaux confondus.</p><details class="hint"><summary>💡 Indice</summary><p>Transportez l'identifiant de la racine à chaque niveau.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>racine</th><th>nb_sous_genres</th></tr></thead><tbody><tr><td class="">Rock</td><td class="">4</td></tr><tr><td class="">Électro</td><td class="">3</td></tr><tr><td class="">Hip-hop</td><td class="">2</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> arbre <span class="k">AS</span> (
+    <span class="k">SELECT</span> id, id <span class="k">AS</span> racine_id              <span class="c">-- chaque racine est sa propre racine</span>
+    <span class="k">FROM</span> genres
+    <span class="k">WHERE</span> parent_id <span class="k">IS</span> <span class="k">NULL</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> g.id, a.racine_id                <span class="c">-- les descendants héritent de la racine</span>
+    <span class="k">FROM</span> genres g
+    <span class="k">JOIN</span> arbre a <span class="k">ON</span> g.parent_id = a.id
+)
+<span class="k">SELECT</span> r.nom <span class="k">AS</span> racine, <span class="k">COUNT</span>(*) - <span class="n">1</span> <span class="k">AS</span> nb_sous_genres   <span class="c">-- -1 : on ne compte pas la racine</span>
+<span class="k">FROM</span> arbre a
+<span class="k">JOIN</span> genres r <span class="k">ON</span> r.id = a.racine_id
+<span class="k">GROUP</span> <span class="k">BY</span> r.nom
+<span class="k">ORDER</span> <span class="k">BY</span> nb_sous_genres <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N8"><summary><span class="num">N8</span><span class="acc-title">Fenêtrage : classer</span><span class="ftag f5">Fenêtrage</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-8-1">
+<div class="exo-head"><span class="num">8.1</span><strong>Classement des buteurs</strong></div>
+<p class="enonce">Classez tous les joueurs selon leur nombre de buts avec <code class='inl'>RANK</code>.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>10 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>buts</th><th>rang</th></tr></thead><tbody><tr><td class="">Yanis Belkacem</td><td class="">7</td><td class="">1</td></tr><tr><td class="">Ilyes Haddad</td><td class="">6</td><td class="">2</td></tr><tr><td class="">Enzo Rossi</td><td class="">5</td><td class="">3</td></tr><tr><td class="">Lucas Moreau</td><td class="">4</td><td class="">4</td></tr><tr><td class="">Hugo Martin</td><td class="">2</td><td class="">5</td></tr><tr><td class="">Rayan Ndiaye</td><td class="">2</td><td class="">5</td></tr></tbody></table></div><div class="res-note">… 10 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom, buts,
+       <span class="k">RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER</span> <span class="k">BY</span> buts <span class="k">DESC</span>) <span class="k">AS</span> rang
+<span class="k">FROM</span> joueurs
+<span class="k">ORDER</span> <span class="k">BY</span> rang, nom;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-8-2">
+<div class="exo-head"><span class="num">8.2</span><strong>Meilleure performance</strong></div>
+<p class="enonce">Pour chaque jeu, ne gardez que la meilleure partie de chaque joueur.</p><details class="hint"><summary>💡 Indice</summary><p>On peut partitionner sur plusieurs colonnes.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>10 lignes</span></div><div class="tbl"><table><thead><tr><th>jeu</th><th>pseudo</th><th>score</th></tr></thead><tbody><tr><td class="">Pac-Man</td><td class="">Kenji</td><td class="">9500</td></tr><tr><td class="">Pac-Man</td><td class="">Zed</td><td class="">8000</td></tr><tr><td class="">Pac-Man</td><td class="">Mo</td><td class="">8000</td></tr><tr><td class="">Pac-Man</td><td class="">Sara</td><td class="">7000</td></tr><tr><td class="">Pac-Man</td><td class="">Lyna</td><td class="">6500</td></tr><tr><td class="">Tetris</td><td class="">Mo</td><td class="">15000</td></tr></tbody></table></div><div class="res-note">… 10 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> jeu, pseudo, score
+<span class="k">FROM</span> (
+    <span class="k">SELECT</span> jeu, pseudo, score,
+           <span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> jeu, pseudo <span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>) <span class="k">AS</span> rn
+    <span class="k">FROM</span> parties
+) t
+<span class="k">WHERE</span> rn = <span class="n">1</span>
+<span class="k">ORDER</span> <span class="k">BY</span> jeu, score <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-8-3">
+<div class="exo-head"><span class="num">8.3</span><strong>Numéroter les parties</strong></div>
+<p class="enonce">Numérotez les parties de chaque joueur dans l'ordre chronologique (1re partie, 2e partie…). Attention : Zed a joué deux parties le même jour.</p><details class="hint"><summary>💡 Indice</summary><p>Sans critère de départage (ici <code>id</code>), l'ordre des deux parties du même jour est arbitraire.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>12 lignes</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>date_partie</th><th>jeu</th><th>num_partie</th></tr></thead><tbody><tr><td class="">Kenji</td><td class="">2026-09-03</td><td class="">Tetris</td><td class="">1</td></tr><tr><td class="">Kenji</td><td class="">2026-09-06</td><td class="">Pac-Man</td><td class="">2</td></tr><tr><td class="">Lyna</td><td class="">2026-09-02</td><td class="">Tetris</td><td class="">1</td></tr><tr><td class="">Lyna</td><td class="">2026-09-02</td><td class="">Pac-Man</td><td class="">2</td></tr><tr><td class="">Lyna</td><td class="">2026-09-09</td><td class="">Pac-Man</td><td class="">3</td></tr><tr><td class="">Mo</td><td class="">2026-09-03</td><td class="">Tetris</td><td class="">1</td></tr></tbody></table></div><div class="res-note">… 12 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pseudo, date_partie, jeu,
+       <span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> pseudo <span class="k">ORDER</span> <span class="k">BY</span> date_partie, id) <span class="k">AS</span> num_partie
+<span class="k">FROM</span> parties
+<span class="k">ORDER</span> <span class="k">BY</span> pseudo, num_partie;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N9"><summary><span class="num">N9</span><span class="acc-title">Fenêtrage : cumuler et comparer</span><span class="ftag f5">Fenêtrage</span><span class="acc-count">0 / 3</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo" id="ex-9-1">
+<div class="exo-head"><span class="num">9.1</span><strong>Le cumul de Kairo</strong></div>
+<p class="enonce">Affichez les écoutes mensuelles de Kairo et leur cumul depuis janvier.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>mois</th><th>ecoutes</th><th>cumul</th></tr></thead><tbody><tr><td class="">2026-01</td><td class="">8000</td><td class="">8000</td></tr><tr><td class="">2026-02</td><td class="">9000</td><td class="">17000</td></tr><tr><td class="">2026-03</td><td class="">13000</td><td class="">30000</td></tr><tr><td class="">2026-04</td><td class="">12500</td><td class="">42500</td></tr><tr><td class="">2026-05</td><td class="">12500</td><td class="">55000</td></tr><tr><td class="">2026-06</td><td class="">19000</td><td class="">74000</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">TO_CHAR</span>(mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> mois, ecoutes,
+       <span class="k">SUM</span>(ecoutes) <span class="k">OVER</span> (<span class="k">ORDER</span> <span class="k">BY</span> mois) <span class="k">AS</span> cumul
+<span class="k">FROM</span> streams
+<span class="k">WHERE</span> artiste = <span class="s">'Kairo'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> mois;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-9-2">
+<div class="exo-head"><span class="num">9.2</span><strong>Les mois en baisse</strong></div>
+<p class="enonce">Listez les mois où un artiste a fait moins d'écoutes que le mois précédent.</p><details class="hint"><summary>💡 Indice</summary><p>Une fonction de fenêtrage ne se filtre pas dans le WHERE : calculez-la d'abord dans une CTE.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>artiste</th><th>mois</th><th>precedent</th><th>ecoutes</th></tr></thead><tbody><tr><td class="">Kairo</td><td class="">2026-04</td><td class="">13000</td><td class="">12500</td></tr><tr><td class="">Nova</td><td class="">2026-03</td><td class="">15000</td><td class="">14000</td></tr><tr><td class="">Nova</td><td class="">2026-06</td><td class="">30000</td><td class="">28000</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> evolution <span class="k">AS</span> (
+    <span class="k">SELECT</span> artiste, mois, ecoutes,
+           <span class="k">LAG</span>(ecoutes) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> artiste <span class="k">ORDER</span> <span class="k">BY</span> mois) <span class="k">AS</span> precedent
+    <span class="k">FROM</span> streams
+)
+<span class="k">SELECT</span> artiste, <span class="k">TO_CHAR</span>(mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> mois, precedent, ecoutes
+<span class="k">FROM</span> evolution
+<span class="k">WHERE</span> ecoutes &lt; precedent
+<span class="k">ORDER</span> <span class="k">BY</span> artiste, mois;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-9-3">
+<div class="exo-head"><span class="num">9.3</span><strong>Moyenne glissante sur 2 mois</strong></div>
+<p class="enonce">Pour Nova, calculez la moyenne des écoutes du mois courant et du mois précédent.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>mois</th><th>ecoutes</th><th>moyenne_2_mois</th></tr></thead><tbody><tr><td class="">2026-01</td><td class="">12000</td><td class="">12000</td></tr><tr><td class="">2026-02</td><td class="">15000</td><td class="">13500</td></tr><tr><td class="">2026-03</td><td class="">14000</td><td class="">14500</td></tr><tr><td class="">2026-04</td><td class="">21000</td><td class="">17500</td></tr><tr><td class="">2026-05</td><td class="">30000</td><td class="">25500</td></tr><tr><td class="">2026-06</td><td class="">28000</td><td class="">29000</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">TO_CHAR</span>(mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> mois, ecoutes,
+       <span class="k">ROUND</span>(<span class="k">AVG</span>(ecoutes) <span class="k">OVER</span> (
+           <span class="k">ORDER</span> <span class="k">BY</span> mois
+           <span class="k">ROWS</span> <span class="k">BETWEEN</span> <span class="n">1</span> <span class="k">PRECEDING</span> <span class="k">AND</span> <span class="k">CURRENT</span> <span class="k">ROW</span>
+       )) <span class="k">AS</span> moyenne_2_mois
+<span class="k">FROM</span> streams
+<span class="k">WHERE</span> artiste = <span class="s">'Nova'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> mois;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details></div></section><section class="panel" id="filmbox"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">🎬</span>Projet fil rouge · FilmBox</div>
+<div class="objectif-box">FilmBox est un réseau social de cinéphiles, sur le modèle de Letterboxd : les membres notent les films qu'ils voient, tiennent un journal de visionnage et créent des listes. Vous êtes la personne chargée de sa couche données. À vous de répondre aux besoins de l'équipe produit, mission après mission.</div>
+<h3>🗄 La base</h3>
+<p>30 films et leurs castings réels, 3 sagas, 72 personnes, 8 membres fictifs, leurs notes et leur journal de visionnage.</p>
+<div class="code"><div class="code-bar"><span>Schéma</span><button class="copy" type="button">Copier</button></div><pre>sagas        (id, nom)
+films        (id, titre, annee, genre, saga_id, film_precedent_id)
+personnes    (id, nom)
+casting      (film_id, personne_id, role)          <span class="c">-- role : 'acteur' ou 'realisateur'</span>
+utilisateurs (id, pseudo, ville, inscrit_le)
+notes        (utilisateur_id, film_id, note, note_le)   <span class="c">-- note de 0,5 à 5</span>
+journal      (id, utilisateur_id, film_id, date_visionnage)</pre></div>
+<h3>📥 Installation</h3>
+<p><button class="btn" type="button" id="dl-filmbox">⬇️ Télécharger filmbox.sql</button></p>
+<div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">DATABASE</span> filmbox;
+<span class="m">\c</span> filmbox
+<span class="m">\i</span> C:/chemin/vers/filmbox.sql</pre></div>
+<div class="instruction-box">📌 Relancez <code class="inl">filmbox.sql</code> à tout moment pour repartir de zéro : il recrée toutes les tables, y compris celles des missions.</div>
+<div class="prog"><div class="prog-label"><span>Tâches réussies</span><span class="ptxt" id="ptxt-fb">0</span></div><div class="prog-bar"><div class="prog-fill" id="pfill-fb"></div></div></div>
+<div class="toc"><a href="#" class="chip-m" data-anchor="mis-M1"><span class="num">M1</span>🗄 Prise en main <span class="ftag f5" style="margin-left:auto">N1 · N2</span></a><a href="#" class="chip-m" data-anchor="mis-M2"><span class="num">M2</span>🎞 Le catalogue <span class="ftag f5" style="margin-left:auto">N3 · N4 · N5</span></a><a href="#" class="chip-m" data-anchor="mis-M3"><span class="num">M3</span>👤 Le profil d'un membre <span class="ftag f5" style="margin-left:auto">N6</span></a><a href="#" class="chip-m" data-anchor="mis-M4"><span class="num">M4</span>🤩 Sagas & Kevin Bacon <span class="ftag f5" style="margin-left:auto">N7</span></a><a href="#" class="chip-m" data-anchor="mis-M5"><span class="num">M5</span>🏆 Les classements <span class="ftag f5" style="margin-left:auto">N8</span></a><a href="#" class="chip-m" data-anchor="mis-M6"><span class="num">M6</span>📈 Ma saison ciné <span class="ftag f5" style="margin-left:auto">N9</span></a></div></div><div class="card fb-card" id="mis-M1"><div class="section-title"><span class="icon-bg ib-purple">🗄</span><span><span class="num">M1</span>&nbsp; Prise en main</span></div><span class="ftag f4">Notions N1 · N2</span><p style="margin-top:8px">Découvrir la base FilmBox et créer les listes de films des membres.</p><div class="exo" id="ex-M1-1">
+<div class="exo-head"><span class="num">M1.1</span><strong>Explorer FilmBox</strong></div>
+<p class="enonce">Connectez-vous à la base <code class='inl'>filmbox</code>, listez ses tables et décrivez la table <code class='inl'>casting</code>. Quelle est sa clé primaire ? Quelles valeurs la colonne <code class='inl'>role</code> accepte-t-elle ?</p>
+<div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> 7 tables. La clé primaire de <code>casting</code> porte sur 3 colonnes <code>(film_id, personne_id, role)</code> : une même personne peut être actrice et réalisatrice d'un film. <code>role</code> n'accepte que <code>'acteur'</code> ou <code>'realisateur'</code>.</div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\c</span> filmbox
+<span class="m">\dt</span>
+<span class="m">\d</span> casting</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M1-2">
+<div class="exo-head"><span class="num">M1.2</span><strong>La table listes</strong></div>
+<p class="enonce">Créez la table <code class='inl'>listes</code> : identifiant automatique, membre propriétaire (obligatoire, doit exister), titre obligatoire, visibilité publique ou privée (privée par défaut) et date de création (aujourd'hui par défaut).</p>
+<div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> PostgreSQL confirme <code>CREATE TABLE</code>, sans erreur. Vérifiez la structure avec <code>\d</code>.</div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">TABLE</span> listes (
+    id              <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">ALWAYS</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    utilisateur_id  <span class="k">INTEGER</span>      <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> utilisateurs(id),
+    titre           <span class="k">VARCHAR</span>(<span class="n">100</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    publique        <span class="k">BOOLEAN</span>      <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> false,
+    creee_le        <span class="k">DATE</span>         <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> CURRENT_DATE
+);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M1-3">
+<div class="exo-head"><span class="num">M1.3</span><strong>Le contenu des listes</strong></div>
+<p class="enonce">Créez la table <code class='inl'>liste_films</code> qui range des films dans une liste, à une position strictement positive. Un film ne peut apparaître qu'une fois par liste.</p>
+<div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> PostgreSQL confirme <code>CREATE TABLE</code>, sans erreur. Vérifiez la structure avec <code>\d</code>.</div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">TABLE</span> liste_films (
+    liste_id  <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> listes(id),
+    film_id   <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> films(id),
+    position  <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">CHECK</span> (position &gt; <span class="n">0</span>),
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> (liste_id, film_id)
+);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M1-4">
+<div class="exo-head"><span class="num">M1.4</span><strong>Le top Nolan</strong></div>
+<p class="enonce">Créez pour <code class='inl'>nolanfan</code> une liste publique « Mon top Nolan » contenant, dans l'ordre, The Dark Knight, Inception et Batman Begins. Affichez ensuite la liste avec les titres.</p><details class="hint"><summary>💡 Indice</summary><p>Retrouvez les identifiants avec des sous-requêtes ou des jointures plutôt que de les écrire en dur.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>liste</th><th>position</th><th>film</th></tr></thead><tbody><tr><td class="">Mon top Nolan</td><td class="">1</td><td class="">The Dark Knight</td></tr><tr><td class="">Mon top Nolan</td><td class="">2</td><td class="">Inception</td></tr><tr><td class="">Mon top Nolan</td><td class="">3</td><td class="">Batman Begins</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> listes (utilisateur_id, titre, publique)
+<span class="k">SELECT</span> id, <span class="s">'Mon top Nolan'</span>, true <span class="k">FROM</span> utilisateurs <span class="k">WHERE</span> pseudo = <span class="s">'nolanfan'</span>;
+
+<span class="k">INSERT</span> <span class="k">INTO</span> liste_films (liste_id, film_id, position)
+<span class="k">SELECT</span> l.id, f.id, v.position
+<span class="k">FROM</span> listes l
+<span class="k">JOIN</span> (<span class="k">VALUES</span> (<span class="s">'The Dark Knight'</span>, <span class="n">1</span>), (<span class="s">'Inception'</span>, <span class="n">2</span>), (<span class="s">'Batman Begins'</span>, <span class="n">3</span>)) <span class="k">AS</span> v(titre, position)
+     <span class="k">ON</span> true
+<span class="k">JOIN</span> films f <span class="k">ON</span> f.titre = v.titre
+<span class="k">WHERE</span> l.titre = <span class="s">'Mon top Nolan'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> l.titre <span class="k">AS</span> liste, lf.position, f.titre <span class="k">AS</span> film
+<span class="k">FROM</span> listes l
+<span class="k">JOIN</span> liste_films lf <span class="k">ON</span> lf.liste_id = l.id
+<span class="k">JOIN</span> films f <span class="k">ON</span> f.id = lf.film_id
+<span class="k">ORDER</span> <span class="k">BY</span> lf.position;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="card fb-card" id="mis-M2"><div class="section-title"><span class="icon-bg ib-purple">🎞</span><span><span class="num">M2</span>&nbsp; Le catalogue</span></div><span class="ftag f4">Notions N3 · N4 · N5</span><p style="margin-top:8px">Interroger le catalogue : filmographies, réalisateurs prolifiques, films et membres phares.</p><div class="exo" id="ex-M2-1">
+<div class="exo-head"><span class="num">M2.1</span><strong>Les années 2000</strong></div>
+<p class="enonce">Affichez les films sortis entre 2000 et 2010 inclus, du plus ancien au plus récent.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>10 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>annee</th><th>genre</th></tr></thead><tbody><tr><td class="">Seul au monde</td><td class="">2000</td><td class="">Aventure</td></tr><tr><td class="">Le Fabuleux Destin d&#x27;Amélie Poulain</td><td class="">2001</td><td class="">Comédie</td></tr><tr><td class="">Ocean&#x27;s Eleven</td><td class="">2001</td><td class="">Policier</td></tr><tr><td class="">Arrête-moi si tu peux</td><td class="">2002</td><td class="">Policier</td></tr><tr><td class="">Mystic River</td><td class="">2003</td><td class="">Thriller</td></tr><tr><td class="">Batman Begins</td><td class="">2005</td><td class="">Action</td></tr></tbody></table></div><div class="res-note">… 10 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> titre, annee, genre
+<span class="k">FROM</span> films
+<span class="k">WHERE</span> annee <span class="k">BETWEEN</span> <span class="n">2000</span> <span class="k">AND</span> <span class="n">2010</span>
+<span class="k">ORDER</span> <span class="k">BY</span> annee, titre;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M2-2">
+<div class="exo-head"><span class="num">M2.2</span><strong>La filmographie de Kevin Bacon</strong></div>
+<p class="enonce">Affichez les films dans lesquels Kevin Bacon a joué, par ordre chronologique.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>4 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>annee</th></tr></thead><tbody><tr><td class="">Des hommes d&#x27;honneur</td><td class="">1992</td></tr><tr><td class="">Apollo 13</td><td class="">1995</td></tr><tr><td class="">Mystic River</td><td class="">2003</td></tr><tr><td class="">X-Men : Le Commencement</td><td class="">2011</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> f.titre, f.annee
+<span class="k">FROM</span> casting c
+<span class="k">JOIN</span> personnes p <span class="k">ON</span> p.id = c.personne_id
+<span class="k">JOIN</span> films f    <span class="k">ON</span> f.id = c.film_id
+<span class="k">WHERE</span> p.nom = <span class="s">'Kevin Bacon'</span>
+  <span class="k">AND</span> c.role = <span class="s">'acteur'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> f.annee;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M2-3">
+<div class="exo-head"><span class="num">M2.3</span><strong>Les réalisateurs prolifiques</strong></div>
+<p class="enonce">Affichez les réalisateurs ayant au moins 2 films dans le catalogue, avec leur nombre de films.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>realisateur</th><th>nb_films</th></tr></thead><tbody><tr><td class="">Robert Zemeckis</td><td class="">5</td></tr><tr><td class="">Christopher Nolan</td><td class="">4</td></tr><tr><td class="">Bryan Singer</td><td class="">2</td></tr><tr><td class="">David Fincher</td><td class="">2</td></tr><tr><td class="">Martin Scorsese</td><td class="">2</td></tr><tr><td class="">Steven Spielberg</td><td class="">2</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> p.nom <span class="k">AS</span> realisateur, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_films
+<span class="k">FROM</span> casting c
+<span class="k">JOIN</span> personnes p <span class="k">ON</span> p.id = c.personne_id
+<span class="k">WHERE</span> c.role = <span class="s">'realisateur'</span>
+<span class="k">GROUP</span> <span class="k">BY</span> p.nom
+<span class="k">HAVING</span> <span class="k">COUNT</span>(*) &gt;= <span class="n">2</span>
+<span class="k">ORDER</span> <span class="k">BY</span> nb_films <span class="k">DESC</span>, p.nom;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M2-4">
+<div class="exo-head"><span class="num">M2.4</span><strong>Les mieux notés</strong></div>
+<p class="enonce">Affichez les 5 films les mieux notés parmi ceux qui ont reçu au moins 5 notes, avec leur moyenne arrondie à 2 décimales et le nombre de notes.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>moyenne</th><th>nb_notes</th></tr></thead><tbody><tr><td class="">Retour vers le futur</td><td class="">4.64</td><td class="">7</td></tr><tr><td class="">Arrête-moi si tu peux</td><td class="">4.60</td><td class="">5</td></tr><tr><td class="">Inception</td><td class="">4.60</td><td class="">5</td></tr><tr><td class="">Seven</td><td class="">4.50</td><td class="">6</td></tr><tr><td class="">The Dark Knight</td><td class="">4.50</td><td class="">5</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> f.titre, <span class="k">ROUND</span>(<span class="k">AVG</span>(n.note), <span class="n">2</span>) <span class="k">AS</span> moyenne, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_notes
+<span class="k">FROM</span> notes n
+<span class="k">JOIN</span> films f <span class="k">ON</span> f.id = n.film_id
+<span class="k">GROUP</span> <span class="k">BY</span> f.titre
+<span class="k">HAVING</span> <span class="k">COUNT</span>(*) &gt;= <span class="n">5</span>
+<span class="k">ORDER</span> <span class="k">BY</span> moyenne <span class="k">DESC</span>, f.titre
+<span class="k">LIMIT</span> <span class="n">5</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M2-5">
+<div class="exo-head"><span class="num">M2.5</span><strong>Les membres les plus actifs</strong></div>
+<p class="enonce">Pour chaque membre, affichez le nombre de visionnages et le nombre de films différents vus, du plus actif au moins actif.</p><details class="hint"><summary>💡 Indice</summary><p><code>COUNT(DISTINCT colonne)</code> ne compte chaque valeur qu'une fois : l'écart révèle les revisionnages.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>nb_visionnages</th><th>nb_films_distincts</th></tr></thead><tbody><tr><td class="">lea.reel</td><td class="">31</td><td class="">23</td></tr><tr><td class="">darkroom</td><td class="">30</td><td class="">21</td></tr><tr><td class="">cinephile_92</td><td class="">29</td><td class="">21</td></tr><tr><td class="">maxou_ciné</td><td class="">28</td><td class="">22</td></tr><tr><td class="">bobine</td><td class="">27</td><td class="">22</td></tr><tr><td class="">nolanfan</td><td class="">25</td><td class="">19</td></tr></tbody></table></div><div class="res-note">… 8 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> u.pseudo,
+       <span class="k">COUNT</span>(*)                  <span class="k">AS</span> nb_visionnages,
+       <span class="k">COUNT</span>(<span class="k">DISTINCT</span> j.film_id) <span class="k">AS</span> nb_films_distincts
+<span class="k">FROM</span> journal j
+<span class="k">JOIN</span> utilisateurs u <span class="k">ON</span> u.id = j.utilisateur_id
+<span class="k">GROUP</span> <span class="k">BY</span> u.pseudo
+<span class="k">ORDER</span> <span class="k">BY</span> nb_visionnages <span class="k">DESC</span>, u.pseudo;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="card fb-card" id="mis-M3"><div class="section-title"><span class="icon-bg ib-purple">👤</span><span><span class="num">M3</span>&nbsp; Le profil d'un membre</span></div><span class="ftag f4">Notions N6</span><p style="margin-top:8px">Construire la page profil d'un membre en découpant le calcul en étapes.</p><div class="exo" id="ex-M3-1">
+<div class="exo-head"><span class="num">M3.1</span><strong>La carte de profil</strong></div>
+<p class="enonce">Pour <code class='inl'>cinephile_92</code>, affichez en une ligne : le nombre de films notés, la note moyenne, son genre le plus noté et son coup de cœur (sa meilleure note, la plus ancienne en cas d'égalité). Une CTE par information.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>nb_films_notes</th><th>note_moyenne</th><th>genre_prefere</th><th>coup_de_coeur</th></tr></thead><tbody><tr><td class="">cinephile_92</td><td class="">21</td><td class="">4.10</td><td class="">Science-fiction</td><td class="">Seven</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> membre <span class="k">AS</span> (
+    <span class="k">SELECT</span> id, pseudo <span class="k">FROM</span> utilisateurs <span class="k">WHERE</span> pseudo = <span class="s">'cinephile_92'</span>
+),
+stats <span class="k">AS</span> (
+    <span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_films_notes, <span class="k">ROUND</span>(<span class="k">AVG</span>(n.note), <span class="n">2</span>) <span class="k">AS</span> note_moyenne
+    <span class="k">FROM</span> notes n <span class="k">JOIN</span> membre m <span class="k">ON</span> m.id = n.utilisateur_id
+),
+genre_prefere <span class="k">AS</span> (
+    <span class="k">SELECT</span> f.genre
+    <span class="k">FROM</span> notes n
+    <span class="k">JOIN</span> membre m <span class="k">ON</span> m.id = n.utilisateur_id
+    <span class="k">JOIN</span> films f  <span class="k">ON</span> f.id = n.film_id
+    <span class="k">GROUP</span> <span class="k">BY</span> f.genre
+    <span class="k">ORDER</span> <span class="k">BY</span> <span class="k">COUNT</span>(*) <span class="k">DESC</span>, f.genre
+    <span class="k">LIMIT</span> <span class="n">1</span>
+),
+coup_de_coeur <span class="k">AS</span> (
+    <span class="k">SELECT</span> f.titre
+    <span class="k">FROM</span> notes n
+    <span class="k">JOIN</span> membre m <span class="k">ON</span> m.id = n.utilisateur_id
+    <span class="k">JOIN</span> films f  <span class="k">ON</span> f.id = n.film_id
+    <span class="k">ORDER</span> <span class="k">BY</span> n.note <span class="k">DESC</span>, n.note_le
+    <span class="k">LIMIT</span> <span class="n">1</span>
+)
+<span class="k">SELECT</span> m.pseudo, s.nb_films_notes, s.note_moyenne,
+       g.genre <span class="k">AS</span> genre_prefere, c.titre <span class="k">AS</span> coup_de_coeur
+<span class="k">FROM</span> membre m, stats s, genre_prefere g, coup_de_coeur c;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M3-2">
+<div class="exo-head"><span class="num">M3.2</span><strong>À voir ensuite</strong></div>
+<p class="enonce">Listez les films que <code class='inl'>cinephile_92</code> n'a pas encore vus, du plus récent au plus ancien.</p><details class="hint"><summary>💡 Indice</summary><p>Un LEFT JOIN suivi de <code>IS NULL</code> trouve ce qui n'a pas de correspondance.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>9 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>annee</th></tr></thead><tbody><tr><td class="">Le Loup de Wall Street</td><td class="">2013</td></tr><tr><td class="">The Dark Knight Rises</td><td class="">2012</td></tr><tr><td class="">Batman Begins</td><td class="">2005</td></tr><tr><td class="">Arrête-moi si tu peux</td><td class="">2002</td></tr><tr><td class="">Le Fabuleux Destin d&#x27;Amélie Poulain</td><td class="">2001</td></tr><tr><td class="">Fight Club</td><td class="">1999</td></tr></tbody></table></div><div class="res-note">… 9 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> deja_vus <span class="k">AS</span> (
+    <span class="k">SELECT</span> j.film_id
+    <span class="k">FROM</span> journal j
+    <span class="k">JOIN</span> utilisateurs u <span class="k">ON</span> u.id = j.utilisateur_id
+    <span class="k">WHERE</span> u.pseudo = <span class="s">'cinephile_92'</span>
+)
+<span class="k">SELECT</span> f.titre, f.annee
+<span class="k">FROM</span> films f
+<span class="k">LEFT</span> <span class="k">JOIN</span> deja_vus v <span class="k">ON</span> v.film_id = f.id
+<span class="k">WHERE</span> v.film_id <span class="k">IS</span> <span class="k">NULL</span>
+<span class="k">ORDER</span> <span class="k">BY</span> f.annee <span class="k">DESC</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M3-3">
+<div class="exo-head"><span class="num">M3.3</span><strong>Les films qui divisent</strong></div>
+<p class="enonce">Trouvez les 5 films les plus clivants : ceux dont l'écart entre la meilleure et la pire note est le plus grand.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>pire</th><th>meilleure</th><th>ecart</th></tr></thead><tbody><tr><td class="">Apollo 13</td><td class="">3.0</td><td class="">4.5</td><td class="">1.5</td></tr><tr><td class="">Il faut sauver le soldat Ryan</td><td class="">3.5</td><td class="">5.0</td><td class="">1.5</td></tr><tr><td class="">Inception</td><td class="">3.5</td><td class="">5.0</td><td class="">1.5</td></tr><tr><td class="">Intouchables</td><td class="">3.5</td><td class="">5.0</td><td class="">1.5</td></tr><tr><td class="">La Môme</td><td class="">3.0</td><td class="">4.5</td><td class="">1.5</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> ecarts <span class="k">AS</span> (
+    <span class="k">SELECT</span> film_id, <span class="k">MIN</span>(note) <span class="k">AS</span> pire, <span class="k">MAX</span>(note) <span class="k">AS</span> meilleure,
+           <span class="k">MAX</span>(note) - <span class="k">MIN</span>(note) <span class="k">AS</span> ecart
+    <span class="k">FROM</span> notes
+    <span class="k">GROUP</span> <span class="k">BY</span> film_id
+)
+<span class="k">SELECT</span> f.titre, e.pire, e.meilleure, e.ecart
+<span class="k">FROM</span> ecarts e
+<span class="k">JOIN</span> films f <span class="k">ON</span> f.id = e.film_id
+<span class="k">ORDER</span> <span class="k">BY</span> e.ecart <span class="k">DESC</span>, f.titre
+<span class="k">LIMIT</span> <span class="n">5</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="card fb-card" id="mis-M4"><div class="section-title"><span class="icon-bg ib-purple">🤩</span><span><span class="num">M4</span>&nbsp; Sagas & Kevin Bacon</span></div><span class="ftag f4">Notions N7</span><p style="margin-top:8px">Parcourir les sagas épisode par épisode, puis relier n'importe quel acteur à Kevin Bacon.</p><div class="exo" id="ex-M4-1">
+<div class="exo-head"><span class="num">M4.1</span><strong>Dans l'ordre, s'il vous plaît</strong></div>
+<p class="enonce">Affichez les épisodes de la saga « Retour vers le futur » dans l'ordre, en suivant la colonne <code class='inl'>film_precedent_id</code>.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>episode</th><th>titre</th><th>annee</th></tr></thead><tbody><tr><td class="">1</td><td class="">Retour vers le futur</td><td class="">1985</td></tr><tr><td class="">2</td><td class="">Retour vers le futur II</td><td class="">1989</td></tr><tr><td class="">3</td><td class="">Retour vers le futur III</td><td class="">1990</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> episodes <span class="k">AS</span> (
+    <span class="k">SELECT</span> f.id, f.titre, f.annee, <span class="n">1</span> <span class="k">AS</span> episode
+    <span class="k">FROM</span> films f
+    <span class="k">JOIN</span> sagas s <span class="k">ON</span> s.id = f.saga_id
+    <span class="k">WHERE</span> s.nom = <span class="s">'Retour vers le futur'</span>
+      <span class="k">AND</span> f.film_precedent_id <span class="k">IS</span> <span class="k">NULL</span>          <span class="c">-- le premier épisode</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> f.id, f.titre, f.annee, e.episode + <span class="n">1</span>
+    <span class="k">FROM</span> films f
+    <span class="k">JOIN</span> episodes e <span class="k">ON</span> f.film_precedent_id = e.id
+)
+<span class="k">SELECT</span> episode, titre, annee <span class="k">FROM</span> episodes <span class="k">ORDER</span> <span class="k">BY</span> episode;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M4-2">
+<div class="exo-head"><span class="num">M4.2</span><strong>Toutes les sagas</strong></div>
+<p class="enonce">Pour toutes les sagas à la fois, affichez chaque épisode avec son numéro et le parcours complet depuis le premier film.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>9 lignes</span></div><div class="tbl"><table><thead><tr><th>saga</th><th>episode</th><th>parcours</th></tr></thead><tbody><tr><td class="">Retour vers le futur</td><td class="">1</td><td class="">Retour vers le futur</td></tr><tr><td class="">Retour vers le futur</td><td class="">2</td><td class="">Retour vers le futur → Retour vers le futur II</td></tr><tr><td class="">Retour vers le futur</td><td class="">3</td><td class="">Retour vers le futur → Retour vers le futur II → Retour vers le futur III</td></tr><tr><td class="">The Dark Knight</td><td class="">1</td><td class="">Batman Begins</td></tr><tr><td class="">The Dark Knight</td><td class="">2</td><td class="">Batman Begins → The Dark Knight</td></tr><tr><td class="">The Dark Knight</td><td class="">3</td><td class="">Batman Begins → The Dark Knight → The Dark Knight Rises</td></tr></tbody></table></div><div class="res-note">… 9 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> episodes <span class="k">AS</span> (
+    <span class="k">SELECT</span> f.id, f.saga_id, <span class="n">1</span> <span class="k">AS</span> episode, f.titre::<span class="k">TEXT</span> <span class="k">AS</span> parcours
+    <span class="k">FROM</span> films f
+    <span class="k">WHERE</span> f.saga_id <span class="k">IS</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">AND</span> f.film_precedent_id <span class="k">IS</span> <span class="k">NULL</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> f.id, f.saga_id, e.episode + <span class="n">1</span>, e.parcours || <span class="s">' → '</span> || f.titre
+    <span class="k">FROM</span> films f
+    <span class="k">JOIN</span> episodes e <span class="k">ON</span> f.film_precedent_id = e.id
+)
+<span class="k">SELECT</span> s.nom <span class="k">AS</span> saga, e.episode, e.parcours
+<span class="k">FROM</span> episodes e
+<span class="k">JOIN</span> sagas s <span class="k">ON</span> s.id = e.saga_id
+<span class="k">ORDER</span> <span class="k">BY</span> s.nom, e.episode;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M4-3">
+<div class="exo-head"><span class="num">M4.3</span><strong>Le nombre de Kevin Bacon</strong></div>
+<p class="enonce">Calculez le « nombre de Bacon » de chaque acteur : 1 s'il a joué avec Kevin Bacon, 2 s'il a joué avec quelqu'un qui a joué avec lui, etc. Limitez la recherche à 4 degrés et affichez les acteurs les plus éloignés.</p><details class="hint"><summary>💡 Indice</summary><p>Mémorisez le chemin parcouru dans un tableau (<code>ARRAY</code>) pour ne jamais repasser par le même acteur.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>nombre_de_bacon</th></tr></thead><tbody><tr><td class="">Bérénice Bejo</td><td class="">4</td></tr><tr><td class="">Edward Norton</td><td class="">4</td></tr><tr><td class="">Gérard Depardieu</td><td class="">4</td></tr><tr><td class="">Helena Bonham Carter</td><td class="">4</td></tr><tr><td class="">Anne Hathaway</td><td class="">3</td></tr><tr><td class="">Brad Pitt</td><td class="">3</td></tr></tbody></table></div><div class="res-note">… 8 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> chaine <span class="k">AS</span> (
+    <span class="k">SELECT</span> p.id <span class="k">AS</span> personne_id, <span class="n">0</span> <span class="k">AS</span> degre, ARRAY[p.id] <span class="k">AS</span> chemin
+    <span class="k">FROM</span> personnes p
+    <span class="k">WHERE</span> p.nom = <span class="s">'Kevin Bacon'</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> c2.personne_id, ch.degre + <span class="n">1</span>, ch.chemin || c2.personne_id
+    <span class="k">FROM</span> chaine ch
+    <span class="k">JOIN</span> casting c1 <span class="k">ON</span> c1.personne_id = ch.personne_id <span class="k">AND</span> c1.role = <span class="s">'acteur'</span>
+    <span class="k">JOIN</span> casting c2 <span class="k">ON</span> c2.film_id = c1.film_id <span class="k">AND</span> c2.role = <span class="s">'acteur'</span>
+                   <span class="k">AND</span> c2.personne_id &lt;&gt; <span class="k">ALL</span>(ch.chemin)   <span class="c">-- pas de retour en arrière</span>
+    <span class="k">WHERE</span> ch.degre &lt; <span class="n">4</span>                                    <span class="c">-- profondeur maximale</span>
+)
+<span class="k">SELECT</span> p.nom, <span class="k">MIN</span>(ch.degre) <span class="k">AS</span> nombre_de_bacon
+<span class="k">FROM</span> chaine ch
+<span class="k">JOIN</span> personnes p <span class="k">ON</span> p.id = ch.personne_id
+<span class="k">GROUP</span> <span class="k">BY</span> p.nom
+<span class="k">ORDER</span> <span class="k">BY</span> nombre_de_bacon <span class="k">DESC</span>, p.nom
+<span class="k">LIMIT</span> <span class="n">8</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M4-4">
+<div class="exo-head"><span class="num">M4.4</span><strong>D'Omar Sy à Kevin Bacon</strong></div>
+<p class="enonce">Affichez le chemin le plus court entre Kevin Bacon et Omar Sy, avec les films qui les relient.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>degre</th><th>chemin</th></tr></thead><tbody><tr><td class="">2</td><td class="">Kevin Bacon — X-Men : Le Commencement — James McAvoy — X-Men : Days of Future Past — Omar Sy</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> chaine <span class="k">AS</span> (
+    <span class="k">SELECT</span> p.id <span class="k">AS</span> personne_id, <span class="n">0</span> <span class="k">AS</span> degre, ARRAY[p.id] <span class="k">AS</span> ids,
+           p.nom::<span class="k">TEXT</span> <span class="k">AS</span> chemin
+    <span class="k">FROM</span> personnes p
+    <span class="k">WHERE</span> p.nom = <span class="s">'Kevin Bacon'</span>
+    <span class="k">UNION</span> <span class="k">ALL</span>
+    <span class="k">SELECT</span> c2.personne_id, ch.degre + <span class="n">1</span>, ch.ids || c2.personne_id,
+           ch.chemin || <span class="s">' — '</span> || f.titre || <span class="s">' — '</span> || p2.nom
+    <span class="k">FROM</span> chaine ch
+    <span class="k">JOIN</span> casting c1   <span class="k">ON</span> c1.personne_id = ch.personne_id <span class="k">AND</span> c1.role = <span class="s">'acteur'</span>
+    <span class="k">JOIN</span> casting c2   <span class="k">ON</span> c2.film_id = c1.film_id <span class="k">AND</span> c2.role = <span class="s">'acteur'</span>
+                     <span class="k">AND</span> c2.personne_id &lt;&gt; <span class="k">ALL</span>(ch.ids)
+    <span class="k">JOIN</span> films f      <span class="k">ON</span> f.id = c1.film_id
+    <span class="k">JOIN</span> personnes p2 <span class="k">ON</span> p2.id = c2.personne_id
+    <span class="k">WHERE</span> ch.degre &lt; <span class="n">3</span>
+)
+<span class="k">SELECT</span> degre, chemin
+<span class="k">FROM</span> chaine
+<span class="k">WHERE</span> personne_id = (<span class="k">SELECT</span> id <span class="k">FROM</span> personnes <span class="k">WHERE</span> nom = <span class="s">'Omar Sy'</span>)
+<span class="k">ORDER</span> <span class="k">BY</span> degre, chemin
+<span class="k">LIMIT</span> <span class="n">1</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M4-5">
+<div class="exo-head"><span class="num">M4.5</span><strong>Les inaccessibles</strong></div>
+<p class="enonce">Quels acteurs ne sont reliés à Kevin Bacon par <strong>aucun</strong> chemin, quelle que soit la distance ? Astuce : sans limite de profondeur, il faut empêcher la requête de tourner en rond.</p><details class="hint"><summary>💡 Indice</summary><p>Avec <code>UNION</code>, une ligne déjà trouvée n'est pas ajoutée à nouveau : quand plus rien de neuf n'apparaît, la récursion s'arrête.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>nom</th></tr></thead><tbody><tr><td class="">Audrey Tautou</td></tr><tr><td class="">Christopher Lloyd</td></tr><tr><td class="">Hubert Koundé</td></tr><tr><td class="">Lea Thompson</td></tr><tr><td class="">Mathieu Kassovitz</td></tr><tr><td class="">Michael J. Fox</td></tr></tbody></table></div><div class="res-note">… 8 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> <span class="k">RECURSIVE</span> atteints <span class="k">AS</span> (
+    <span class="k">SELECT</span> id <span class="k">AS</span> personne_id <span class="k">FROM</span> personnes <span class="k">WHERE</span> nom = <span class="s">'Kevin Bacon'</span>
+    <span class="k">UNION</span>                                   <span class="c">-- UNION (et non UNION ALL) : supprime les doublons,</span>
+    <span class="k">SELECT</span> c2.personne_id                   <span class="c">-- donc la récursion s'arrête d'elle-même</span>
+    <span class="k">FROM</span> atteints a
+    <span class="k">JOIN</span> casting c1 <span class="k">ON</span> c1.personne_id = a.personne_id <span class="k">AND</span> c1.role = <span class="s">'acteur'</span>
+    <span class="k">JOIN</span> casting c2 <span class="k">ON</span> c2.film_id = c1.film_id <span class="k">AND</span> c2.role = <span class="s">'acteur'</span>
+)
+<span class="k">SELECT</span> <span class="k">DISTINCT</span> p.nom
+<span class="k">FROM</span> casting c
+<span class="k">JOIN</span> personnes p <span class="k">ON</span> p.id = c.personne_id
+<span class="k">WHERE</span> c.role = <span class="s">'acteur'</span>
+  <span class="k">AND</span> c.personne_id <span class="k">NOT</span> <span class="k">IN</span> (<span class="k">SELECT</span> personne_id <span class="k">FROM</span> atteints)
+<span class="k">ORDER</span> <span class="k">BY</span> p.nom;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="card fb-card" id="mis-M5"><div class="section-title"><span class="icon-bg ib-purple">🏆</span><span><span class="num">M5</span>&nbsp; Les classements</span></div><span class="ftag f4">Notions N8</span><p style="margin-top:8px">Produire les classements de la page d'accueil de FilmBox.</p><div class="exo" id="ex-M5-1">
+<div class="exo-head"><span class="num">M5.1</span><strong>Top 3 par genre</strong></div>
+<p class="enonce">Pour chaque genre, affichez les 3 films les mieux notés (au moins 3 notes).</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>21 lignes</span></div><div class="tbl"><table><thead><tr><th>genre</th><th>rang</th><th>titre</th><th>moyenne</th></tr></thead><tbody><tr><td class="">Action</td><td class="">1</td><td class="">The Dark Knight</td><td class="">4.50</td></tr><tr><td class="">Action</td><td class="">2</td><td class="">Batman Begins</td><td class="">4.00</td></tr><tr><td class="">Action</td><td class="">3</td><td class="">The Dark Knight Rises</td><td class="">4.00</td></tr><tr><td class="">Aventure</td><td class="">1</td><td class="">Seul au monde</td><td class="">3.36</td></tr><tr><td class="">Comédie</td><td class="">1</td><td class="">Le Loup de Wall Street</td><td class="">4.20</td></tr><tr><td class="">Comédie</td><td class="">2</td><td class="">Intouchables</td><td class="">4.10</td></tr></tbody></table></div><div class="res-note">… 21 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> moyennes <span class="k">AS</span> (
+    <span class="k">SELECT</span> f.genre, f.titre, <span class="k">ROUND</span>(<span class="k">AVG</span>(n.note), <span class="n">2</span>) <span class="k">AS</span> moyenne
+    <span class="k">FROM</span> notes n
+    <span class="k">JOIN</span> films f <span class="k">ON</span> f.id = n.film_id
+    <span class="k">GROUP</span> <span class="k">BY</span> f.genre, f.titre
+    <span class="k">HAVING</span> <span class="k">COUNT</span>(*) &gt;= <span class="n">3</span>
+),
+classes <span class="k">AS</span> (
+    <span class="k">SELECT</span> genre, titre, moyenne,
+           <span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> genre <span class="k">ORDER</span> <span class="k">BY</span> moyenne <span class="k">DESC</span>, titre) <span class="k">AS</span> rang
+    <span class="k">FROM</span> moyennes
+)
+<span class="k">SELECT</span> genre, rang, titre, moyenne
+<span class="k">FROM</span> classes
+<span class="k">WHERE</span> rang &lt;= <span class="n">3</span>
+<span class="k">ORDER</span> <span class="k">BY</span> genre, rang;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M5-2">
+<div class="exo-head"><span class="num">M5.2</span><strong>Le classement des réalisateurs</strong></div>
+<p class="enonce">Classez les réalisateurs selon la note moyenne de l'ensemble de leurs films, avec <code class='inl'>DENSE_RANK</code>.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>10 lignes</span></div><div class="tbl"><table><thead><tr><th>rang</th><th>realisateur</th><th>moyenne</th><th>nb_notes</th></tr></thead><tbody><tr><td class="">1</td><td class="">Mathieu Kassovitz</td><td class="">4.75</td><td class="">4</td></tr><tr><td class="">2</td><td class="">Frank Darabont</td><td class="">4.63</td><td class="">4</td></tr><tr><td class="">3</td><td class="">Steven Spielberg</td><td class="">4.41</td><td class="">11</td></tr><tr><td class="">4</td><td class="">Christopher Nolan</td><td class="">4.31</td><td class="">18</td></tr><tr><td class="">5</td><td class="">David Fincher</td><td class="">4.30</td><td class="">10</td></tr><tr><td class="">6</td><td class="">Martin Scorsese</td><td class="">4.21</td><td class="">12</td></tr></tbody></table></div><div class="res-note">… 10 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> moyennes <span class="k">AS</span> (
+    <span class="k">SELECT</span> p.nom <span class="k">AS</span> realisateur, <span class="k">ROUND</span>(<span class="k">AVG</span>(n.note), <span class="n">2</span>) <span class="k">AS</span> moyenne, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb_notes
+    <span class="k">FROM</span> casting c
+    <span class="k">JOIN</span> personnes p <span class="k">ON</span> p.id = c.personne_id
+    <span class="k">JOIN</span> notes n     <span class="k">ON</span> n.film_id = c.film_id
+    <span class="k">WHERE</span> c.role = <span class="s">'realisateur'</span>
+    <span class="k">GROUP</span> <span class="k">BY</span> p.nom
+)
+<span class="k">SELECT</span> <span class="k">DENSE_RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER</span> <span class="k">BY</span> moyenne <span class="k">DESC</span>) <span class="k">AS</span> rang,
+       realisateur, moyenne, nb_notes
+<span class="k">FROM</span> moyennes
+<span class="k">ORDER</span> <span class="k">BY</span> rang, realisateur
+<span class="k">LIMIT</span> <span class="n">10</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M5-3">
+<div class="exo-head"><span class="num">M5.3</span><strong>Le coup de cœur de chacun</strong></div>
+<p class="enonce">Pour chaque membre, affichez son film le mieux noté (le plus ancien en cas d'égalité).</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>8 lignes</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>titre</th><th>note</th><th>note_le</th></tr></thead><tbody><tr><td class="">bobine</td><td class="">Retour vers le futur</td><td class="">5.0</td><td class="">2026-05-01</td></tr><tr><td class="">cinephile_92</td><td class="">Seven</td><td class="">5.0</td><td class="">2026-03-02</td></tr><tr><td class="">darkroom</td><td class="">Inception</td><td class="">5.0</td><td class="">2026-03-13</td></tr><tr><td class="">lea.reel</td><td class="">Inception</td><td class="">5.0</td><td class="">2026-02-17</td></tr><tr><td class="">maxou_ciné</td><td class="">Il faut sauver le soldat Ryan</td><td class="">5.0</td><td class="">2026-05-03</td></tr><tr><td class="">nolanfan</td><td class="">Seven</td><td class="">5.0</td><td class="">2026-03-30</td></tr></tbody></table></div><div class="res-note">… 8 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pseudo, titre, note, note_le
+<span class="k">FROM</span> (
+    <span class="k">SELECT</span> u.pseudo, f.titre, n.note, n.note_le,
+           <span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> u.id <span class="k">ORDER</span> <span class="k">BY</span> n.note <span class="k">DESC</span>, n.note_le) <span class="k">AS</span> rn
+    <span class="k">FROM</span> notes n
+    <span class="k">JOIN</span> utilisateurs u <span class="k">ON</span> u.id = n.utilisateur_id
+    <span class="k">JOIN</span> films f        <span class="k">ON</span> f.id = n.film_id
+) t
+<span class="k">WHERE</span> rn = <span class="n">1</span>
+<span class="k">ORDER</span> <span class="k">BY</span> pseudo;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M5-4">
+<div class="exo-head"><span class="num">M5.4</span><strong>Le meilleur épisode</strong></div>
+<p class="enonce">Au sein de chaque saga, classez les épisodes selon leur note moyenne.</p><details class="hint"><summary>💡 Indice</summary><p>Une fonction de fenêtrage peut classer un résultat déjà agrégé : elle s'applique après le GROUP BY.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>9 lignes</span></div><div class="tbl"><table><thead><tr><th>saga</th><th>titre</th><th>moyenne</th><th>rang_dans_saga</th></tr></thead><tbody><tr><td class="">Retour vers le futur</td><td class="">Retour vers le futur</td><td class="">4.64</td><td class="">1</td></tr><tr><td class="">Retour vers le futur</td><td class="">Retour vers le futur III</td><td class="">4.21</td><td class="">2</td></tr><tr><td class="">Retour vers le futur</td><td class="">Retour vers le futur II</td><td class="">3.80</td><td class="">3</td></tr><tr><td class="">The Dark Knight</td><td class="">The Dark Knight</td><td class="">4.50</td><td class="">1</td></tr><tr><td class="">The Dark Knight</td><td class="">The Dark Knight Rises</td><td class="">4.00</td><td class="">2</td></tr><tr><td class="">The Dark Knight</td><td class="">Batman Begins</td><td class="">4.00</td><td class="">2</td></tr></tbody></table></div><div class="res-note">… 9 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> s.nom <span class="k">AS</span> saga, f.titre, <span class="k">ROUND</span>(<span class="k">AVG</span>(n.note), <span class="n">2</span>) <span class="k">AS</span> moyenne,
+       <span class="k">RANK</span>() <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> s.id <span class="k">ORDER</span> <span class="k">BY</span> <span class="k">AVG</span>(n.note) <span class="k">DESC</span>) <span class="k">AS</span> rang_dans_saga
+<span class="k">FROM</span> films f
+<span class="k">JOIN</span> sagas s <span class="k">ON</span> s.id = f.saga_id
+<span class="k">JOIN</span> notes n <span class="k">ON</span> n.film_id = f.id
+<span class="k">GROUP</span> <span class="k">BY</span> s.id, s.nom, f.titre
+<span class="k">ORDER</span> <span class="k">BY</span> saga, rang_dans_saga;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="card fb-card" id="mis-M6"><div class="section-title"><span class="icon-bg ib-purple">📈</span><span><span class="num">M6</span>&nbsp; Ma saison ciné</span></div><span class="ftag f4">Notions N9</span><p style="margin-top:8px">Suivre l'activité des membres et l'évolution des notes dans le temps.</p><div class="exo" id="ex-M6-1">
+<div class="exo-head"><span class="num">M6.1</span><strong>Visionnages cumulés</strong></div>
+<p class="enonce">Pour <code class='inl'>cinephile_92</code>, affichez le nombre de visionnages par mois et leur cumul depuis janvier.</p><details class="hint"><summary>💡 Indice</summary><p><code>DATE_TRUNC('month', date)</code> ramène une date au premier jour de son mois.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>9 lignes</span></div><div class="tbl"><table><thead><tr><th>mois</th><th>nb</th><th>cumul</th></tr></thead><tbody><tr><td class="">2026-01</td><td class="">2</td><td class="">2</td></tr><tr><td class="">2026-02</td><td class="">1</td><td class="">3</td></tr><tr><td class="">2026-03</td><td class="">2</td><td class="">5</td></tr><tr><td class="">2026-04</td><td class="">9</td><td class="">14</td></tr><tr><td class="">2026-05</td><td class="">3</td><td class="">17</td></tr><tr><td class="">2026-06</td><td class="">4</td><td class="">21</td></tr></tbody></table></div><div class="res-note">… 9 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">WITH</span> par_mois <span class="k">AS</span> (
+    <span class="k">SELECT</span> DATE_TRUNC(<span class="s">'month'</span>, j.date_visionnage)::<span class="k">DATE</span> <span class="k">AS</span> mois, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb
+    <span class="k">FROM</span> journal j
+    <span class="k">JOIN</span> utilisateurs u <span class="k">ON</span> u.id = j.utilisateur_id
+    <span class="k">WHERE</span> u.pseudo = <span class="s">'cinephile_92'</span>
+    <span class="k">GROUP</span> <span class="k">BY</span> <span class="n">1</span>
+)
+<span class="k">SELECT</span> <span class="k">TO_CHAR</span>(mois, <span class="s">'YYYY-MM'</span>) <span class="k">AS</span> mois, nb,
+       <span class="k">SUM</span>(nb) <span class="k">OVER</span> (<span class="k">ORDER</span> <span class="k">BY</span> mois) <span class="k">AS</span> cumul
+<span class="k">FROM</span> par_mois
+<span class="k">ORDER</span> <span class="k">BY</span> mois;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M6-2">
+<div class="exo-head"><span class="num">M6.2</span><strong>La note d'Inception au fil du temps</strong></div>
+<p class="enonce">Affichez chaque note reçue par Inception dans l'ordre chronologique, avec la moyenne cumulée après chaque nouvelle note.</p>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>note_le</th><th>pseudo</th><th>note</th><th>moyenne_cumulee</th></tr></thead><tbody><tr><td class="">2026-02-17</td><td class="">lea.reel</td><td class="">5.0</td><td class="">5.00</td></tr><tr><td class="">2026-03-13</td><td class="">darkroom</td><td class="">5.0</td><td class="">5.00</td></tr><tr><td class="">2026-05-13</td><td class="">nolanfan</td><td class="">3.5</td><td class="">4.50</td></tr><tr><td class="">2026-06-26</td><td class="">bobine</td><td class="">4.5</td><td class="">4.50</td></tr><tr><td class="">2026-08-18</td><td class="">cinephile_92</td><td class="">5.0</td><td class="">4.60</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> n.note_le, u.pseudo, n.note,
+       <span class="k">ROUND</span>(<span class="k">AVG</span>(n.note) <span class="k">OVER</span> (
+           <span class="k">ORDER</span> <span class="k">BY</span> n.note_le
+           <span class="k">ROWS</span> <span class="k">BETWEEN</span> <span class="k">UNBOUNDED</span> <span class="k">PRECEDING</span> <span class="k">AND</span> <span class="k">CURRENT</span> <span class="k">ROW</span>
+       ), <span class="n">2</span>) <span class="k">AS</span> moyenne_cumulee
+<span class="k">FROM</span> notes n
+<span class="k">JOIN</span> films f        <span class="k">ON</span> f.id = n.film_id
+<span class="k">JOIN</span> utilisateurs u <span class="k">ON</span> u.id = n.utilisateur_id
+<span class="k">WHERE</span> f.titre = <span class="s">'Inception'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> n.note_le;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M6-3">
+<div class="exo-head"><span class="num">M6.3</span><strong>Plus sévère que la moyenne ?</strong></div>
+<p class="enonce">Pour chaque note de <code class='inl'>nolanfan</code>, affichez la moyenne du film (tous membres confondus) et l'écart entre sa note et cette moyenne.</p><details class="hint"><summary>💡 Indice</summary><p>Calculez la moyenne sur tous les membres <strong>avant</strong> de filtrer sur nolanfan, sinon la moyenne ne porte que sur ses propres notes.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>19 lignes</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>titre</th><th>note</th><th>moyenne_film</th><th>ecart</th></tr></thead><tbody><tr><td class="">nolanfan</td><td class="">Ocean&#x27;s Eleven</td><td class="">4.5</td><td class="">3.50</td><td class="">1.00</td></tr><tr><td class="">nolanfan</td><td class="">X-Men : Days of Future Past</td><td class="">4.5</td><td class="">3.80</td><td class="">0.70</td></tr><tr><td class="">nolanfan</td><td class="">Seven</td><td class="">5.0</td><td class="">4.50</td><td class="">0.50</td></tr><tr><td class="">nolanfan</td><td class="">Intouchables</td><td class="">4.5</td><td class="">4.10</td><td class="">0.40</td></tr><tr><td class="">nolanfan</td><td class="">Retour vers le futur III</td><td class="">4.5</td><td class="">4.21</td><td class="">0.29</td></tr><tr><td class="">nolanfan</td><td class="">Arrête-moi si tu peux</td><td class="">4.5</td><td class="">4.60</td><td class="">-0.10</td></tr></tbody></table></div><div class="res-note">… 19 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pseudo, titre, note, moyenne_film, note - moyenne_film <span class="k">AS</span> ecart
+<span class="k">FROM</span> (
+    <span class="k">SELECT</span> u.pseudo, f.titre, n.note,
+           <span class="k">ROUND</span>(<span class="k">AVG</span>(n.note) <span class="k">OVER</span> (<span class="k">PARTITION</span> <span class="k">BY</span> n.film_id), <span class="n">2</span>) <span class="k">AS</span> moyenne_film
+    <span class="k">FROM</span> notes n
+    <span class="k">JOIN</span> films f        <span class="k">ON</span> f.id = n.film_id
+    <span class="k">JOIN</span> utilisateurs u <span class="k">ON</span> u.id = n.utilisateur_id
+) t
+<span class="k">WHERE</span> pseudo = <span class="s">'nolanfan'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> ecart <span class="k">DESC</span>, titre;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo" id="ex-M6-4">
+<div class="exo-head"><span class="num">M6.4</span><strong>Le rythme de visionnage</strong></div>
+<p class="enonce">Pour <code class='inl'>cinephile_92</code>, affichez chaque visionnage et le nombre de jours écoulés depuis le précédent.</p><details class="hint"><summary>💡 Indice</summary><p>La différence entre deux dates donne un nombre de jours.</p></details>
+<div class="res"><div class="res-bar">▶ Résultat attendu <span>29 lignes</span></div><div class="tbl"><table><thead><tr><th>date_visionnage</th><th>titre</th><th>jours_depuis_precedent</th></tr></thead><tbody><tr><td class="">2026-01-06</td><td class="">Seul au monde</td><td class="null">NULL</td></tr><tr><td class="">2026-01-19</td><td class="">The Dark Knight</td><td class="">13</td></tr><tr><td class="">2026-02-18</td><td class="">The Dark Knight</td><td class="">30</td></tr><tr><td class="">2026-03-02</td><td class="">Seven</td><td class="">12</td></tr><tr><td class="">2026-03-06</td><td class="">Retour vers le futur</td><td class="">4</td></tr><tr><td class="">2026-04-03</td><td class="">Titanic</td><td class="">28</td></tr></tbody></table></div><div class="res-note">… 29 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> j.date_visionnage, f.titre,
+       j.date_visionnage - <span class="k">LAG</span>(j.date_visionnage) <span class="k">OVER</span> (<span class="k">ORDER</span> <span class="k">BY</span> j.date_visionnage, j.id)
+           <span class="k">AS</span> jours_depuis_precedent
+<span class="k">FROM</span> journal j
+<span class="k">JOIN</span> utilisateurs u <span class="k">ON</span> u.id = j.utilisateur_id
+<span class="k">JOIN</span> films f        <span class="k">ON</span> f.id = j.film_id
+<span class="k">WHERE</span> u.pseudo = <span class="s">'cinephile_92'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> j.date_visionnage, j.id;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="result-panel"><h4>🎬 Et après ?</h4><p>En séance 2, FilmBox s'enrichit : fiche film en JSONB, vues, vue matérialisée des tendances et fonction de note pondérée.</p></div></section><section class="panel" id="glossaire"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">📖</span>Glossaire de la séance</div>
+<div id="gl-locked"><div class="instruction-box">🔒 Le glossaire se débloque une fois les 3 cas terminés.</div>
+<div class="lock-pills"><span class="lock-pill" id="lp1">⏳ Cas 1</span><span class="lock-pill" id="lp2">⏳ Cas 2</span><span class="lock-pill" id="lp3">⏳ Cas 3</span></div></div>
+<div id="gl-open" hidden><div><span class="ftag f1">Prise en main</span><span class="ftag f2">Structure</span><span class="ftag f3">Requêtes</span><span class="ftag f4">CTE</span><span class="ftag f5">Fenêtrage</span></div><br>
+<input class="gl-search" type="search" placeholder="Rechercher un terme…" aria-label="Rechercher un terme"><div class="gl-item"><b>Agrégat</b> <span class="ftag f3">Requêtes</span><p>Fonction qui résume plusieurs lignes en une seule valeur : somme, moyenne, comptage…</p></div><div class="gl-item"><b>Alias</b> <span class="ftag f3">Requêtes</span><p>Nom court donné à une table ou à une colonne dans une requête.</p></div><div class="gl-item"><b>Ancrage</b> <span class="ftag f4">CTE</span><p>Première partie d&#x27;une récursion : le point de départ du parcours.</p></div><div class="gl-item"><b>Base de données</b> <span class="ftag f1">Prise en main</span><p>Ensemble nommé de tables et d&#x27;objets ; un même serveur peut en héberger plusieurs.</p></div><div class="gl-item"><b>Cadre (frame)</b> <span class="ftag f5">Fenêtrage</span><p>Sous-ensemble de lignes pris en compte pour le calcul, défini par ROWS ou RANGE.</p></div><div class="gl-item"><b>Clé primaire</b> <span class="ftag f2">Structure</span><p>Colonne ou groupe de colonnes qui identifie chaque ligne de façon unique.</p></div><div class="gl-item"><b>Clé étrangère</b> <span class="ftag f2">Structure</span><p>Colonne qui fait référence à une ligne existante d&#x27;une autre table.</p></div><div class="gl-item"><b>Collation</b> <span class="ftag f5">Fenêtrage</span><p>Règles de tri et de comparaison du texte : ordre alphabétique, accents.</p></div><div class="gl-item"><b>Contrainte</b> <span class="ftag f2">Structure</span><p>Règle vérifiée à chaque écriture, qui refuse les données incohérentes.</p></div><div class="gl-item"><b>CTE</b> <span class="ftag f4">CTE</span><p>Résultat intermédiaire nommé, défini avec WITH, utilisé par la requête qui suit.</p></div><div class="gl-item"><b>CTE récursive</b> <span class="ftag f4">CTE</span><p>Résultat intermédiaire qui s&#x27;appelle lui-même pour parcourir une hiérarchie ou un graphe.</p></div><div class="gl-item"><b>Fonction de fenêtrage</b> <span class="ftag f5">Fenêtrage</span><p>Calcul effectué sur un ensemble de lignes liées, sans les fusionner (mot-clé OVER).</p></div><div class="gl-item"><b>HAVING</b> <span class="ftag f3">Requêtes</span><p>Clause qui filtre les groupes, après le regroupement.</p></div><div class="gl-item"><b>IDENTITY</b> <span class="ftag f2">Structure</span><p>Mécanisme standard qui génère automatiquement un identifiant croissant.</p></div><div class="gl-item"><b>Jointure</b> <span class="ftag f3">Requêtes</span><p>Opération qui relie les lignes de deux tables selon une condition.</p></div><div class="gl-item"><b>LAG / LEAD</b> <span class="ftag f5">Fenêtrage</span><p>Renvoient la valeur de la ligne précédente ou suivante.</p></div><div class="gl-item"><b>Méta-commande</b> <span class="ftag f1">Prise en main</span><p>Commande propre au client, commençant par une barre oblique inversée, sans point-virgule.</p></div><div class="gl-item"><b>NULL</b> <span class="ftag f3">Requêtes</span><p>Absence de valeur, « inconnu » ; se teste avec IS, jamais avec =.</p></div><div class="gl-item"><b>PARTITION BY</b> <span class="ftag f5">Fenêtrage</span><p>Découpe les lignes en groupes indépendants pour un calcul de fenêtrage.</p></div><div class="gl-item"><b>PostgreSQL</b> <span class="ftag f1">Prise en main</span><p>Système de gestion de bases de données relationnelles libre et open source.</p></div><div class="gl-item"><b>psql</b> <span class="ftag f1">Prise en main</span><p>Client en ligne de commande officiel de PostgreSQL.</p></div><div class="gl-item"><b>SGBD</b> <span class="ftag f1">Prise en main</span><p>Logiciel qui stocke les données et exécute les requêtes qu&#x27;on lui envoie.</p></div><div class="gl-item"><b>Table</b> <span class="ftag f2">Structure</span><p>Structure qui range les données en lignes et en colonnes.</p></div><div class="gl-item"><b>Type de données</b> <span class="ftag f2">Structure</span><p>Nature des valeurs qu&#x27;une colonne accepte : entier, décimal exact, texte, date…</p></div><div class="gl-item"><b>UNION ALL</b> <span class="ftag f4">CTE</span><p>Assemble les résultats de deux requêtes en conservant les doublons.</p></div><div class="gl-item"><b>Étape récursive</b> <span class="ftag f4">CTE</span><p>Partie qui trouve le niveau suivant à partir des lignes déjà obtenues.</p></div></div></div></section></main>
+<footer>SQL avancé avec PostgreSQL · M1 Tech Lead</footer>
+<script>const TERMS=[["PostgreSQL", "f1", "Système de gestion de bases de données relationnelles libre et open source."], ["SGBD", "f1", "Logiciel qui stocke les données et exécute les requêtes qu'on lui envoie."], ["psql", "f1", "Client en ligne de commande officiel de PostgreSQL."], ["Méta-commande", "f1", "Commande propre au client, commençant par une barre oblique inversée, sans point-virgule."], ["Base de données", "f1", "Ensemble nommé de tables et d'objets ; un même serveur peut en héberger plusieurs."], ["Table", "f2", "Structure qui range les données en lignes et en colonnes."], ["Type de données", "f2", "Nature des valeurs qu'une colonne accepte : entier, décimal exact, texte, date…"], ["Contrainte", "f2", "Règle vérifiée à chaque écriture, qui refuse les données incohérentes."], ["Clé primaire", "f2", "Colonne ou groupe de colonnes qui identifie chaque ligne de façon unique."], ["Clé étrangère", "f2", "Colonne qui fait référence à une ligne existante d'une autre table."], ["IDENTITY", "f2", "Mécanisme standard qui génère automatiquement un identifiant croissant."], ["NULL", "f3", "Absence de valeur, « inconnu » ; se teste avec IS, jamais avec =."], ["Jointure", "f3", "Opération qui relie les lignes de deux tables selon une condition."], ["Alias", "f3", "Nom court donné à une table ou à une colonne dans une requête."], ["Agrégat", "f3", "Fonction qui résume plusieurs lignes en une seule valeur : somme, moyenne, comptage…"], ["HAVING", "f3", "Clause qui filtre les groupes, après le regroupement."], ["CTE", "f4", "Résultat intermédiaire nommé, défini avec WITH, utilisé par la requête qui suit."], ["CTE récursive", "f4", "Résultat intermédiaire qui s'appelle lui-même pour parcourir une hiérarchie ou un graphe."], ["Ancrage", "f4", "Première partie d'une récursion : le point de départ du parcours."], ["Étape récursive", "f4", "Partie qui trouve le niveau suivant à partir des lignes déjà obtenues."], ["UNION ALL", "f4", "Assemble les résultats de deux requêtes en conservant les doublons."], ["Fonction de fenêtrage", "f5", "Calcul effectué sur un ensemble de lignes liées, sans les fusionner (mot-clé OVER)."], ["PARTITION BY", "f5", "Découpe les lignes en groupes indépendants pour un calcul de fenêtrage."], ["Cadre (frame)", "f5", "Sous-ensemble de lignes pris en compte pour le calcul, défini par ROWS ou RANGE."], ["LAG / LEAD", "f5", "Renvoient la valeur de la ligne précédente ou suivante."], ["Collation", "f5", "Règles de tri et de comparaison du texte : ordre alphabétique, accents."]];const GROUPS=[["Jointure (JOIN)", "f3", [["Afficher chaque commande avec le nom du client qui l'a passée.", false], ["Lister les joueurs avec la ville de leur club.", false], ["Afficher chaque film avec le nom de son réalisateur.", false], ["Trouver les clients qui n'ont jamais passé de commande.", false], ["Calculer le nombre total de buts marqués dans le championnat.", true]], "Un total sur une seule table ne relie rien : c'est un agrégat (SUM). Les clients sans commande, eux, relèvent bien d'une jointure (LEFT JOIN + IS NULL)."], ["Agrégation (GROUP BY / HAVING)", "f3", [["Compter le nombre de joueurs de chaque équipe.", false], ["Calculer le chiffre d'affaires de chaque mois.", false], ["Trouver les genres qui comptent plus de 10 films.", false], ["Calculer la note moyenne de chaque film.", false], ["Afficher chaque vente avec le total cumulé depuis le début de l'année.", true]], "Chaque vente doit rester visible avec son cumul : GROUP BY fusionnerait les lignes. C'est une fonction de fenêtrage (SUM() OVER)."], ["CTE (WITH)", "f4", [["Calculer d'abord les points de chaque équipe, puis établir le classement.", false], ["Découper une requête de 60 lignes en étapes nommées et testables séparément.", false], ["Réutiliser le même résultat intermédiaire à deux endroits de la requête.", false], ["Calculer une moyenne, puis ne garder que les lignes situées au-dessus.", false], ["Afficher tous les sous-dossiers d'un dossier, quelle que soit la profondeur.", true]], "Une profondeur inconnue impose de répéter le calcul niveau après niveau : il faut une CTE récursive (WITH RECURSIVE)."], ["CTE récursive", "f4", [["Retrouver tous les collaborateurs placés sous une directrice, à tous les niveaux.", false], ["Afficher un fil de discussion : les réponses aux réponses d'un commentaire.", false], ["Construire le chemin complet d'une catégorie : Maison > Cuisine > Robots.", false], ["Trouver les amis de mes amis, jusqu'au 3e degré.", false], ["Afficher le top 3 des ventes de chaque magasin.", true]], "Un top N par groupe n'a rien de hiérarchique : c'est un classement par fonction de fenêtrage (ROW_NUMBER() OVER (PARTITION BY magasin …))."], ["Fonctions de fenêtrage", "f5", [["Afficher le classement des pilotes après chaque Grand Prix.", false], ["Calculer la variation du nombre d'abonnés par rapport à la semaine précédente.", false], ["Calculer une moyenne glissante des températures sur 7 jours.", false], ["Donner le rang de chaque élève au sein de sa classe.", false], ["Afficher le nombre total de commandes de chaque client, une ligne par client.", true]], "Une ligne par client : les commandes sont fusionnées, c'est un GROUP BY avec COUNT."]];const VF=[["Une méta-commande psql comme \\dt doit se terminer par un point-virgule.", false, "Les méta-commandes n'en prennent pas ; seules les requêtes SQL se terminent par ;."], ["NUMERIC est le type adapté pour stocker des montants en euros.", true, "NUMERIC est exact ; FLOAT et REAL sont approximatifs et créent des erreurs d'arrondi."], ["WHERE equipe_id = NULL trouve les joueurs sans club.", false, "Une comparaison avec NULL n'est jamais vraie : il faut écrire IS NULL."], ["Dans une condition, AND est évalué avant OR.", true, "C'est pourquoi il faut des parenthèses dès qu'on mélange AND et OR."], ["Un INNER JOIN conserve toutes les lignes de la table de gauche.", false, "C'est le rôle du LEFT JOIN. L'INNER JOIN supprime les lignes sans correspondance."], ["HAVING filtre les groupes, après le GROUP BY.", true, "WHERE filtre les lignes avant le regroupement, HAVING filtre les groupes après."], ["On peut utiliser dans le WHERE un alias défini dans le SELECT.", false, "Le WHERE est évalué avant le SELECT : l'alias n'existe pas encore."], ["Une CTE reste disponible pour les requêtes suivantes de la session.", false, "Une CTE n'existe que le temps de la requête qui la suit."], ["Plusieurs CTE s'enchaînent avec un seul WITH, séparées par des virgules.", true, "On n'écrit WITH qu'une fois ; chaque CTE peut utiliser les précédentes."], ["Une CTE récursive combine un ancrage et une étape récursive avec UNION ALL (ou UNION).", true, "L'ancrage donne le point de départ, l'étape récursive le niveau suivant."], ["Remplacer UNION ALL par UNION dans une CTE récursive peut empêcher une boucle infinie.", true, "UNION supprime les lignes déjà trouvées : sur un graphe avec des cycles, la récursion finit par ne plus rien produire de neuf."], ["Une fonction de fenêtrage réduit le nombre de lignes, comme GROUP BY.", false, "Elle ajoute une information à chaque ligne sans les fusionner."], ["RANK et DENSE_RANK donnent le même rang à deux lignes à égalité.", true, "La différence vient après : RANK saute des rangs, DENSE_RANK non."], ["En cas d'égalité, ROW_NUMBER donne toujours le même résultat d'une exécution à l'autre.", false, "L'ordre entre lignes à égalité est arbitraire : ajoutez un critère de départage."], ["On peut filtrer directement sur ROW_NUMBER() dans le WHERE.", false, "Les fonctions de fenêtrage sont calculées après le WHERE : on filtre dans une requête englobante ou une CTE."], ["LAG renvoie NULL pour la première ligne de chaque partition.", true, "Il n'y a pas de ligne précédente (sauf si on fournit une valeur par défaut en 3e argument)."], ["Sans cadre précisé, SUM() OVER (ORDER BY …) additionne ensemble les lignes à égalité.", true, "Le cadre par défaut est RANGE : les ex æquo forment un même bloc. Précisez ROWS BETWEEN pour un cumul ligne par ligne."], ["PARTITION BY est obligatoire dans une fonction de fenêtrage.", false, "Sans PARTITION BY, la fenêtre porte sur l'ensemble du résultat."]];const FILMBOX_SQL="-- =====================================================================\n--  FilmBox — jeu de données du projet fil rouge (séance 1)\n--  Films et castings réels ; membres, notes et visionnages fictifs.\n--  Script ré-exécutable : il supprime puis recrée toutes les tables.\n--  À charger dans une base dédiée :  CREATE DATABASE filmbox;\n-- =====================================================================\n\n-- (listes et liste_films sont créées pendant la mission M1)\nDROP TABLE IF EXISTS liste_films, listes, journal, notes, casting, films, sagas, personnes, utilisateurs CASCADE;\n\nCREATE TABLE sagas (\n    id   INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    nom  VARCHAR(60) NOT NULL UNIQUE\n);\n\nCREATE TABLE films (\n    id                 INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    titre              VARCHAR(120) NOT NULL,\n    annee              INTEGER      NOT NULL CHECK (annee BETWEEN 1888 AND 2100),\n    genre              VARCHAR(30)  NOT NULL,\n    saga_id            INTEGER REFERENCES sagas(id),\n    film_precedent_id  INTEGER REFERENCES films(id)     -- épisode précédent dans la saga\n);\n\nCREATE TABLE personnes (\n    id   INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    nom  VARCHAR(80) NOT NULL UNIQUE\n);\n\nCREATE TABLE casting (\n    film_id     INTEGER NOT NULL REFERENCES films(id),\n    personne_id INTEGER NOT NULL REFERENCES personnes(id),\n    role        VARCHAR(12) NOT NULL CHECK (role IN ('acteur', 'realisateur')),\n    PRIMARY KEY (film_id, personne_id, role)\n);\n\nCREATE TABLE utilisateurs (\n    id          INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    pseudo      VARCHAR(30) NOT NULL UNIQUE,\n    ville       VARCHAR(50),\n    inscrit_le  DATE NOT NULL\n);\n\nCREATE TABLE notes (\n    utilisateur_id INTEGER NOT NULL REFERENCES utilisateurs(id),\n    film_id        INTEGER NOT NULL REFERENCES films(id),\n    note           NUMERIC(2,1) NOT NULL CHECK (note BETWEEN 0.5 AND 5),\n    note_le        DATE NOT NULL,\n    PRIMARY KEY (utilisateur_id, film_id)                -- une note par membre et par film\n);\n\nCREATE TABLE journal (\n    id              INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n    utilisateur_id  INTEGER NOT NULL REFERENCES utilisateurs(id),\n    film_id         INTEGER NOT NULL REFERENCES films(id),\n    date_visionnage DATE    NOT NULL\n);\n\n-- ---------- Sagas ----------\nINSERT INTO sagas (nom) VALUES ('Retour vers le futur'), ('The Dark Knight'), ('X-Men : la prélogie');\n\n-- ---------- Films ----------\nINSERT INTO films (titre, annee, genre, saga_id) VALUES\n ('Apollo 13', 1995, 'Drame', NULL),                                  -- 1\n ('Mystic River', 2003, 'Thriller', NULL),                            -- 2\n ('Des hommes d''honneur', 1992, 'Drame', NULL),                      -- 3\n ('X-Men : Le Commencement', 2011, 'Science-fiction', 3),             -- 4\n ('X-Men : Days of Future Past', 2014, 'Science-fiction', 3),         -- 5\n ('X-Men : Apocalypse', 2016, 'Science-fiction', 3),                  -- 6\n ('Forrest Gump', 1994, 'Drame', NULL),                               -- 7\n ('Seul au monde', 2000, 'Aventure', NULL),                           -- 8\n ('Il faut sauver le soldat Ryan', 1998, 'Guerre', NULL),             -- 9\n ('Arrête-moi si tu peux', 2002, 'Policier', NULL),                   -- 10\n ('Titanic', 1997, 'Romance', NULL),                                  -- 11\n ('Inception', 2010, 'Science-fiction', NULL),                        -- 12\n ('Les Infiltrés', 2006, 'Policier', NULL),                           -- 13\n ('Once Upon a Time… in Hollywood', 2019, 'Comédie', NULL),           -- 14\n ('Le Loup de Wall Street', 2013, 'Comédie', NULL),                   -- 15\n ('Fight Club', 1999, 'Thriller', NULL),                              -- 16\n ('Ocean''s Eleven', 2001, 'Policier', NULL),                         -- 17\n ('Seven', 1995, 'Thriller', NULL),                                   -- 18\n ('Batman Begins', 2005, 'Action', 2),                                -- 19\n ('The Dark Knight', 2008, 'Action', 2),                              -- 20\n ('The Dark Knight Rises', 2012, 'Action', 2),                        -- 21\n ('Les Évadés', 1994, 'Drame', NULL),                                 -- 22\n ('Intouchables', 2011, 'Comédie', NULL),                             -- 23\n ('La Môme', 2007, 'Drame', NULL),                                    -- 24\n ('The Artist', 2011, 'Comédie', NULL),                               -- 25\n ('Le Fabuleux Destin d''Amélie Poulain', 2001, 'Comédie', NULL),     -- 26\n ('La Haine', 1995, 'Drame', NULL),                                   -- 27\n ('Retour vers le futur', 1985, 'Science-fiction', 1),                -- 28\n ('Retour vers le futur II', 1989, 'Science-fiction', 1),             -- 29\n ('Retour vers le futur III', 1990, 'Science-fiction', 1);            -- 30\n\n-- Chaînage des sagas : chaque épisode pointe vers le précédent\nUPDATE films SET film_precedent_id = 4  WHERE id = 5;\nUPDATE films SET film_precedent_id = 5  WHERE id = 6;\nUPDATE films SET film_precedent_id = 19 WHERE id = 20;\nUPDATE films SET film_precedent_id = 20 WHERE id = 21;\nUPDATE films SET film_precedent_id = 28 WHERE id = 29;\nUPDATE films SET film_precedent_id = 29 WHERE id = 30;\n\n-- ---------- Personnes et casting ----------\n-- Table de travail temporaire : (film, personne, rôle) en toutes lettres\nCREATE TEMP TABLE _casting (film_id INTEGER, nom VARCHAR(80), role VARCHAR(12));\nINSERT INTO _casting VALUES\n (1,'Tom Hanks','acteur'),(1,'Kevin Bacon','acteur'),(1,'Bill Paxton','acteur'),(1,'Gary Sinise','acteur'),(1,'Ed Harris','acteur'),(1,'Ron Howard','realisateur'),\n (2,'Sean Penn','acteur'),(2,'Tim Robbins','acteur'),(2,'Kevin Bacon','acteur'),(2,'Laurence Fishburne','acteur'),(2,'Clint Eastwood','realisateur'),\n (3,'Tom Cruise','acteur'),(3,'Jack Nicholson','acteur'),(3,'Demi Moore','acteur'),(3,'Kevin Bacon','acteur'),(3,'Rob Reiner','realisateur'),\n (4,'James McAvoy','acteur'),(4,'Michael Fassbender','acteur'),(4,'Jennifer Lawrence','acteur'),(4,'Kevin Bacon','acteur'),(4,'Matthew Vaughn','realisateur'),\n (5,'Hugh Jackman','acteur'),(5,'James McAvoy','acteur'),(5,'Michael Fassbender','acteur'),(5,'Jennifer Lawrence','acteur'),(5,'Omar Sy','acteur'),(5,'Bryan Singer','realisateur'),\n (6,'James McAvoy','acteur'),(6,'Michael Fassbender','acteur'),(6,'Jennifer Lawrence','acteur'),(6,'Bryan Singer','realisateur'),\n (7,'Tom Hanks','acteur'),(7,'Robin Wright','acteur'),(7,'Gary Sinise','acteur'),(7,'Robert Zemeckis','realisateur'),\n (8,'Tom Hanks','acteur'),(8,'Helen Hunt','acteur'),(8,'Robert Zemeckis','realisateur'),\n (9,'Tom Hanks','acteur'),(9,'Matt Damon','acteur'),(9,'Tom Sizemore','acteur'),(9,'Vin Diesel','acteur'),(9,'Steven Spielberg','realisateur'),\n (10,'Leonardo DiCaprio','acteur'),(10,'Tom Hanks','acteur'),(10,'Steven Spielberg','realisateur'),\n (11,'Leonardo DiCaprio','acteur'),(11,'Kate Winslet','acteur'),(11,'James Cameron','realisateur'),\n (12,'Leonardo DiCaprio','acteur'),(12,'Joseph Gordon-Levitt','acteur'),(12,'Elliot Page','acteur'),(12,'Tom Hardy','acteur'),(12,'Marion Cotillard','acteur'),(12,'Michael Caine','acteur'),(12,'Christopher Nolan','realisateur'),\n (13,'Leonardo DiCaprio','acteur'),(13,'Matt Damon','acteur'),(13,'Jack Nicholson','acteur'),(13,'Martin Scorsese','realisateur'),\n (14,'Leonardo DiCaprio','acteur'),(14,'Brad Pitt','acteur'),(14,'Margot Robbie','acteur'),(14,'Quentin Tarantino','realisateur'),\n (15,'Leonardo DiCaprio','acteur'),(15,'Jonah Hill','acteur'),(15,'Margot Robbie','acteur'),(15,'Jean Dujardin','acteur'),(15,'Martin Scorsese','realisateur'),\n (16,'Brad Pitt','acteur'),(16,'Edward Norton','acteur'),(16,'Helena Bonham Carter','acteur'),(16,'David Fincher','realisateur'),\n (17,'George Clooney','acteur'),(17,'Brad Pitt','acteur'),(17,'Matt Damon','acteur'),(17,'Julia Roberts','acteur'),(17,'Steven Soderbergh','realisateur'),\n (18,'Brad Pitt','acteur'),(18,'Morgan Freeman','acteur'),(18,'David Fincher','realisateur'),\n (19,'Christian Bale','acteur'),(19,'Michael Caine','acteur'),(19,'Liam Neeson','acteur'),(19,'Morgan Freeman','acteur'),(19,'Gary Oldman','acteur'),(19,'Christopher Nolan','realisateur'),\n (20,'Christian Bale','acteur'),(20,'Heath Ledger','acteur'),(20,'Michael Caine','acteur'),(20,'Morgan Freeman','acteur'),(20,'Gary Oldman','acteur'),(20,'Christopher Nolan','realisateur'),\n (21,'Christian Bale','acteur'),(21,'Tom Hardy','acteur'),(21,'Anne Hathaway','acteur'),(21,'Joseph Gordon-Levitt','acteur'),(21,'Marion Cotillard','acteur'),(21,'Michael Caine','acteur'),(21,'Gary Oldman','acteur'),(21,'Morgan Freeman','acteur'),(21,'Christopher Nolan','realisateur'),\n (22,'Tim Robbins','acteur'),(22,'Morgan Freeman','acteur'),(22,'Frank Darabont','realisateur'),\n (23,'François Cluzet','acteur'),(23,'Omar Sy','acteur'),(23,'Olivier Nakache','realisateur'),(23,'Éric Toledano','realisateur'),\n (24,'Marion Cotillard','acteur'),(24,'Gérard Depardieu','acteur'),(24,'Olivier Dahan','realisateur'),\n (25,'Jean Dujardin','acteur'),(25,'Bérénice Bejo','acteur'),(25,'Michel Hazanavicius','realisateur'),\n (26,'Audrey Tautou','acteur'),(26,'Mathieu Kassovitz','acteur'),(26,'Jean-Pierre Jeunet','realisateur'),\n (27,'Vincent Cassel','acteur'),(27,'Hubert Koundé','acteur'),(27,'Saïd Taghmaoui','acteur'),(27,'Mathieu Kassovitz','realisateur'),\n (28,'Michael J. Fox','acteur'),(28,'Christopher Lloyd','acteur'),(28,'Lea Thompson','acteur'),(28,'Robert Zemeckis','realisateur'),\n (29,'Michael J. Fox','acteur'),(29,'Christopher Lloyd','acteur'),(29,'Lea Thompson','acteur'),(29,'Robert Zemeckis','realisateur'),\n (30,'Michael J. Fox','acteur'),(30,'Christopher Lloyd','acteur'),(30,'Lea Thompson','acteur'),(30,'Robert Zemeckis','realisateur');\n\nINSERT INTO personnes (nom) SELECT DISTINCT nom FROM _casting ORDER BY nom;\nINSERT INTO casting (film_id, personne_id, role)\nSELECT c.film_id, p.id, c.role FROM _casting c JOIN personnes p ON p.nom = c.nom;\n\n-- ---------- Membres (fictifs) ----------\nINSERT INTO utilisateurs (pseudo, ville, inscrit_le) VALUES\n ('cinephile_92', 'Nanterre',  '2024-03-12'),\n ('popcorn_queen','Lyon',      '2024-09-01'),\n ('nolanfan',     'Paris',     '2025-01-05'),\n ('maxou_ciné',   'Marseille', '2025-02-20'),\n ('lea.reel',     'Lille',     '2025-04-02'),\n ('darkroom',     'Nantes',    '2025-06-18'),\n ('bobine',       'Bordeaux',  '2025-09-07'),\n ('sofa_critic',  'Paris',     '2025-12-11');\n\n-- ---------- Notes et visionnages (générés, mais déterministes) ----------\n-- Chaque film a une « qualité » de base ; chaque membre note autour de cette base.\nCREATE TEMP TABLE _base (film_id INTEGER, base NUMERIC);\nINSERT INTO _base VALUES\n (1,3.8),(2,4.0),(3,3.6),(4,3.7),(5,3.9),(6,3.0),(7,4.4),(8,3.7),(9,4.3),(10,4.0),\n (11,3.9),(12,4.4),(13,4.2),(14,3.8),(15,4.1),(16,4.4),(17,3.6),(18,4.3),(19,3.9),(20,4.7),\n (21,3.9),(22,4.8),(23,4.3),(24,3.7),(25,3.8),(26,4.2),(27,4.3),(28,4.5),(29,3.9),(30,3.5);\n\nCREATE TEMP TABLE _h AS\nSELECT u.id AS utilisateur_id, b.film_id, b.base,\n       ('x' || substr(md5(u.id || '-' || b.film_id), 1, 8))::bit(32)::int AS h\nFROM utilisateurs u CROSS JOIN _base b;\n\n-- Environ 2 films sur 3 vus par chaque membre\nINSERT INTO notes (utilisateur_id, film_id, note, note_le)\nSELECT utilisateur_id, film_id,\n       LEAST(5, GREATEST(0.5, ROUND((base + ((abs(h) % 11) - 5) * 0.15) * 2) / 2)),\n       DATE '2026-01-05' + (abs(h / 7) % 255)\nFROM _h\nWHERE abs(h) % 3 <> 0;\n\n-- Un visionnage par note, à la date de la note\nINSERT INTO journal (utilisateur_id, film_id, date_visionnage)\nSELECT utilisateur_id, film_id, note_le FROM notes;\n\n-- Quelques revisionnages\nINSERT INTO journal (utilisateur_id, film_id, date_visionnage)\nSELECT n.utilisateur_id, n.film_id, n.note_le + 30 + (n.film_id % 20)\nFROM notes n\nWHERE n.note >= 4.5 AND n.note_le + 30 + (n.film_id % 20) <= DATE '2026-09-20';\n\nDROP TABLE _casting, _base, _h;\n\n-- ---------- Contrôle ----------\nSELECT 'films' AS table_name, COUNT(*) AS lignes FROM films\nUNION ALL SELECT 'personnes', COUNT(*) FROM personnes\nUNION ALL SELECT 'casting', COUNT(*) FROM casting\nUNION ALL SELECT 'utilisateurs', COUNT(*) FROM utilisateurs\nUNION ALL SELECT 'notes', COUNT(*) FROM notes\nUNION ALL SELECT 'journal', COUNT(*) FROM journal;\n";
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+function show(id){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});}
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{const txt=b.closest('.code').querySelector('pre').innerText;
+ const ok=()=>{b.textContent='Copié ✓';b.classList.add('done');setTimeout(()=>{b.textContent='Copier';b.classList.remove('done')},1500)};
+ if(navigator.clipboard){navigator.clipboard.writeText(txt).then(ok).catch(()=>fb(txt,ok))}else fb(txt,ok);}));
+function fb(t,ok){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){}a.remove();}
+const s=document.querySelector('.gl-search');if(s){s.addEventListener('input',()=>{const q=s.value.toLowerCase();
+ document.querySelectorAll('#gl-open .gl-item').forEach(i=>i.style.display=i.innerText.toLowerCase().includes(q)?'':'none');});}
+
+const FORMATEUR = /[?&#]formateur\b/.test(location.search + location.hash);
+if (FORMATEUR) document.body.classList.add('formateur');
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FAM = {f1:'Prise en main',f2:'Structure',f3:'Requêtes',f4:'CTE',f5:'Fenêtrage'};
+const done = {c1:false,c2:false,c3:false};
+function setProg(fill, txt, a, b){ document.getElementById(fill).style.width = (b ? a/b*100 : 0) + '%'; document.getElementById(txt).textContent = a + ' / ' + b; }
+function finish(k){ done[k] = true; document.getElementById('lp' + k[1]).classList.add('done'); document.getElementById('lp' + k[1]).textContent = '✅ Cas ' + k[1];
+  if (done.c1 && done.c2 && done.c3){ document.getElementById('gl-locked').hidden = true; document.getElementById('gl-open').hidden = false; document.querySelector('[data-tab="glossaire"]').classList.remove('locked'); } }
+function panel(id, html){ document.getElementById(id).innerHTML = html; }
+
+/* ---------- CAS 1 ---------- */
+let c1 = {};
+function c1Init(){ const all = shuffle(TERMS); c1 = {rounds: [], idx: 0, score: 0, checked: 0};
+  for (let i = 0; i < all.length; i += 10) c1.rounds.push(all.slice(i, i + 10));
+  panel('c1-result',''); c1Render(); }
+function c1Render(){ const r = c1.rounds[c1.idx]; const defs = shuffle(r); const L = 'ABCDEFGHIJ';
+  c1.map = {}; defs.forEach((d, i) => c1.map[d[0]] = L[i]);
+  const opts = '<option value="">—</option>' + defs.map((d, i) => `<option>${L[i]}</option>`).join('');
+  panel('c1-zone', `<div class="term-grid"><div>${r.map(t => `<div class="term-item" data-t="${esc(t[0])}"><span>${esc(t[0])}</span><select aria-label="Définition de ${esc(t[0])}">${opts}</select></div>`).join('')}</div>
+   <div>${defs.map((d, i) => `<div class="def-item"><b>${L[i]}</b><span>${esc(d[2])}</span></div>`).join('')}</div></div>`);
+  document.getElementById('c1-round-lbl').textContent = `Round ${c1.idx + 1} / ${c1.rounds.length}`;
+  document.getElementById('c1-check').disabled = false; document.getElementById('c1-next').hidden = true;
+  setProg('c1-fill','c1-ptxt', c1.checked, TERMS.length); }
+document.getElementById('c1-check').onclick = () => { let ok = 0; const items = document.querySelectorAll('#c1-zone .term-item');
+  if ([...items].some(it => !it.querySelector('select').value)) { panel('c1-result','<div class="instruction-box">Associez une lettre à chaque terme avant de vérifier.</div>'); return; }
+  items.forEach(it => { const good = it.querySelector('select').value === c1.map[it.dataset.t]; it.classList.toggle('ok', good); it.classList.toggle('ko', !good); if (good) ok++; });
+  c1.score += ok; c1.checked += items.length; document.getElementById('c1-check').disabled = true;
+  setProg('c1-fill','c1-ptxt', c1.checked, TERMS.length);
+  const last = c1.idx === c1.rounds.length - 1;
+  panel('c1-result', `<div class="result-panel"><h4>Round ${c1.idx + 1} : <span class="score">${ok} / ${items.length}</span></h4>${last ? `<p>Score total : <span class="score">${c1.score} / ${TERMS.length}</span></p>` : '<p>Les bordures vertes et rouges indiquent vos réponses. Passez au round suivant.</p>'}</div>`);
+  if (last) finish('c1'); else document.getElementById('c1-next').hidden = false; };
+document.getElementById('c1-next').onclick = () => { c1.idx++; panel('c1-result',''); c1Render(); };
+document.getElementById('c1-reveal').onclick = () => document.querySelectorAll('#c1-zone .term-item').forEach(it => it.querySelector('select').value = c1.map[it.dataset.t]);
+document.getElementById('c1-reset').onclick = c1Init;
+
+/* ---------- CAS 2 ---------- */
+let c2sel = {};
+function c2Init(){ c2sel = {}; panel('c2-result','');
+  panel('c2-zone', GROUPS.map((g, gi) => `<div class="group" data-g="${gi}"><h4>Groupe ${gi + 1} · ${esc(g[0])} <span class="ftag ${g[1]}">${FAM[g[1]]}</span></h4>
+   ${shuffle(g[2].map((s, si) => [s, si])).map(([s, si]) => `<button type="button" class="sit" data-s="${si}">${esc(s[0])}</button>`).join('')}<div class="expl" hidden></div></div>`).join(''));
+  document.querySelectorAll('#c2-zone .sit').forEach(b => b.onclick = () => { const g = b.closest('.group'); g.querySelectorAll('.sit').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); c2sel[g.dataset.g] = +b.dataset.s; setProg('c2-fill','c2-ptxt', Object.keys(c2sel).length, GROUPS.length); });
+  document.getElementById('c2-check').disabled = false; setProg('c2-fill','c2-ptxt', 0, GROUPS.length); }
+document.getElementById('c2-check').onclick = () => { if (Object.keys(c2sel).length < GROUPS.length) { panel('c2-result','<div class="instruction-box">Désignez une intruse dans chaque groupe avant de vérifier.</div>'); return; }
+  let ok = 0; document.querySelectorAll('#c2-zone .group').forEach(g => { const G = GROUPS[g.dataset.g]; const intr = G[2].findIndex(s => s[1]);
+    g.querySelectorAll('.sit').forEach(b => { const s = +b.dataset.s; if (s === intr) b.classList.add('good'); else if (s === c2sel[g.dataset.g]) b.classList.add('bad'); });
+    if (c2sel[g.dataset.g] === intr) ok++; const e = g.querySelector('.expl'); e.hidden = false; e.innerHTML = '💡 ' + esc(G[3]); });
+  document.getElementById('c2-check').disabled = true;
+  panel('c2-result', `<div class="result-panel"><h4>Intruses trouvées : <span class="score">${ok} / ${GROUPS.length}</span></h4><p>L'intruse de chaque groupe est encadrée en vert, avec son explication.</p></div>`); finish('c2'); };
+document.getElementById('c2-reveal').onclick = () => document.querySelectorAll('#c2-zone .group').forEach(g => { const intr = GROUPS[g.dataset.g][2].findIndex(s => s[1]); g.querySelector(`.sit[data-s="${intr}"]`).click(); });
+document.getElementById('c2-reset').onclick = c2Init;
+
+/* ---------- CAS 3 ---------- */
+let c3ans = {};
+function c3Init(){ c3ans = {}; panel('c3-result','');
+  panel('c3-zone', shuffle(VF.map((v, i) => [v, i])).map(([v, i], n) => `<div class="vf" data-i="${i}"><div class="vf-row"><p><strong>${n + 1}.</strong> ${esc(v[0])}</p><div class="vf-btns"><button type="button" data-v="1">Vrai</button><button type="button" data-v="0">Faux</button></div></div><div class="expl" hidden></div></div>`).join(''));
+  document.querySelectorAll('#c3-zone .vf-btns button').forEach(b => b.onclick = () => { const q = b.closest('.vf'); q.querySelectorAll('button').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); c3ans[q.dataset.i] = b.dataset.v === '1'; setProg('c3-fill','c3-ptxt', Object.keys(c3ans).length, VF.length); });
+  document.getElementById('c3-check').disabled = false; setProg('c3-fill','c3-ptxt', 0, VF.length); }
+document.getElementById('c3-check').onclick = () => { if (Object.keys(c3ans).length < VF.length) { panel('c3-result','<div class="instruction-box">Répondez à toutes les affirmations avant de vérifier.</div>'); return; }
+  let ok = 0; document.querySelectorAll('#c3-zone .vf').forEach(q => { const v = VF[q.dataset.i]; const good = c3ans[q.dataset.i] === v[1]; if (good) ok++;
+    q.classList.add(good ? 'good' : 'bad'); const e = q.querySelector('.expl'); e.hidden = false; e.innerHTML = `${good ? '✅' : '❌'} <strong>${v[1] ? 'Vrai' : 'Faux'}</strong> — ${esc(v[2])}`; });
+  document.getElementById('c3-check').disabled = true;
+  panel('c3-result', `<div class="result-panel"><h4>Score : <span class="score">${ok} / ${VF.length}</span></h4><p>Relisez les explications des affirmations encadrées en rouge.</p></div>`); finish('c3'); };
+document.getElementById('c3-reveal').onclick = () => document.querySelectorAll('#c3-zone .vf').forEach(q => q.querySelector(`button[data-v="${VF[q.dataset.i][1] ? 1 : 0}"]`).click());
+document.getElementById('c3-reset').onclick = c3Init;
+
+c1Init(); c2Init(); c3Init();
+
+/* ---------- exos : progression + navigation ---------- */
+function exoProg(){ [['exos','.exos-card'],['fb','.fb-card']].forEach(([k, sel]) => { const all = document.querySelectorAll(sel + ' .understood input'); const d = [...all].filter(i => i.checked).length;
+  document.getElementById('pfill-' + k).style.width = (all.length ? d/all.length*100 : 0) + '%'; document.getElementById('ptxt-' + k).textContent = d + ' / ' + all.length; }); }
+function accCount(){ document.querySelectorAll('details.acc').forEach(d => { const all = d.querySelectorAll('.understood input'); const k = [...all].filter(i => i.checked).length; const c = d.querySelector('.acc-count'); c.textContent = k + ' / ' + all.length; c.classList.toggle('full', k === all.length); }); }
+document.querySelectorAll('.exo .understood input').forEach(i => i.addEventListener('change', () => { i.closest('.understood').classList.toggle('done', i.checked); exoProg(); accCount(); }));
+document.querySelectorAll('.chip[data-acc]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const d = document.getElementById(a.dataset.acc); d.open = true; d.scrollIntoView({behavior:'smooth'}); }));
+document.getElementById('acc-open').onclick = () => document.querySelectorAll('details.acc').forEach(d => d.open = true);
+document.getElementById('acc-close').onclick = () => document.querySelectorAll('details.acc').forEach(d => d.open = false);
+exoProg();
+document.querySelectorAll('.chip-m').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.getElementById(a.dataset.anchor).scrollIntoView({behavior:'smooth'}); }));
+document.getElementById('dl-filmbox').addEventListener('click', () => { const b = new Blob([FILMBOX_SQL], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'filmbox.sql'; document.body.appendChild(a); a.click(); a.remove(); });
+</script></body></html>

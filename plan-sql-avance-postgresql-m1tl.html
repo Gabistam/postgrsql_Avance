@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan de cours — SQL avancé PostgreSQL · M1TL 2026-2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#2563eb; --primary-light:#dbeafe; --primary-dark:#1e40af;
+    --secondary:#059669; --secondary-light:#d1fae5;
+    --accent:#d97706; --accent-light:#fef3c7;
+    --danger:#dc2626; --danger-light:#fee2e2;
+    --purple:#7c3aed; --purple-light:#ede9fe;
+    --dark:#0f172a; --dark-2:#1e293b; --slate:#334155;
+    --text:#1e293b; --muted:#64748b; --border:#e2e8f0; --bg:#f1f5f9; --card:#ffffff;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:15px}
+  code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+
+  /* HEADER */
+  header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:44px 24px 36px}
+  .wrap{max-width:1080px;margin:0 auto}
+  .badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:16px}
+  header h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.2;margin-bottom:10px}
+  header p.lead{color:#cbd5e1;max-width:720px;font-size:15.5px}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+  .pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:13px;font-weight:500}
+  .gprog{margin-top:24px;max-width:520px}
+  .gprog-label{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:6px}
+  .gprog-bar{height:8px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+  .gprog-fill{height:100%;width:0;background:#34d399;transition:width .4s}
+
+  /* TABS */
+  .tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(15,23,42,.05)}
+  .tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 12px}
+  .tab{background:none;border:none;border-bottom:3px solid transparent;padding:15px 16px;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .tab:hover{color:var(--primary)}
+  .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+  .tab:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+  main{padding:30px 16px 60px}
+  .panel{display:none}
+  .panel.active{display:block}
+
+  /* CARDS */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
+  .section-title{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;margin-bottom:16px}
+  .icon-bg{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+  .ib-blue{background:var(--primary-light)} .ib-green{background:var(--secondary-light)}
+  .ib-amber{background:var(--accent-light)} .ib-red{background:var(--danger-light)} .ib-purple{background:var(--purple-light)}
+  h3{font-size:15.5px;font-weight:700;margin:18px 0 8px}
+  p+p{margin-top:8px}
+  ul.clean{list-style:none}
+  ul.clean li{padding:5px 0 5px 24px;position:relative}
+  ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--primary);font-weight:700}
+
+  .objectif-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:16px;color:var(--primary-dark)}
+  .instruction-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;margin:16px 0;color:#78350f}
+  .warn-box{background:var(--danger-light);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;margin:16px 0;color:#7f1d1d}
+  .ok-box{background:var(--secondary-light);border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin:16px 0;color:#064e3b}
+
+  /* FAMILLE TAGS */
+  .ftag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0}
+  .f1{background:#dbeafe;color:#1e40af} .f2{background:#d1fae5;color:#065f46}
+  .f3{background:#fef3c7;color:#92400e} .f4{background:#fee2e2;color:#991b1b} .f5{background:#ede9fe;color:#5b21b6}
+
+  /* SÉANCES GRID */
+  .sess-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+  .sess-card{border:1px solid var(--border);border-radius:12px;padding:16px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;color:inherit}
+  .sess-card:hover{border-color:var(--primary)}
+  .sess-card .date{font-size:12px;color:var(--muted);font-weight:600}
+  .sess-card .t{font-weight:700;margin:6px 0 8px;font-size:14.5px;line-height:1.35}
+
+  /* TABLES */
+  .tbl-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{background:var(--dark-2);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:13px}
+  th:first-child{border-top-left-radius:8px} th:last-child{border-top-right-radius:8px}
+  td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:nth-child(even) td{background:#f8fafc}
+  td.time{font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap;color:var(--primary-dark);font-weight:600}
+  .type{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
+  .t-demo{background:var(--primary-light);color:var(--primary-dark)}
+  .t-lab{background:var(--secondary-light);color:#065f46}
+  .t-defi{background:var(--accent-light);color:#92400e}
+  .t-bilan{background:var(--purple-light);color:#5b21b6}
+  .t-pause{background:#e2e8f0;color:var(--slate)}
+
+  /* CODE */
+  pre{background:var(--dark);color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13px;line-height:1.55;margin:10px 0}
+  pre .c{color:#64748b} pre .k{color:#93c5fd} pre .s{color:#86efac} pre .n{color:#fcd34d}
+  code.inl{background:#e2e8f0;padding:1px 6px;border-radius:5px;font-size:13px}
+
+  /* CHECKLIST + PROGRESS */
+  .prog{margin:6px 0 14px}
+  .prog-label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  .prog-bar{height:8px;background:var(--border);border-radius:999px;overflow:hidden}
+  .prog-fill{height:100%;width:0;background:var(--secondary);transition:width .35s}
+  .check{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:8px;cursor:pointer}
+  .check:hover{background:#f8fafc}
+  .check input{margin-top:5px;accent-color:var(--secondary);width:16px;height:16px;flex-shrink:0}
+  .check.done span{color:var(--muted);text-decoration:line-through}
+
+  /* RESULT PANEL */
+  .result-panel{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:var(--radius);padding:22px 24px;margin-top:6px}
+  .result-panel h4{color:#fff;font-size:15.5px;margin-bottom:8px}
+  .result-panel .score{color:#34d399;font-weight:800;font-family:'JetBrains Mono',monospace}
+  .result-panel ul{margin-left:18px}
+  .result-panel li{margin:3px 0}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:760px){.two{grid-template-columns:1fr}.card{padding:20px}}
+
+  .nav-row{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
+  .btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--primary)}
+  .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btn:hover{filter:brightness(.96)}
+  footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 40px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="badge">🐘 Plan de cours · M1 Tech Lead · 2026-2027</span>
+    <h1>SQL avancé avec PostgreSQL</h1>
+    <p class="lead">Requêtage avancé, index et optimisation, fonctions, procédures, vues, triggers, transactions et sécurité. Le socle data du tech lead, posé en tout début d'année, sur un fil rouge unique : <strong>ShopFlow</strong>, une marketplace e-commerce multi-vendeurs.</p>
+    <div class="meta">
+      <span class="pill">⏱ 17,5 h · 5 demi-journées</span>
+      <span class="pill">🛠 100 % pratique</span>
+      <span class="pill">📅 25 → 29 sept. 2026</span>
+      <span class="pill">📦 Évaluation : travail à rendre</span>
+      <span class="pill">🤖 IA encadrée · 🌱 RSE</span>
+    </div>
+    <div class="gprog">
+      <div class="gprog-label"><span>Avancement du module (checklists formateur)</span><span id="gprog-txt">0 %</span></div>
+      <div class="gprog-bar"><div class="gprog-fill" id="gprog-fill"></div></div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Sections du plan">
+  <div class="wrap" role="tablist">
+    <button class="tab active" data-tab="overview" role="tab">🗺 Vue d'ensemble</button>
+    <button class="tab" data-tab="s1" role="tab">S1 · Requêtage</button>
+    <button class="tab" data-tab="s2" role="tab">S2 · Vues & fonctions</button>
+    <button class="tab" data-tab="s3" role="tab">S3 · Optimisation</button>
+    <button class="tab" data-tab="s4" role="tab">S4 · Procédures & triggers</button>
+    <button class="tab" data-tab="s5" role="tab">S5 · Transactions & sécurité</button>
+    <button class="tab" data-tab="rendu" role="tab">📦 Travail à rendre</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ============ VUE D'ENSEMBLE ============ -->
+<section class="panel active" id="overview">
+
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-blue">🎯</span>Objectif du module</div>
+    <div class="objectif-box">À la fin du module, vous maîtrisez les fonctionnalités avancées de PostgreSQL pour manipuler les données efficacement, optimiser les requêtes et automatiser les tâches — avec le regard d'un tech lead : performance, fiabilité, sécurité et sobriété.</div>
+    <p>Chaque demi-journée suit le même rythme : une courte démo live (15 à 20 min max), puis des ateliers guidés sur la base ShopFlow, un défi en autonomie et un bilan. Les scripts produits en séance constituent directement la matière du travail à rendre.</p>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-green">📅</span>Déroulé des 5 séances</div>
+    <div class="sess-grid">
+      <button class="sess-card" data-go="s1"><div class="date">Ven. 25/09 · 09:00–12:30</div><div class="t">S1 — Requêtage avancé</div><span class="ftag f1">CTE</span><span class="ftag f1">Window</span><span class="ftag f1">JSONB</span></button>
+      <button class="sess-card" data-go="s2"><div class="date">Ven. 25/09 · 13:30–17:00</div><div class="t">S2 — Vues & fonctions</div><span class="ftag f2">Vues</span><span class="ftag f2">PL/pgSQL</span></button>
+      <button class="sess-card" data-go="s3"><div class="date">Lun. 28/09 · 09:00–12:30</div><div class="t">S3 — Index & optimisation</div><span class="ftag f3">EXPLAIN</span><span class="ftag f3">Index</span></button>
+      <button class="sess-card" data-go="s4"><div class="date">Lun. 28/09 · 13:30–17:00</div><div class="t">S4 — Procédures & triggers</div><span class="ftag f4">CALL</span><span class="ftag f4">Triggers</span></button>
+      <button class="sess-card" data-go="s5"><div class="date">Mar. 29/09 · 13:30–17:00</div><div class="t">S5 — Transactions & sécurité</div><span class="ftag f5">ACID</span><span class="ftag f5">RLS</span></button>
+    </div>
+    <div class="instruction-box">📌 Le 29/09 ne compte qu'une demi-journée : le brief du travail à rendre est présenté dès S1 pour que les étudiants construisent leur rendu au fil des séances, et non en une seule fois à la fin.</div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-amber">🧩</span>Compétences visées → séances → preuves</div>
+    <div class="tbl-wrap"><table>
+      <tr><th>Compétence (fiche pédagogique)</th><th>Séances</th><th>Preuve attendue dans le rendu</th></tr>
+      <tr><td>Créer des fonctions avancées</td><td><span class="ftag f1">S1</span><span class="ftag f2">S2</span></td><td>Requêtes avancées commentées + 3 fonctions PL/pgSQL testées</td></tr>
+      <tr><td>Optimiser des requêtes</td><td><span class="ftag f3">S3</span></td><td>Rapport EXPLAIN ANALYZE avant/après sur 3 requêtes lentes</td></tr>
+      <tr><td>Gérer les transactions</td><td><span class="ftag f4">S4</span><span class="ftag f5">S5</span></td><td>Procédure transactionnelle + scénario de concurrence documenté</td></tr>
+      <tr><td>Automatiser avec des triggers</td><td><span class="ftag f4">S4</span></td><td>3 triggers (validation, horodatage, audit)</td></tr>
+      <tr><td>Sécuriser les opérations</td><td><span class="ftag f5">S5</span></td><td>Script rôles/GRANT + Row Level Security par vendeur</td></tr>
+    </table></div>
+  </div>
+
+  <div class="two">
+    <div class="card">
+      <div class="section-title"><span class="icon-bg ib-purple">🛒</span>Fil rouge : ShopFlow</div>
+      <p>Une marketplace où plusieurs vendeurs publient des produits achetés par des clients. Le domaine est volontairement riche : hiérarchie de catégories (récursivité), stocks (triggers, transactions), paiements (atomicité), données multi-vendeurs (RLS) et assez de volume pour sentir la différence qu'apporte un bon index.</p>
+<pre><span class="c">-- Schéma cible (fourni en S1)</span>
+vendeurs(id, nom, email, created_at)
+clients(id, nom, email, ville, created_at)
+categories(id, nom, parent_id)          <span class="c">-- arbre</span>
+produits(id, vendeur_id, categorie_id,
+         nom, prix, stock, attributs JSONB)
+commandes(id, client_id, statut, created_at)
+lignes_commande(commande_id, produit_id,
+                quantite, prix_unitaire)
+paiements(id, commande_id, montant, statut)
+audit_log(id, table_name, op, old, new, at)</pre>
+    </div>
+    <div class="card">
+      <div class="section-title"><span class="icon-bg ib-red">🧰</span>Prérequis & installation</div>
+      <ul class="clean">
+        <li>PostgreSQL 16 ou 17 installé (postgresql.org) — ou via Docker <code class="inl">postgres:17</code></li>
+        <li>Un client : psql + DBeaver ou pgAdmin</li>
+        <li>Extensions activables : <code class="inl">pg_stat_statements</code>, <code class="inl">pg_trgm</code></li>
+        <li>Repo Git personnel <code class="inl">shopflow-sql</code> créé avant S1</li>
+        <li>Prérequis : SELECT / JOIN / GROUP BY maîtrisés</li>
+      </ul>
+      <div class="warn-box">⚠️ À envoyer aux étudiants <strong>avant le 25/09 au matin</strong> : les 20 premières minutes de S1 ne suffisent pas à dépanner une installation Windows capricieuse.</div>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="card">
+      <div class="section-title"><span class="icon-bg ib-blue">🤖</span>Usage de l'IA</div>
+      <ul class="clean">
+        <li>Réécrire une requête complexe, puis <strong>prouver</strong> l'équivalence (mêmes résultats) et le gain (EXPLAIN ANALYZE)</li>
+        <li>Soumettre un plan d'exécution à l'IA pour repérer les goulets d'étranglement, puis vérifier chaque hypothèse par une mesure</li>
+        <li>Règle du module : toute requête produite avec l'IA est signalée dans le README du rendu</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="section-title"><span class="icon-bg ib-green">🌱</span>Démarche RSE</div>
+      <ul class="clean">
+        <li>Mesurer avant d'optimiser : buffers lus, temps d'exécution, volume scanné</li>
+        <li>Chaque optimisation du rapport S3 est traduite en charge serveur économisée</li>
+        <li>Sobriété : pas d'index « au cas où » (coût en écriture et en stockage), purge et archivage pensés dès la modélisation</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ S1 ============ -->
+<section class="panel" id="s1">
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-blue">🔎</span>S1 — Installation & requêtage avancé</div>
+    <p><span class="ftag f1">Vendredi 25/09 · 09:00–12:30</span><span class="ftag f1">Fonctions avancées de manipulation</span></p>
+    <div class="objectif-box">🎯 Écrire des requêtes analytiques que le GROUP BY classique ne permet pas : classements, cumuls, comparaisons ligne à ligne, parcours d'arbres et données semi-structurées.</div>
+    <div class="tbl-wrap"><table>
+      <tr><th>Horaire</th><th>Type</th><th>Contenu</th></tr>
+      <tr><td class="time">09:00–09:25</td><td><span class="type t-lab">Setup</span></td><td>Vérification des installations, création de la base <code class="inl">shopflow</code>, exécution du script schéma + jeu de données. Présentation du brief du rendu (5 min).</td></tr>
+      <tr><td class="time">09:25–10:05</td><td><span class="type t-demo">Démo + lab</span></td><td><strong>CTE et CTE récursives</strong> : lisibilité des requêtes en étapes, parcours de l'arbre des catégories (chemin complet « Maison > Cuisine > Robots »).</td></tr>
+      <tr><td class="time">10:05–10:55</td><td><span class="type t-demo">Démo + lab</span></td><td><strong>Fonctions de fenêtrage</strong> : <code class="inl">ROW_NUMBER</code>, <code class="inl">RANK</code>, <code class="inl">DENSE_RANK</code>, <code class="inl">LAG/LEAD</code>, <code class="inl">SUM() OVER</code> avec <code class="inl">PARTITION BY</code> et cadres de fenêtre.</td></tr>
+      <tr><td class="time">10:55–11:05</td><td><span class="type t-pause">Pause</span></td><td>—</td></tr>
+      <tr><td class="time">11:05–11:50</td><td><span class="type t-lab">Lab</span></td><td><strong>Agrégations avancées</strong> : <code class="inl">FILTER</code>, <code class="inl">GROUPING SETS / ROLLUP</code>, <code class="inl">LATERAL</code>, requêtes sur <code class="inl">JSONB</code> (<code class="inl">-&gt;&gt;</code>, <code class="inl">@&gt;</code>, <code class="inl">jsonb_array_elements</code>).</td></tr>
+      <tr><td class="time">11:50–12:20</td><td><span class="type t-defi">Défi</span></td><td>Top 3 des produits par vendeur sur le dernier trimestre, avec évolution du CA mensuel par rapport au mois précédent.</td></tr>
+      <tr><td class="time">12:20–12:30</td><td><span class="type t-bilan">Bilan</span></td><td>Tour de table : quelle requête vous aurait pris 3 sous-requêtes avant ce matin ?</td></tr>
+    </table></div>
+<pre><span class="c">-- Exemple fil conducteur : CA cumulé par vendeur, mois par mois</span>
+<span class="k">SELECT</span> vendeur_id, mois, ca,
+       <span class="k">SUM</span>(ca) <span class="k">OVER</span> (<span class="k">PARTITION BY</span> vendeur_id <span class="k">ORDER BY</span> mois) <span class="k">AS</span> ca_cumule,
+       ca - <span class="k">LAG</span>(ca) <span class="k">OVER</span> (<span class="k">PARTITION BY</span> vendeur_id <span class="k">ORDER BY</span> mois) <span class="k">AS</span> delta
+<span class="k">FROM</span> ca_mensuel_vendeur;</pre>
+    <div class="instruction-box">⚠️ Piège fréquent : confondre <code class="inl">RANK</code> (saute des rangs en cas d'égalité) et <code class="inl">DENSE_RANK</code>. Faites-le constater sur deux produits au même CA.</div>
+    <p><strong>Exemples hors fil rouge à glisser :</strong> classement de pilotes au championnat par cumul de points (fenêtrage), organigramme d'une équipe esport (CTE récursive).</p>
+    <h3>✅ Checklist formateur</h3>
+    <div class="prog"><div class="prog-label"><span>Progression S1</span><span class="ptxt">0/5</span></div><div class="prog-bar"><div class="prog-fill"></div></div></div>
+    <div class="checks">
+      <label class="check"><input type="checkbox"><span>Tous les postes connectés à la base shopflow avec données</span></label>
+      <label class="check"><input type="checkbox"><span>CTE récursive sur les catégories réalisée</span></label>
+      <label class="check"><input type="checkbox"><span>Window functions : classement + cumul + LAG</span></label>
+      <label class="check"><input type="checkbox"><span>FILTER / ROLLUP / JSONB manipulés</span></label>
+      <label class="check"><input type="checkbox"><span>Défi tenté et commit <code class="inl">s1_requetes.sql</code> poussé</span></label>
+    </div>
+    <div class="result-panel"><h4>📦 Livrable de séance</h4><ul><li><span class="mono">s1_requetes.sql</span> — 8 requêtes commentées (au moins 1 CTE récursive, 3 window functions, 1 JSONB)</li></ul></div>
+  </div>
+</section>
+
+<!-- ============ S2 ============ -->
+<section class="panel" id="s2">
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-green">🧱</span>S2 — Vues & fonctions PL/pgSQL</div>
+    <p><span class="ftag f2">Vendredi 25/09 · 13:30–17:00</span><span class="ftag f2">Vues · Fonctions avancées</span></p>
+    <div class="objectif-box">🎯 Encapsuler la logique métier dans la base : exposer des vues propres aux applications, calculer des KPI coûteux une seule fois, et écrire des fonctions réutilisables et testées.</div>
+    <div class="tbl-wrap"><table>
+      <tr><th>Horaire</th><th>Type</th><th>Contenu</th></tr>
+      <tr><td class="time">13:30–13:40</td><td><span class="type t-bilan">Rappel</span></td><td>Correction express du défi S1.</td></tr>
+      <tr><td class="time">13:40–14:25</td><td><span class="type t-demo">Démo + lab</span></td><td><strong>Vues</strong> : vue de lecture, vue modifiable, <code class="inl">WITH CHECK OPTION</code>, vue comme contrat d'API entre la base et le back-end.</td></tr>
+      <tr><td class="time">14:25–15:05</td><td><span class="type t-lab">Lab</span></td><td><strong>Vues matérialisées</strong> : tableau de bord des ventes, <code class="inl">REFRESH MATERIALIZED VIEW CONCURRENTLY</code>, arbitrage fraîcheur vs coût.</td></tr>
+      <tr><td class="time">15:05–15:15</td><td><span class="type t-pause">Pause</span></td><td>—</td></tr>
+      <tr><td class="time">15:15–16:15</td><td><span class="type t-demo">Démo + lab</span></td><td><strong>Fonctions SQL et PL/pgSQL</strong> : paramètres, <code class="inl">RETURNS TABLE</code>, variables, <code class="inl">IF</code>/boucles, <code class="inl">RAISE EXCEPTION</code>, volatilité <code class="inl">IMMUTABLE / STABLE / VOLATILE</code>.</td></tr>
+      <tr><td class="time">16:15–16:50</td><td><span class="type t-defi">Défi</span></td><td><code class="inl">fn_ca_vendeur(vendeur_id, date_debut, date_fin)</code> + <code class="inl">fn_panier_total(commande_id)</code> avec gestion des cas d'erreur.</td></tr>
+      <tr><td class="time">16:50–17:00</td><td><span class="type t-bilan">Bilan</span></td><td>Vue, vue matérialisée ou fonction : quand choisir quoi ?</td></tr>
+    </table></div>
+<pre><span class="k">CREATE OR REPLACE FUNCTION</span> fn_ca_vendeur(p_vendeur <span class="k">INT</span>, p_debut <span class="k">DATE</span>, p_fin <span class="k">DATE</span>)
+<span class="k">RETURNS NUMERIC</span> <span class="k">LANGUAGE</span> plpgsql <span class="k">STABLE AS</span> $$
+<span class="k">DECLARE</span> v_ca <span class="k">NUMERIC</span>;
+<span class="k">BEGIN</span>
+  <span class="k">IF</span> p_debut &gt; p_fin <span class="k">THEN</span>
+    <span class="k">RAISE EXCEPTION</span> <span class="s">'Période invalide : % &gt; %'</span>, p_debut, p_fin;
+  <span class="k">END IF</span>;
+  <span class="k">SELECT COALESCE</span>(<span class="k">SUM</span>(l.quantite * l.prix_unitaire), <span class="n">0</span>) <span class="k">INTO</span> v_ca
+  <span class="k">FROM</span> lignes_commande l
+  <span class="k">JOIN</span> produits p <span class="k">ON</span> p.id = l.produit_id
+  <span class="k">JOIN</span> commandes c <span class="k">ON</span> c.id = l.commande_id
+  <span class="k">WHERE</span> p.vendeur_id = p_vendeur <span class="k">AND</span> c.created_at::<span class="k">date BETWEEN</span> p_debut <span class="k">AND</span> p_fin;
+  <span class="k">RETURN</span> v_ca;
+<span class="k">END</span>; $$;</pre>
+    <div class="instruction-box">⚠️ Déclarer <code class="inl">IMMUTABLE</code> une fonction qui lit une table : ça compile, mais le planificateur peut mettre en cache un résultat faux. Montrez-le, c'est une erreur qui marque.</div>
+    <p><strong>Exemples hors fil rouge :</strong> vue « fiche technique » d'un parc automobile d'occasion, vue matérialisée du classement d'un tournoi.</p>
+    <h3>✅ Checklist formateur</h3>
+    <div class="prog"><div class="prog-label"><span>Progression S2</span><span class="ptxt">0/4</span></div><div class="prog-bar"><div class="prog-fill"></div></div></div>
+    <div class="checks">
+      <label class="check"><input type="checkbox"><span>Vue + WITH CHECK OPTION testée en insertion</span></label>
+      <label class="check"><input type="checkbox"><span>Vue matérialisée rafraîchie en CONCURRENTLY (index unique créé)</span></label>
+      <label class="check"><input type="checkbox"><span>Fonction PL/pgSQL avec RAISE EXCEPTION</span></label>
+      <label class="check"><input type="checkbox"><span>Commit <code class="inl">s2_vues_fonctions.sql</code> poussé</span></label>
+    </div>
+    <div class="result-panel"><h4>📦 Livrable de séance</h4><ul><li><span class="mono">s2_vues_fonctions.sql</span> — 2 vues (dont 1 matérialisée) + 2 fonctions avec jeux de tests</li></ul></div>
+  </div>
+</section>
+
+<!-- ============ S3 ============ -->
+<section class="panel" id="s3">
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-amber">⚡</span>S3 — Index & optimisation de requêtes</div>
+    <p><span class="ftag f3">Lundi 28/09 · 09:00–12:30</span><span class="ftag f3">Index · Optimisation · IA · RSE</span></p>
+    <div class="objectif-box">🎯 Lire un plan d'exécution, identifier le goulet d'étranglement, choisir le bon index et prouver le gain par la mesure — pas par l'intuition.</div>
+    <div class="tbl-wrap"><table>
+      <tr><th>Horaire</th><th>Type</th><th>Contenu</th></tr>
+      <tr><td class="time">09:00–09:20</td><td><span class="type t-lab">Setup</span></td><td>Montée en volume avec <code class="inl">generate_series</code> (~1 M commandes, ~3 M lignes), <code class="inl">ANALYZE</code>, activation de <code class="inl">pg_stat_statements</code>.</td></tr>
+      <tr><td class="time">09:20–10:05</td><td><span class="type t-demo">Démo + lab</span></td><td><strong>Lire un plan</strong> : <code class="inl">EXPLAIN (ANALYZE, BUFFERS)</code>, Seq Scan vs Index Scan vs Bitmap, Nested Loop / Hash Join / Merge Join, écart estimé vs réel.</td></tr>
+      <tr><td class="time">10:05–10:50</td><td><span class="type t-lab">Lab</span></td><td><strong>Types d'index</strong> : B-tree, composite (ordre des colonnes), partiel, sur expression, couvrant (<code class="inl">INCLUDE</code>), GIN pour JSONB et <code class="inl">pg_trgm</code>.</td></tr>
+      <tr><td class="time">10:50–11:00</td><td><span class="type t-pause">Pause</span></td><td>—</td></tr>
+      <tr><td class="time">11:00–11:40</td><td><span class="type t-lab">Lab</span></td><td><strong>Anti-patterns</strong> : fonction sur colonne indexée, <code class="inl">OR</code> multiples, <code class="inl">SELECT *</code>, pagination <code class="inl">OFFSET</code> → pagination par clé. Coût d'un index en écriture.</td></tr>
+      <tr><td class="time">11:40–12:20</td><td><span class="type t-defi">Défi IA</span></td><td>3 requêtes lentes fournies : soumettre le plan à une IA, confronter ses suggestions à la mesure, garder uniquement ce qui est prouvé.</td></tr>
+      <tr><td class="time">12:20–12:30</td><td><span class="type t-bilan">Bilan RSE</span></td><td>Traduire les gains en buffers et en ms économisés à l'échelle de 10 000 appels par jour.</td></tr>
+    </table></div>
+<pre><span class="c">-- Avant : Seq Scan sur 1 M lignes</span>
+<span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> id, created_at <span class="k">FROM</span> commandes
+<span class="k">WHERE</span> client_id = <span class="n">4242</span> <span class="k">AND</span> statut = <span class="s">'payee'</span>
+<span class="k">ORDER BY</span> created_at <span class="k">DESC LIMIT</span> <span class="n">10</span>;
+
+<span class="c">-- Après : index composite + partiel, lecture directe triée</span>
+<span class="k">CREATE INDEX</span> idx_cmd_client_payee
+  <span class="k">ON</span> commandes (client_id, created_at <span class="k">DESC</span>)
+  <span class="k">WHERE</span> statut = <span class="s">'payee'</span>;</pre>
+    <div class="warn-box">🚫 L'IA propose souvent d'ajouter des index partout. Règle du module : un index sans gain mesuré dans le rapport est supprimé.</div>
+    <p><strong>Exemples hors fil rouge :</strong> recherche floue de joueurs par pseudo (<code class="inl">pg_trgm</code>), filtrage d'annonces auto par attributs JSONB (marque, carburant, kilométrage).</p>
+    <h3>✅ Checklist formateur</h3>
+    <div class="prog"><div class="prog-label"><span>Progression S3</span><span class="ptxt">0/4</span></div><div class="prog-bar"><div class="prog-fill"></div></div></div>
+    <div class="checks">
+      <label class="check"><input type="checkbox"><span>Base montée en volume et statistiques à jour</span></label>
+      <label class="check"><input type="checkbox"><span>Chaque étudiant sait lire estimé vs réel et les buffers</span></label>
+      <label class="check"><input type="checkbox"><span>Au moins 4 types d'index testés et mesurés</span></label>
+      <label class="check"><input type="checkbox"><span>Rapport avant/après amorcé sur les 3 requêtes</span></label>
+    </div>
+    <div class="result-panel"><h4>📦 Livrable de séance</h4><ul><li><span class="mono">s3_optimisation.md</span> — pour chaque requête : plan avant, hypothèse, index ou réécriture, plan après, gain chiffré, apport réel de l'IA</li></ul></div>
+  </div>
+</section>
+
+<!-- ============ S4 ============ -->
+<section class="panel" id="s4">
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-red">⚙️</span>S4 — Procédures stockées & triggers</div>
+    <p><span class="ftag f4">Lundi 28/09 · 13:30–17:00</span><span class="ftag f4">Procédures · Triggers · Transactions</span></p>
+    <div class="objectif-box">🎯 Automatiser les règles métier au plus près des données : une procédure qui passe une commande de bout en bout, et des triggers qui valident, horodatent et tracent.</div>
+    <div class="tbl-wrap"><table>
+      <tr><th>Horaire</th><th>Type</th><th>Contenu</th></tr>
+      <tr><td class="time">13:30–13:45</td><td><span class="type t-demo">Démo</span></td><td>Fonction vs procédure : <code class="inl">CALL</code>, contrôle de transaction (<code class="inl">COMMIT</code>/<code class="inl">ROLLBACK</code>) dans une procédure.</td></tr>
+      <tr><td class="time">13:45–14:45</td><td><span class="type t-lab">Lab</span></td><td><strong>Procédure <code class="inl">passer_commande</code></strong> : vérif stock, création commande et lignes, décrément stock, bloc <code class="inl">EXCEPTION</code> et annulation propre.</td></tr>
+      <tr><td class="time">14:45–14:55</td><td><span class="type t-pause">Pause</span></td><td>—</td></tr>
+      <tr><td class="time">14:55–15:40</td><td><span class="type t-demo">Démo + lab</span></td><td><strong>Triggers BEFORE</strong> : validation (prix &gt; 0, stock ≥ 0), mise à jour automatique de <code class="inl">updated_at</code>. <code class="inl">NEW</code> / <code class="inl">OLD</code>, <code class="inl">TG_OP</code>.</td></tr>
+      <tr><td class="time">15:40–16:25</td><td><span class="type t-lab">Lab</span></td><td><strong>Triggers AFTER</strong> : table <code class="inl">audit_log</code> générique en JSONB, triggers niveau instruction et tables de transition.</td></tr>
+      <tr><td class="time">16:25–16:50</td><td><span class="type t-defi">Défi</span></td><td>Historique automatique des prix produits + alerte quand le stock passe sous un seuil.</td></tr>
+      <tr><td class="time">16:50–17:00</td><td><span class="type t-bilan">Bilan</span></td><td>Logique métier en base ou dans l'application : arguments du tech lead.</td></tr>
+    </table></div>
+<pre><span class="k">CREATE OR REPLACE FUNCTION</span> trg_audit() <span class="k">RETURNS TRIGGER LANGUAGE</span> plpgsql <span class="k">AS</span> $$
+<span class="k">BEGIN</span>
+  <span class="k">INSERT INTO</span> audit_log(table_name, op, old, new, at)
+  <span class="k">VALUES</span> (TG_TABLE_NAME, TG_OP, to_jsonb(<span class="k">OLD</span>), to_jsonb(<span class="k">NEW</span>), now());
+  <span class="k">RETURN NULL</span>;  <span class="c">-- ignoré pour un trigger AFTER</span>
+<span class="k">END</span>; $$;
+
+<span class="k">CREATE TRIGGER</span> audit_produits
+<span class="k">AFTER INSERT OR UPDATE OR DELETE ON</span> produits
+<span class="k">FOR EACH ROW EXECUTE FUNCTION</span> trg_audit();</pre>
+    <div class="instruction-box">⚠️ Pièges à montrer : trigger qui met à jour sa propre table (récursion), cascade de triggers invisible pour les développeurs, et coût d'un trigger ligne à ligne sur un import massif.</div>
+    <p><strong>Exemples hors fil rouge :</strong> mise à jour automatique du classement d'une équipe après saisie d'un score de match, journal des modifications d'un dossier véhicule.</p>
+    <h3>✅ Checklist formateur</h3>
+    <div class="prog"><div class="prog-label"><span>Progression S4</span><span class="ptxt">0/4</span></div><div class="prog-bar"><div class="prog-fill"></div></div></div>
+    <div class="checks">
+      <label class="check"><input type="checkbox"><span>Procédure passer_commande fonctionne et annule en cas de stock insuffisant</span></label>
+      <label class="check"><input type="checkbox"><span>Trigger BEFORE de validation + updated_at</span></label>
+      <label class="check"><input type="checkbox"><span>Audit log JSONB opérationnel</span></label>
+      <label class="check"><input type="checkbox"><span>Commit <code class="inl">s4_procedures_triggers.sql</code> poussé</span></label>
+    </div>
+    <div class="result-panel"><h4>📦 Livrable de séance</h4><ul><li><span class="mono">s4_procedures_triggers.sql</span> — 1 à 2 procédures + 3 triggers, avec scénarios de test (cas nominal et cas d'échec)</li></ul></div>
+  </div>
+</section>
+
+<!-- ============ S5 ============ -->
+<section class="panel" id="s5">
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-purple">🔐</span>S5 — Transactions, concurrence & sécurité</div>
+    <p><span class="ftag f5">Mardi 29/09 · 13:30–17:00</span><span class="ftag f5">Transactions · Sécurité</span></p>
+    <div class="objectif-box">🎯 Garantir la cohérence quand plusieurs utilisateurs écrivent en même temps, et verrouiller l'accès aux données selon le principe du moindre privilège.</div>
+    <div class="tbl-wrap"><table>
+      <tr><th>Horaire</th><th>Type</th><th>Contenu</th></tr>
+      <tr><td class="time">13:30–14:15</td><td><span class="type t-demo">Démo à 2 terminaux</span></td><td><strong>Transactions</strong> : ACID, <code class="inl">SAVEPOINT</code>, MVCC, niveaux d'isolation (READ COMMITTED, REPEATABLE READ, SERIALIZABLE) et anomalies associées.</td></tr>
+      <tr><td class="time">14:15–14:55</td><td><span class="type t-lab">Lab</span></td><td><strong>Concurrence</strong> : double vente du dernier article, <code class="inl">SELECT … FOR UPDATE</code>, <code class="inl">SKIP LOCKED</code> (file de traitement), provoquer puis éviter un deadlock.</td></tr>
+      <tr><td class="time">14:55–15:05</td><td><span class="type t-pause">Pause</span></td><td>—</td></tr>
+      <tr><td class="time">15:05–16:05</td><td><span class="type t-lab">Lab</span></td><td><strong>Sécurité</strong> : rôles et <code class="inl">GRANT/REVOKE</code>, rôle applicatif sans droits DDL, <strong>Row Level Security</strong> (un vendeur ne voit que ses produits), <code class="inl">SECURITY DEFINER</code> + <code class="inl">search_path</code> fixé, injection SQL et requêtes paramétrées.</td></tr>
+      <tr><td class="time">16:05–16:45</td><td><span class="type t-defi">Atelier rendu</span></td><td>Point individuel sur l'avancement du travail à rendre, questions, déblocages.</td></tr>
+      <tr><td class="time">16:45–17:00</td><td><span class="type t-bilan">Clôture</span></td><td>Rappel des attendus, de la date limite et de la grille d'évaluation.</td></tr>
+    </table></div>
+<pre><span class="k">ALTER TABLE</span> produits <span class="k">ENABLE ROW LEVEL SECURITY</span>;
+
+<span class="k">CREATE POLICY</span> vendeur_ses_produits <span class="k">ON</span> produits
+  <span class="k">USING</span> (vendeur_id = current_setting(<span class="s">'app.vendeur_id'</span>)::<span class="k">INT</span>);
+
+<span class="c">-- Côté application, après connexion du vendeur 12 :</span>
+<span class="k">SET</span> app.vendeur_id = <span class="s">'12'</span>;
+<span class="k">SELECT</span> * <span class="k">FROM</span> produits;  <span class="c">-- ne renvoie que ses produits</span></pre>
+    <div class="warn-box">🚫 Le propriétaire d'une table contourne la RLS par défaut. Testez toujours les politiques avec le rôle applicatif, jamais avec <code class="inl">postgres</code> (ou utilisez <code class="inl">FORCE ROW LEVEL SECURITY</code>).</div>
+    <p><strong>Exemples hors fil rouge :</strong> réservation de la dernière place d'un tournoi (FOR UPDATE), clubs sportifs qui ne voient que leurs licenciés (RLS).</p>
+    <h3>✅ Checklist formateur</h3>
+    <div class="prog"><div class="prog-label"><span>Progression S5</span><span class="ptxt">0/4</span></div><div class="prog-bar"><div class="prog-fill"></div></div></div>
+    <div class="checks">
+      <label class="check"><input type="checkbox"><span>Anomalie de concurrence reproduite puis corrigée</span></label>
+      <label class="check"><input type="checkbox"><span>Deadlock provoqué et expliqué</span></label>
+      <label class="check"><input type="checkbox"><span>Rôle applicatif + RLS testés avec le bon rôle</span></label>
+      <label class="check"><input type="checkbox"><span>Chaque étudiant connaît ce qui reste à faire pour son rendu</span></label>
+    </div>
+    <div class="result-panel"><h4>📦 Livrable de séance</h4><ul><li><span class="mono">s5_transactions_securite.sql</span> — scénario de concurrence commenté + script rôles, GRANT et RLS</li></ul></div>
+  </div>
+</section>
+
+<!-- ============ RENDU ============ -->
+<section class="panel" id="rendu">
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-blue">📦</span>Travail à rendre — ShopFlow Data Layer</div>
+    <div class="objectif-box">🎯 Livrer la couche données complète de ShopFlow, comme un tech lead la remettrait à son équipe : fonctionnelle, mesurée, sécurisée et documentée.</div>
+    <div class="instruction-box">📅 Date limite proposée : <strong>à fixer</strong> (suggestion : 2 semaines après S5). Rendu : lien vers le repo Git <code class="inl">shopflow-sql</code>, historique de commits visible.</div>
+    <h3>Contenu attendu</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>Fichier</th><th>Attendu</th><th>Famille</th></tr>
+      <tr><td class="mono">01_schema.sql · 02_seed.sql</td><td>Schéma avec contraintes + jeu de données volumineux reproductible</td><td><span class="ftag f1">Base</span></td></tr>
+      <tr><td class="mono">03_requetes.sql</td><td>10 requêtes analytiques commentées (CTE récursive, window, FILTER, JSONB, LATERAL)</td><td><span class="ftag f1">S1</span></td></tr>
+      <tr><td class="mono">04_vues_fonctions.sql</td><td>2 vues dont 1 matérialisée + 3 fonctions PL/pgSQL avec tests</td><td><span class="ftag f2">S2</span></td></tr>
+      <tr><td class="mono">05_optimisation.md</td><td>Rapport avant/après sur 3 requêtes : plans, index retenus, gains chiffrés</td><td><span class="ftag f3">S3</span></td></tr>
+      <tr><td class="mono">06_procedures_triggers.sql</td><td>2 procédures + 3 triggers, cas nominal et cas d'échec</td><td><span class="ftag f4">S4</span></td></tr>
+      <tr><td class="mono">07_securite.sql</td><td>Rôles, GRANT/REVOKE, RLS vendeurs + scénario de concurrence documenté</td><td><span class="ftag f5">S5</span></td></tr>
+      <tr><td class="mono">README.md</td><td>Installation, choix techniques, usage de l'IA déclaré, section RSE</td><td><span class="ftag f5">Doc</span></td></tr>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-green">📊</span>Grille d'évaluation</div>
+    <div class="tbl-wrap"><table>
+      <tr><th>Critère</th><th>Ce qui est vérifié</th><th>Points</th></tr>
+      <tr><td>Requêtage avancé</td><td>Justesse des résultats, usage pertinent des fonctions avancées</td><td class="time">3</td></tr>
+      <tr><td>Vues & fonctions</td><td>Fonctions robustes (erreurs gérées, volatilité correcte), vue matérialisée justifiée</td><td class="time">3</td></tr>
+      <tr><td>Optimisation</td><td>Plans lus et interprétés, gains mesurés, pas d'index inutile</td><td class="time">4</td></tr>
+      <tr><td>Procédures & triggers</td><td>Atomicité de la commande, triggers fiables, cas d'échec testés</td><td class="time">4</td></tr>
+      <tr><td>Transactions & sécurité</td><td>Concurrence maîtrisée, moindre privilège, RLS testée avec le bon rôle</td><td class="time">4</td></tr>
+      <tr><td>Documentation, IA & RSE</td><td>README clair, usage de l'IA déclaré et critiqué, impact de sobriété chiffré</td><td class="time">2</td></tr>
+    </table></div>
+    <div class="result-panel">
+      <h4>Total : <span class="score">20 / 20</span></h4>
+      <ul>
+        <li>Un script qui ne s'exécute pas sur une base vierge plafonne le critère concerné à la moitié des points</li>
+        <li>Une requête issue de l'IA non déclarée n'est pas comptée</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="icon-bg ib-amber">🚀</span>Pour aller plus loin (bonus)</div>
+    <ul class="clean">
+      <li>Partitionnement de la table <code class="inl">commandes</code> par mois et mesure de l'effet sur les requêtes</li>
+      <li>Recherche plein texte sur les produits (<code class="inl">tsvector</code> + index GIN)</li>
+      <li>Tests automatisés des fonctions avec pgTAP</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+<footer>SQL avancé · PostgreSQL — M1TL 2026-2027 · 17,5 h · Plan de cours formateur</footer>
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  function show(id){
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === id));
+    panels.forEach(p => p.classList.toggle('active', p.id === id));
+    window.scrollTo({top: document.querySelector('.tabs').offsetTop, behavior: 'smooth'});
+  }
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab)));
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => show(b.dataset.go)));
+
+  function refresh(){
+    let total = 0, done = 0;
+    document.querySelectorAll('.panel').forEach(panel => {
+      const boxes = panel.querySelectorAll('.checks input');
+      if (!boxes.length) return;
+      const d = [...boxes].filter(b => b.checked).length;
+      total += boxes.length; done += d;
+      panel.querySelector('.ptxt').textContent = d + '/' + boxes.length;
+      panel.querySelector('.prog-fill').style.width = (d / boxes.length * 100) + '%';
+    });
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById('gprog-fill').style.width = pct + '%';
+    document.getElementById('gprog-txt').textContent = pct + ' %';
+  }
+  document.querySelectorAll('.checks input').forEach(cb => cb.addEventListener('change', e => {
+    e.target.closest('.check').classList.toggle('done', e.target.checked);
+    refresh();
+  }));
+  refresh();
+</script>
+</body>
+</html>
