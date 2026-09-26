@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liens du module · SQL avancé avec PostgreSQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--purple:#7c3aed;--purple-light:#ede9fe;--danger:#dc2626;--danger-light:#fee2e2;
+--dark:#0f172a;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f1f5f9;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:15px}
+code,.url{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-ligatures:none}
+header{background:linear-gradient(90deg,#60a5fa 0%,#60a5fa 20%,#34d399 20%,#34d399 40%,#fbbf24 40%,#fbbf24 60%,#22d3ee 60%,#22d3ee 80%,#a78bfa 80%,#a78bfa 100%) bottom/100% 5px no-repeat,linear-gradient(135deg,#0f172a 0%,#1e293b 55%,#334155 100%);color:#fff;padding:40px 16px 32px}
+.wrap{max-width:1000px;margin:0 auto}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:12px}
+header h1{font-size:clamp(24px,4vw,34px);font-weight:800;line-height:1.2;margin-bottom:8px}
+header p{color:#cbd5e1}
+.root{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:10px 14px}
+.root .url{color:#a7f3d0;font-size:13.5px;word-break:break-all;flex:1;min-width:200px}
+main{padding:26px 16px 50px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.toolbar small{color:var(--muted)}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:18px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:700;margin-bottom:12px}
+.icon-bg{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.ib-blue{background:var(--primary-light)}
+.sc1,.sc2,.sc3,.sc4,.sc5{color:#fff;font-weight:800}.sc1{background:#1e40af}.sc2{background:#047857}.sc3{background:#b45309}.sc4{background:#0e7490}.sc5{background:#6d28d9}.ib-green{background:var(--secondary-light)}.ib-amber{background:var(--accent-light)}.ib-purple{background:var(--purple-light)}.ib-red{background:var(--danger-light)}
+.links{list-style:none;display:grid;gap:8px}
+.link{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.link:hover{border-color:var(--primary)}
+.kind{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;flex-shrink:0;min-width:112px;text-align:center}
+.k-th{background:var(--primary-light);color:var(--primary-dark)}.k-cp{background:var(--secondary-light);color:#065f46}
+.k-co{background:var(--accent-light);color:#92400e}.k-pl{background:var(--purple-light);color:#5b21b6}.k-ev{background:var(--danger-light);color:#991b1b}
+.link-body{flex:1;min-width:0}
+.link-body a{font-weight:600;color:var(--text);text-decoration:none}
+.link-body a:hover{color:var(--primary);text-decoration:underline}
+.link-body .url{display:block;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.btn,.copy{font-family:inherit;font-weight:600;border-radius:8px;cursor:pointer}
+.btn{font-size:14px;padding:9px 16px;border:1px solid var(--primary);background:var(--primary);color:#fff}
+.copy{font-size:12px;padding:6px 10px;border:1px solid var(--border);background:#fff;color:var(--muted);flex-shrink:0}
+.copy:hover{border-color:var(--primary);color:var(--primary)}
+.copy.done,.btn.done{background:var(--secondary);border-color:var(--secondary);color:#fff}
+.root .copy{background:transparent;color:#e2e8f0;border-color:rgba(255,255,255,.3)}
+button:focus-visible,a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:0 16px 34px}
+@media (max-width:640px){.link{flex-wrap:wrap}.kind{min-width:0}.link-body{flex-basis:100%;order:3}}
+@media print{.copy,.btn{display:none}body{background:#fff}.card{break-inside:avoid}}
+</style></head>
+<body>
+<header><div class="wrap">
+  <span class="badge">🔗 Répertoire des supports</span>
+  <h1>SQL avancé avec PostgreSQL</h1>
+  <p>Tous les supports HTML du module publiés sur GitHub Pages : préparation, 5 séances, corrigés, plan de cours et évaluation.</p>
+  <div class="root"><span>🌐 Racine :</span><span class="url" id="root-url">https://gabistam.github.io/postgrsql_Avance/</span><button class="copy" type="button" data-copy="https://gabistam.github.io/postgrsql_Avance/">Copier</button></div>
+</div></header>
+
+<main><div class="wrap">
+<div class="toolbar"><small>16 pages · cliquez sur un titre pour ouvrir le support, ou copiez son URL.</small><button class="btn" type="button" id="copy-all">📋 Copier tous les liens</button></div>
+
+<section class="card"><div class="section-title"><span class="icon-bg ib-green">🚀</span>Avant de commencer</div>
+<ul class="links">
+<li class="link"><span class="kind k-th">Préparation</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/index.html">Avant la séance — Installer PostgreSQL</a><span class="url">https://gabistam.github.io/postgrsql_Avance/index.html</span></div><button class="copy" type="button">Copier</button></li>
+</ul></section>
+
+<section class="card"><div class="section-title"><span class="icon-bg sc1">1</span>Séance 1 — Fondamentaux et requêtage avancé</div>
+<ul class="links">
+<li class="link"><span class="kind k-th">Théorie</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/seance_1/S1-theorie-fondamentaux-requetage-avance.html">Fondamentaux &amp; requêtage avancé</a><span class="url">https://gabistam.github.io/postgrsql_Avance/seance_1/S1-theorie-fondamentaux-requetage-avance.html</span></div><button class="copy" type="button">Copier</button></li>
+<li class="link"><span class="kind k-cp">Cas pratiques</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/seance_1/S1-cas-pratiques.html">Séance 1 — Cas pratiques</a><span class="url">https://gabistam.github.io/postgrsql_Avance/seance_1/S1-cas-pratiques.html</span></div><button class="copy" type="button">Copier</button></li>
+</ul></section>
+
+<section class="card"><div class="section-title"><span class="icon-bg sc2">2</span>Séance 2 — Agrégations, JSONB, vues et fonctions</div>
+<ul class="links">
+<li class="link"><span class="kind k-th">Théorie</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/seance_2/S2-Theorie-agregations-jsonb-vues-fonctions.html">Agrégations avancées, JSONB, vues &amp; fonctions</a><span class="url">https://gabistam.github.io/postgrsql_Avance/seance_2/S2-Theorie-agregations-jsonb-vues-fonctions.html</span></div><button class="copy" type="button">Copier</button></li>
+<li class="link"><span class="kind k-cp">Cas pratiques</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/seance_2/S2-cas-pratiques.html">Séance 2 — Cas pratiques</a><span class="url">https://gabistam.github.io/postgrsql_Avance/seance_2/S2-cas-pratiques.html</span></div><button class="copy" type="button">Copier</button></li>
+</ul></section>
+
+<section class="card"><div class="section-title"><span class="icon-bg sc3">3</span>Séance 3 — Index et optimisation</div>
+<ul class="links">
+<li class="link"><span class="kind k-th">Théorie</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/seance_3/S3-Theorie-optimisation.html">Index &amp; optimisation</a><span class="url">https://gabistam.github.io/postgrsql_Avance/seance_3/S3-Theorie-optimisation.html</span></div><button class="copy" type="button">Copier</button></li>
+<li class="link"><span class="kind k-cp">Cas pratiques</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/seance_3/S3-cas-pratiques.html">Séance 3 — Cas pratiques</a><span class="url">https://gabistam.github.io/postgrsql_Avance/seance_3/S3-cas-pratiques.html</span></div><button class="copy" type="button">Copier</button></li>
+</ul></section>
+
+<section class="card"><div class="section-title"><span class="icon-bg sc4">4</span>Séance 4 — Procédures stockées et triggers</div>
+<ul class="links">
+<li class="link"><span class="kind k-th">Théorie</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/seance_4/S4-Theorie-procedures-triggers.html">Procédures stockées &amp; triggers</a><span class="url">https://gabistam.github.io/postgrsql_Avance/seance_4/S4-Theorie-procedures-triggers.html</span></div><button class="copy" type="button">Copier</button></li>
+<li class="link"><span class="kind k-cp">Cas pratiques</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/seance_4/S4-cas-pratiques.html">Séance 4 — Cas pratiques</a><span class="url">https://gabistam.github.io/postgrsql_Avance/seance_4/S4-cas-pratiques.html</span></div><button class="copy" type="button">Copier</button></li>
+</ul></section>
+
+<section class="card"><div class="section-title"><span class="icon-bg sc5">5</span>Séance 5 — Transactions, concurrence et sécurité</div>
+<ul class="links">
+<li class="link"><span class="kind k-th">Théorie</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/seance_5/S5-Theorie-transactions-securite.html">Transactions, concurrence &amp; sécurité</a><span class="url">https://gabistam.github.io/postgrsql_Avance/seance_5/S5-Theorie-transactions-securite.html</span></div><button class="copy" type="button">Copier</button></li>
+<li class="link"><span class="kind k-cp">Cas pratiques</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/seance_5/S5-cas-pratiques.html">Séance 5 — Cas pratiques</a><span class="url">https://gabistam.github.io/postgrsql_Avance/seance_5/S5-cas-pratiques.html</span></div><button class="copy" type="button">Copier</button></li>
+</ul></section>
+
+<section class="card"><div class="section-title"><span class="icon-bg ib-amber">✅</span>Corrigés</div>
+<ul class="links">
+<li class="link"><span class="kind k-co">Corrigé</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/Corrections/corriges-seances-1-2.html">Corrigés des séances 1 et 2</a><span class="url">https://gabistam.github.io/postgrsql_Avance/Corrections/corriges-seances-1-2.html</span></div><button class="copy" type="button">Copier</button></li>
+<li class="link"><span class="kind k-co">Corrigé</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/Corrections/corriges-seances-3-4.html">Corrigés des séances 3 et 4</a><span class="url">https://gabistam.github.io/postgrsql_Avance/Corrections/corriges-seances-3-4.html</span></div><button class="copy" type="button">Copier</button></li>
+<li class="link"><span class="kind k-co">Corrigé</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/Corrections/corriges-seance-5.html">Corrigés de la séance 5</a><span class="url">https://gabistam.github.io/postgrsql_Avance/Corrections/corriges-seance-5.html</span></div><button class="copy" type="button">Copier</button></li>
+</ul></section>
+
+<section class="card"><div class="section-title"><span class="icon-bg ib-purple">🗺</span>Plan de cours et évaluation</div>
+<ul class="links">
+<li class="link"><span class="kind k-pl">Plan de cours</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/PlanDeCours/plan-sql-avance-postgresql-m1tl.html">Plan de cours — SQL avancé PostgreSQL · M1TL 2026-2027</a><span class="url">https://gabistam.github.io/postgrsql_Avance/PlanDeCours/plan-sql-avance-postgresql-m1tl.html</span></div><button class="copy" type="button">Copier</button></li>
+<li class="link"><span class="kind k-ev">Évaluation</span><div class="link-body"><a href="https://gabistam.github.io/postgrsql_Avance/Evaluation/evaluation-finale.html">Évaluation finale — questionnaire de 40 questions</a><span class="url">https://gabistam.github.io/postgrsql_Avance/Evaluation/evaluation-finale.html</span></div><button class="copy" type="button">Copier</button></li>
+</ul></section>
+</div></main>
+
+<footer>SQL avancé avec PostgreSQL · Répertoire des supports</footer>
+
+<script>
+function flash(btn, label) {
+  const old = btn.textContent; btn.textContent = label; btn.classList.add('done');
+  setTimeout(() => { btn.textContent = old; btn.classList.remove('done'); }, 1500);
+}
+async function copyText(text, btn) {
+  try { await navigator.clipboard.writeText(text); flash(btn, '✓ Copié'); }
+  catch { flash(btn, 'Copie impossible'); }
+}
+document.querySelectorAll('.copy').forEach(btn => btn.addEventListener('click', () => {
+  const text = btn.dataset.copy || btn.closest('.link').querySelector('a').href;
+  copyText(text, btn);
+}));
+// Liste texte groupée par section : titre de section, puis « libellé : URL »
+document.getElementById('copy-all').addEventListener('click', e => {
+  const text = [...document.querySelectorAll('main section')].map(s =>
+    s.querySelector('.section-title').lastChild.textContent.trim() + '\n' +
+    [...s.querySelectorAll('.link a')].map(a => `- ${a.textContent} : ${a.href}`).join('\n')
+  ).join('\n\n');
+  copyText(text, e.currentTarget);
+});
+</script>
+</body></html>
