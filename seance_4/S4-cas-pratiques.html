@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance 4 — Cas pratiques · SQL avancé avec PostgreSQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;
+--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f1f5f9;--card:#fff;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15.5px}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:44px 20px 34px}
+.wrap{max-width:1000px;margin:0 auto}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+header h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.2;margin-bottom:10px}
+header p.lead{color:#cbd5e1;max-width:700px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:13px;font-weight:500}
+.gprog{margin-top:22px;max-width:480px}
+.gprog-label{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:6px}
+.gprog-bar{height:8px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+.gprog-fill{height:100%;width:0;background:#34d399;transition:width .4s}
+.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(15,23,42,.05)}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 10px}
+.tab{background:none;border:none;border-bottom:3px solid transparent;padding:15px 15px;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--primary)} .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+main{padding:28px 14px 60px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;margin-bottom:14px;line-height:1.3}
+.icon-bg{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.ib-blue{background:var(--primary-light)}.ib-green{background:var(--secondary-light)}.ib-amber{background:var(--accent-light)}.ib-red{background:var(--danger-light)}.ib-purple{background:var(--purple-light)}
+.num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--primary);background:var(--primary-light);padding:3px 9px;border-radius:7px}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+p+p{margin-top:8px}
+ul.clean{list-style:none;margin:6px 0}
+ul.clean li{padding:4px 0 4px 22px;position:relative}
+ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--primary);font-weight:700}
+ol.steps{margin:6px 0 6px 22px} ol.steps li{margin:4px 0}
+.objectif-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:14px;color:var(--primary-dark)}
+.instruction-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;margin:14px 0;color:#78350f}
+.warn-box{background:var(--danger-light);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;margin:14px 0;color:#7f1d1d}
+.ok-box{background:var(--secondary-light);border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin:14px 0;color:#064e3b}
+.analogie{background:var(--purple-light);border-left:4px solid var(--purple);border-radius:10px;padding:14px 18px;margin:14px 0;color:#4c1d95}
+.ftag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0}
+.f1{background:#dbeafe;color:#1e40af}.f2{background:#d1fae5;color:#065f46}.f3{background:#fef3c7;color:#92400e}.f4{background:#fee2e2;color:#991b1b}.f5{background:#ede9fe;color:#5b21b6}
+code.inl{background:#e2e8f0;padding:1px 6px;border-radius:5px;font-size:13px}
+.code{margin:10px 0;border-radius:10px;overflow:hidden;background:var(--dark)}
+.code-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#1e293b;color:#94a3b8;font-size:12px;font-family:'JetBrains Mono',monospace}
+.copy{background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.copy:hover{background:#475569}.copy.done{background:var(--secondary)}
+.code pre{color:#e2e8f0;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0}
+pre .c{color:#64748b;font-style:italic} pre .k{color:#93c5fd;font-weight:500} pre .s{color:#86efac} pre .n{color:#fcd34d} pre .m{color:#f9a8d4}
+pre.sh{color:#a7f3d0}
+.res{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:4px 0 12px}
+.res-bar{display:flex;justify-content:space-between;background:#f8fafc;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;font-weight:700;color:var(--secondary)}
+.res-bar span{color:var(--muted);font-weight:500}
+.tbl{overflow-x:auto}
+.tbl table,.grid-table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#f1f5f9;text-align:left;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate,#334155);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 12px;border-bottom:1px solid #f1f5f9;font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap}
+.tbl td.null{color:#94a3b8;font-style:italic}
+.res-note{padding:9px 12px;font-size:13px;color:var(--muted);background:#f8fafc;border-top:1px solid var(--border)}
+.grid-table th{background:var(--dark-2);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:13px}
+.grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.grid-table tr:nth-child(even) td{background:#f8fafc}
+.grid-table td:first-child{font-weight:600}
+.understood{display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.understood input{accent-color:var(--secondary);width:18px;height:18px}
+.understood.done{border-color:var(--secondary);color:var(--secondary);background:var(--secondary-light)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.toc a{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.toc a:hover{border-color:var(--primary)}
+.result-panel{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:var(--radius);padding:22px 24px;margin:6px 0 22px}
+.result-panel h4{color:#fff;font-size:16px;margin-bottom:8px}
+.result-panel .score{color:#34d399;font-weight:800;font-family:'JetBrains Mono',monospace}
+.result-panel ul{margin-left:18px}.result-panel li{margin:3px 0}
+.os-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.os{font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--muted)}
+.os.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.os-panel{display:none}.os-panel.active{display:block}
+.gl-search{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px}
+.gl-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.gl-item b{font-family:'JetBrains Mono',monospace;font-size:14px}
+.gl-item p{font-size:14px;color:#334155;margin-top:2px}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--primary);background:var(--primary);color:#fff}
+.btn:hover{filter:brightness(.95)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 40px}
+@media (max-width:700px){.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.actions-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn.ghost{background:#fff;color:var(--primary)}
+.term-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.term-grid{grid-template-columns:1fr}}
+.term-item{display:flex;align-items:center;gap:10px;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:13.5px;border:2px solid transparent}
+.term-item span{flex:1}
+.term-item select{font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:7px;padding:5px 6px;border:none;background:#1e293b;color:#fff}
+.term-item.ok{border-color:#34d399}.term-item.ko{border-color:#f87171}
+.def-item{display:flex;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;font-size:14px;background:#fff}
+.def-item b{font-family:'JetBrains Mono',monospace;color:var(--primary)}
+.group{border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.group h4{font-size:15px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sit{display:block;width:100%;text-align:left;font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:#fff;margin-bottom:7px;cursor:pointer;color:var(--text)}
+.sit:hover{border-color:var(--primary)}
+.sit.sel{border-color:var(--accent);background:var(--accent-light)}
+.sit.good{border-color:var(--secondary);background:var(--secondary-light)}
+.sit.bad{border-color:var(--danger);background:var(--danger-light)}
+.expl{font-size:13.5px;margin-top:8px;padding:10px 12px;border-radius:9px;background:#f8fafc;color:#334155}
+.vf{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:9px}
+.vf-row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.vf-row p{flex:1;min-width:220px;font-size:14.5px}
+.vf-btns{display:flex;gap:6px}
+.vf-btns button{font-family:inherit;font-weight:600;font-size:13px;border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 14px;cursor:pointer}
+.vf-btns button.sel{background:var(--primary);border-color:var(--primary);color:#fff}
+.vf.good{border-color:var(--secondary)}.vf.bad{border-color:var(--danger)}
+.exo{border-top:1px solid var(--border);padding-top:16px;margin-top:16px}
+.exo-head{display:flex;gap:10px;align-items:center;font-size:15px}
+.enonce{margin:8px 0}
+details.hint summary,details.corrige summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--accent);margin:6px 0}
+details.corrige summary{color:var(--secondary)}
+details.hint p{font-size:14px;background:var(--accent-light);padding:10px 12px;border-radius:9px;color:#78350f}
+pre.errmsg{padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap;margin:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--border);text-decoration:none;color:var(--primary);background:#fff}
+.chip:hover{border-color:var(--primary)}
+.chip-m{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.chip-m:hover{border-color:var(--primary)}
+.acc{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.acc>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;font-weight:700;font-size:16px}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary:hover{background:#f8fafc}
+.acc>summary:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.acc-title{flex:1}
+.acc-count{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);background:#f1f5f9;padding:3px 10px;border-radius:999px}
+.acc-count.full{background:var(--secondary-light);color:#065f46}
+.chev{color:var(--muted);transition:transform .25s}
+.acc[open] .chev{transform:rotate(180deg)}
+.acc[open]>summary{border-bottom:1px solid var(--border)}
+.acc-body{padding:0 20px 20px}
+.acc-body .exo:first-child{border-top:none;margin-top:4px}
+@media (max-width:600px){.acc>summary{flex-wrap:wrap}.acc-title{flex-basis:60%}}
+.prog{margin:10px 0 14px}.prog-label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.prog-bar{height:8px;background:var(--border);border-radius:999px;overflow:hidden}.prog-fill{height:100%;width:0;background:var(--secondary);transition:width .35s}
+.lock-pills{display:flex;gap:8px;flex-wrap:wrap}
+.lock-pill{font-weight:600;font-size:13px;padding:6px 14px;border-radius:999px;background:#f1f5f9;color:var(--muted)}
+.lock-pill.done{background:var(--secondary-light);color:#065f46}
+.tab.locked::after{content:" 🔒"}
+body:not(.formateur) .formateur-only{display:none!important}
+.mode-flag{display:none}body.formateur .mode-flag{display:inline-block;background:#fbbf24;color:#0f172a}
+.acc{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.acc>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;font-weight:700;font-size:16px}
+.acc>summary::-webkit-details-marker{display:none}.acc>summary:hover{background:#f8fafc}
+.acc-title{flex:1}.acc-count{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);background:#f1f5f9;padding:3px 10px;border-radius:999px}
+.acc-count.full{background:var(--secondary-light);color:#065f46}
+.chev{color:var(--muted);transition:transform .25s}.acc[open] .chev{transform:rotate(180deg)}
+.acc[open]>summary{border-bottom:1px solid var(--border)}.acc-body{padding:0 20px 20px}.acc-body .exo:first-child{border-top:none;margin-top:4px}
+.corr-title{font-size:14px;color:var(--secondary);margin:12px 0 4px}
+
+pre.plantxt{margin:0;padding:12px 14px;background:#0f172a;color:#cbd5e1;font-size:12px;line-height:1.55;overflow-x:auto;white-space:pre}
+.plantxt .bad{color:#fca5a5;font-weight:700}.plantxt .good{color:#6ee7b7;font-weight:700}.plantxt .nd{color:#93c5fd;font-weight:700}
+.plantxt .pt{color:#fcd34d;font-weight:700}.plantxt .pb{color:#c4b5fd}.plantxt .pw{color:#fdba74}
+pre.notices{margin:0;padding:10px 12px;font-size:12.5px;color:#1e3a8a;background:#fff;white-space:pre-wrap;font-family:'JetBrains Mono',monospace}
+.corr-step{font-size:12px;font-weight:700;color:var(--muted);margin-top:8px}
+
+.tl-wrap{overflow-x:auto;margin:10px 0 14px;border:1px solid var(--border);border-radius:10px}
+table.tl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
+table.tl th{background:var(--dark-2);color:#fff;text-align:left;padding:9px 10px;font-weight:600;font-size:12.5px}
+table.tl td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+table.tl2 td:nth-child(2){background:#f8fafc;width:34%}table.tl2 td:nth-child(3){background:#fdf4ff;width:34%}
+table.tl1 td:nth-child(2){width:62%}
+td.tl-n{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--primary);width:28px}
+td.tl-note{font-size:13px;color:#334155}
+pre.tl-sql{margin:0;background:#0f172a;color:#e2e8f0;border-radius:7px;padding:7px 9px;font-size:12px;white-space:pre-wrap}
+pre.tl-sql .k{color:#93c5fd}pre.tl-sql .s{color:#86efac}pre.tl-sql .n{color:#fcd34d}pre.tl-sql .c{color:#64748b}pre.tl-sql .m{color:#f9a8d4}
+pre.tl-err{margin:6px 0 0;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:7px;padding:6px 8px;font-size:11.5px;white-space:pre-wrap;font-family:'JetBrains Mono',monospace}
+.tl-ok{margin-top:5px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#065f46}
+.tl-wait{margin-top:6px;font-size:12px;font-weight:700;color:#b45309;background:#fef3c7;border-radius:6px;padding:4px 8px;display:inline-block}
+.tl-go{font-size:12px;font-weight:700;color:#065f46;background:#d1fae5;border-radius:6px;padding:4px 8px;display:inline-block;margin-bottom:4px}
+.tl-notice{margin-top:5px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#1e40af}
+table.tl-res{border-collapse:collapse;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;background:#fff}
+table.tl-res th{background:#e2e8f0;color:#0f172a;padding:3px 8px;font-weight:600}
+table.tl-res td{padding:3px 8px;border:1px solid #e2e8f0}
+</style></head><body>
+<header><div class="wrap"><span class="badge">🐘 SQL avancé avec PostgreSQL · Séance 4 · Cas pratiques</span>
+<h1>Procédures & triggers en pratique</h1><p class="lead">Trois cas pour vérifier les notions, 16 mini-exos pour écrire procédures et triggers, puis l'automatisation de FilmBox.</p>
+<div class="meta"><span class="pill">🧩 26 termes</span><span class="pill">🔀 Ordre aléatoire</span><span class="pill">🛠 16 mini-exos</span><span class="pill">🎬 2 missions</span><span class="pill">🔒 Glossaire verrouillé</span><span class="pill mode-flag">👩‍🏫 Mode formateur</span></div></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" role="tablist"><button class="tab active" data-tab="intro" role="tab">🎯 Vue d'ensemble</button><button class="tab" data-tab="cas1" role="tab">🧩 Cas 1</button><button class="tab" data-tab="cas2" role="tab">🔍 Cas 2</button><button class="tab" data-tab="cas3" role="tab">✅ Cas 3</button><button class="tab" data-tab="exos" role="tab">🛠 Mini-exos</button><button class="tab" data-tab="filmbox" role="tab">🎬 FilmBox</button><button class="tab locked" data-tab="glossaire" role="tab">📖 Glossaire</button></div></nav>
+<main class="wrap"><section class="panel active" id="intro"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🎯</span>Cas pratiques de la séance 4</div>
+<div class="objectif-box">Vérifier la compréhension des notions N26 à N33, s'entraîner sur des exercices courts, puis poursuivre le projet FilmBox.</div>
+<table class="grid-table"><tr><th>Étape</th><th>Contenu</th><th>Base</th></tr>
+<tr><td>🧩 Cas 1</td><td>26 termes à associer à leur définition</td><td>—</td></tr>
+<tr><td>🔍 Cas 2</td><td>5 groupes de situations, 1 intruse par groupe</td><td>—</td></tr>
+<tr><td>✅ Cas 3</td><td>17 affirmations vrai / faux</td><td>—</td></tr>
+<tr><td>🛠 Mini-exos</td><td>16 exercices SQL, 2 par notion</td><td class="mono">cours_sql + demo-s4.sql</td></tr>
+<tr><td>🎬 FilmBox</td><td>2 missions (M13 à M14), 6 tâches</td><td class="mono">filmbox + filmbox-s4.sql</td></tr>
+<tr><td>📖 Glossaire</td><td>Débloqué après les 3 cas</td><td>—</td></tr></table>
+<div class="instruction-box">📌 Tous les résultats attendus ont été obtenus en exécutant les corrigés sur PostgreSQL, dans l'ordre des exercices. Si votre résultat diffère, c'est votre requête qu'il faut réinterroger.</div></div></section><section class="panel" id="cas1"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🧩</span>Cas 1 — Correspondance termes / définitions</div><div class="objectif-box">🎯 Associer chaque terme clé de la séance à sa définition.</div><div class="instruction-box">📌 Pour chaque terme, choisissez la lettre de la bonne définition, puis cliquez sur Vérifier. 26 termes répartis en 3 rounds, dans un ordre différent à chaque session.</div>
+<div class="prog"><div class="prog-label"><span id="c1-round-lbl">Round 1</span><span id="c1-ptxt">0 / 26</span></div><div class="prog-bar"><div class="prog-fill" id="c1-fill"></div></div></div>
+<div id="c1-zone"></div><div class="actions-row"><button class="btn" id="c1-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c1-reveal" type="button">Révéler</button><button class="btn ghost" id="c1-next" type="button" hidden>Round suivant</button><button class="btn ghost" id="c1-reset" type="button">Recommencer</button></div><div id="c1-result"></div></div></section><section class="panel" id="cas2"><div class="card"><div class="section-title"><span class="icon-bg ib-green">🔍</span>Cas 2 — Identification de situations</div><div class="objectif-box">🎯 Reconnaître l'outil adapté à un besoin concret.</div><div class="instruction-box">📌 Dans chaque groupe, 4 situations relèvent de l'outil indiqué et 1 est une intruse. Cliquez sur l'intruse de chaque groupe, puis vérifiez.</div>
+<div class="prog"><div class="prog-label"><span>Groupes complétés</span><span id="c2-ptxt">0 / 5</span></div><div class="prog-bar"><div class="prog-fill" id="c2-fill"></div></div></div>
+<div id="c2-zone"></div><div class="actions-row"><button class="btn" id="c2-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c2-reveal" type="button">Révéler</button><button class="btn ghost" id="c2-reset" type="button">Recommencer</button></div><div id="c2-result"></div></div></section><section class="panel" id="cas3"><div class="card"><div class="section-title"><span class="icon-bg ib-amber">✅</span>Cas 3 — Vrai ou faux ?</div><div class="objectif-box">🎯 Repérer les idées reçues et les pièges de la séance.</div><div class="instruction-box">📌 Répondez aux 17 affirmations, puis vérifiez : chaque réponse est accompagnée de son explication.</div>
+<div class="prog"><div class="prog-label"><span>Réponses données</span><span id="c3-ptxt">0 / 17</span></div><div class="prog-bar"><div class="prog-fill" id="c3-fill"></div></div></div>
+<div id="c3-zone"></div><div class="actions-row"><button class="btn" id="c3-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c3-reveal" type="button">Révéler</button><button class="btn ghost" id="c3-reset" type="button">Recommencer</button></div><div id="c3-result"></div></div></section><section class="panel" id="exos"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🛠</span>Mini-exos · cours_sql + demo-s4.sql</div><div class="objectif-box">2 exercices par notion pour écrire des procédures et des triggers, avant d'automatiser FilmBox.</div>
+<div class="instruction-box">📌 Travaillez sur la base <code class="inl">cours_sql</code>, avec <code class="inl">demo-s4.sql</code> fraîchement chargé. Faites les exercices <strong>dans l'ordre</strong> : les soldes, stocks et inventaires évoluent au fil des exercices, et certains triggers en déclenchent d'autres. Relancer <code class="inl">demo-s4.sql</code> remet tout à zéro.</div><div class="prog"><div class="prog-label"><span>Exercices réussis</span><span class="ptxt" id="ptxt-exos">0</span></div><div class="prog-bar"><div class="prog-fill" id="pfill-exos"></div></div></div><div class="chips"><a href="#" class="chip" data-acc="exn-N26">N26</a><a href="#" class="chip" data-acc="exn-N27">N27</a><a href="#" class="chip" data-acc="exn-N28">N28</a><a href="#" class="chip" data-acc="exn-N29">N29</a><a href="#" class="chip" data-acc="exn-N30">N30</a><a href="#" class="chip" data-acc="exn-N31">N31</a><a href="#" class="chip" data-acc="exn-N32">N32</a><a href="#" class="chip" data-acc="exn-N33">N33</a></div><div class="actions-row"><button class="btn ghost acc-open" type="button">Tout déplier</button><button class="btn ghost acc-close" type="button">Tout replier</button></div></div><div class="exos-card"><details class="acc" id="exn-N26"><summary><span class="num">N26</span><span class="acc-title">Procédures : CREATE PROCEDURE et CALL</span><span class="ftag f1">Procédures</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">26.1</span><strong>Monter de niveau</strong></div>
+<p class="enonce">Écrivez la procédure <code class='inl'>recompenser(pseudo, niveaux)</code> qui fait gagner des niveaux à un aventurier et lui verse 50 pièces par niveau gagné. Elle lève une erreur si l'aventurier n'existe pas. Récompensez Kairo de 2 niveaux.</p><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>niveau</th><th>pieces</th></tr></thead><tbody><tr><td class="">kairo</td><td class="">3</td><td class="">200</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE PROCEDURE recompenser(p_pseudo <span class="k">TEXT</span>, p_niveaux <span class="k">INTEGER</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">UPDATE</span> aventuriers
+    <span class="k">SET</span> niveau = niveau + p_niveaux,
+        pieces = pieces + <span class="n">50</span> * p_niveaux
+    <span class="k">WHERE</span> pseudo = p_pseudo;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Aventurier inconnu : %'</span>, p_pseudo;
+    <span class="k">END</span> <span class="k">IF</span>;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL recompenser(<span class="s">'kairo'</span>, <span class="n">2</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pseudo, niveau, pieces <span class="k">FROM</span> aventuriers <span class="k">WHERE</span> pseudo = <span class="s">'kairo'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">26.2</span><strong>Revendre un objet</strong></div>
+<p class="enonce">Écrivez la procédure <code class='inl'>vendre(pseudo, objet, INOUT gain)</code> : l'aventurier revend un exemplaire d'un objet de son inventaire à la moitié de son prix. L'objet retourne en boutique, les pièces sont créditées, et la ligne d'inventaire disparaît s'il n'en reste plus. Zed revend son épée courte.</p><details class="hint"><summary>💡 Indice</summary><p>Un paramètre <code>INOUT … DEFAULT NULL</code> peut être omis à l'appel ; sa valeur finale est renvoyée comme une ligne de résultat.</p></details><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>p_gain</th></tr></thead><tbody><tr><td class="">75</td></tr></tbody></table></div></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>pieces</th></tr></thead><tbody><tr><td class="">zed</td><td class="">615</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE PROCEDURE vendre(p_pseudo <span class="k">TEXT</span>, p_objet <span class="k">TEXT</span>, INOUT p_gain <span class="k">INTEGER</span> <span class="k">DEFAULT</span> <span class="k">NULL</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    v_av_id  <span class="k">INTEGER</span>;
+    v_obj    objets%ROWTYPE;
+    v_qte    <span class="k">INTEGER</span>;
+BEGIN
+    <span class="k">SELECT</span> id <span class="k">INTO</span> v_av_id <span class="k">FROM</span> aventuriers <span class="k">WHERE</span> pseudo = p_pseudo;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span> RAISE EXCEPTION <span class="s">'Aventurier inconnu : %'</span>, p_pseudo; <span class="k">END</span> <span class="k">IF</span>;
+    <span class="k">SELECT</span> * <span class="k">INTO</span> v_obj <span class="k">FROM</span> objets <span class="k">WHERE</span> nom = p_objet;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span> RAISE EXCEPTION <span class="s">'Objet inconnu : %'</span>, p_objet; <span class="k">END</span> <span class="k">IF</span>;
+
+    <span class="k">SELECT</span> quantite <span class="k">INTO</span> v_qte <span class="k">FROM</span> inventaire
+    <span class="k">WHERE</span> aventurier_id = v_av_id <span class="k">AND</span> objet_id = v_obj.id;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'% ne possède pas « % »'</span>, p_pseudo, p_objet
+              <span class="k">USING</span> HINT = <span class="s">'Consultez votre inventaire avant de vendre.'</span>;
+    <span class="k">END</span> <span class="k">IF</span>;
+
+    p_gain := v_obj.prix / <span class="n">2</span>;
+    <span class="k">IF</span> v_qte = <span class="n">1</span> <span class="k">THEN</span>
+        <span class="k">DELETE</span> <span class="k">FROM</span> inventaire <span class="k">WHERE</span> aventurier_id = v_av_id <span class="k">AND</span> objet_id = v_obj.id;
+    <span class="k">ELSE</span>
+        <span class="k">UPDATE</span> inventaire <span class="k">SET</span> quantite = quantite - <span class="n">1</span>
+        <span class="k">WHERE</span> aventurier_id = v_av_id <span class="k">AND</span> objet_id = v_obj.id;
+    <span class="k">END</span> <span class="k">IF</span>;
+    <span class="k">UPDATE</span> objets      <span class="k">SET</span> stock  = stock  + <span class="n">1</span>      <span class="k">WHERE</span> id = v_obj.id;
+    <span class="k">UPDATE</span> aventuriers <span class="k">SET</span> pieces = pieces + p_gain <span class="k">WHERE</span> id = v_av_id;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL vendre(<span class="s">'zed'</span>, <span class="s">'Épée courte'</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pseudo, pieces <span class="k">FROM</span> aventuriers <span class="k">WHERE</span> pseudo = <span class="s">'zed'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N27"><summary><span class="num">N27</span><span class="acc-title">Gérer les erreurs</span><span class="ftag f2">Erreurs & lots</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">27.1</span><strong>Vendre ce qu'on n'a pas</strong></div>
+<p class="enonce">Kenji tente de revendre un arc long qu'il ne possède pas. Observez le message et l'astuce, puis vérifiez que le stock d'arcs n'a pas bougé.</p><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur attendue</div><pre class="errmsg">ERROR:  kenji ne possède pas « Arc long »
+HINT:  Consultez votre inventaire avant de vendre.</pre></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>stock</th></tr></thead><tbody><tr><td class="">Arc long</td><td class="">5</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL vendre(<span class="s">'kenji'</span>, <span class="s">'Arc long'</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom, stock <span class="k">FROM</span> objets <span class="k">WHERE</span> nom = <span class="s">'Arc long'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">27.2</span><strong>Inscrire un groupe</strong></div>
+<p class="enonce">Écrivez <code class='inl'>inscrire_lot(pseudos TEXT[])</code> qui inscrit une liste de pseudos : un pseudo déjà pris ne doit pas bloquer les autres, mais produire un simple message. Inscrivez zed, nouvelle, lyna et recrue.</p><details class="hint"><summary>💡 Indice</summary><p>Placez le bloc <code>BEGIN … EXCEPTION … END</code> <strong>à l'intérieur</strong> de la boucle : chaque pseudo a son propre point de reprise.</p></details><div class="res"><div class="res-bar">▶ Résultat attendu <span>0 ligne</span></div></div><div class="res"><div class="res-bar" style="color:#1e40af;background:#eff6ff">💬 Messages attendus</div><pre class="notices">NOTICE:  Déjà pris : zed
+NOTICE:  Inscrit : nouvelle
+NOTICE:  Déjà pris : lyna
+NOTICE:  Inscrit : recrue</pre></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>aventuriers</th></tr></thead><tbody><tr><td class="">10</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE PROCEDURE inscrire_lot(p_pseudos <span class="k">TEXT</span>[])
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    v_pseudo <span class="k">TEXT</span>;
+BEGIN
+    FOREACH v_pseudo <span class="k">IN</span> ARRAY p_pseudos LOOP
+        BEGIN                                    <span class="c">-- un bloc par pseudo : une erreur n'annule que lui</span>
+            <span class="k">INSERT</span> <span class="k">INTO</span> aventuriers (pseudo) <span class="k">VALUES</span> (v_pseudo);
+            RAISE NOTICE <span class="s">'Inscrit : %'</span>, v_pseudo;
+        EXCEPTION
+            <span class="k">WHEN</span> unique_violation <span class="k">THEN</span>
+                RAISE NOTICE <span class="s">'Déjà pris : %'</span>, v_pseudo;
+        <span class="k">END</span>;
+    <span class="k">END</span> LOOP;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL inscrire_lot(ARRAY[<span class="s">'zed'</span>, <span class="s">'nouvelle'</span>, <span class="s">'lyna'</span>, <span class="s">'recrue'</span>]);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> aventuriers <span class="k">FROM</span> aventuriers;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N28"><summary><span class="num">N28</span><span class="acc-title">Valider par lots</span><span class="ftag f2">Erreurs & lots</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">28.1</span><strong>Réassort par lots</strong></div>
+<p class="enonce">Écrivez <code class='inl'>reinitialiser_stocks(valeur, lot)</code> qui remet le stock de chaque objet à une valeur donnée, en validant tous les <code class='inl'>lot</code> objets et en affichant un message à chaque lot. Remettez tous les stocks à 20, par lots de 4.</p><div class="res"><div class="res-bar">▶ Résultat attendu <span>0 ligne</span></div></div><div class="res"><div class="res-bar" style="color:#1e40af;background:#eff6ff">💬 Messages attendus</div><pre class="notices">NOTICE:  Lot validé : 4 objets
+NOTICE:  Lot validé : 8 objets</pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE PROCEDURE reinitialiser_stocks(p_valeur <span class="k">INTEGER</span>, p_lot <span class="k">INTEGER</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    r    RECORD;
+    v_n  <span class="k">INTEGER</span> := <span class="n">0</span>;
+BEGIN
+    FOR r <span class="k">IN</span> <span class="k">SELECT</span> id <span class="k">FROM</span> objets <span class="k">ORDER</span> <span class="k">BY</span> id LOOP
+        <span class="k">UPDATE</span> objets <span class="k">SET</span> stock = p_valeur <span class="k">WHERE</span> id = r.id;
+        v_n := v_n + <span class="n">1</span>;
+        <span class="k">IF</span> v_n % p_lot = <span class="n">0</span> <span class="k">THEN</span>
+            COMMIT;
+            RAISE NOTICE <span class="s">'Lot validé : % objets'</span>, v_n;
+        <span class="k">END</span> <span class="k">IF</span>;
+    <span class="k">END</span> LOOP;
+    COMMIT;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL reinitialiser_stocks(<span class="n">20</span>, <span class="n">4</span>);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">28.2</span><strong>Pourquoi une procédure ?</strong></div>
+<p class="enonce">Écrivez le même traitement sous forme de <strong>fonction</strong> <code class='inl'>f_reinit()</code>, avec un <code class='inl'>COMMIT</code> après la mise à jour, et appelez-la. Que se passe-t-il ?</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> La fonction se crée sans erreur, mais son exécution échoue : une fonction s'exécute toujours dans la transaction de la requête qui l'appelle, elle ne peut pas la valider.</div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur attendue</div><pre class="errmsg">ERROR:  invalid transaction termination</pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION f_reinit()
+RETURNS VOID
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">UPDATE</span> objets <span class="k">SET</span> stock = <span class="n">20</span>;
+    COMMIT;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> f_reinit();</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N29"><summary><span class="num">N29</span><span class="acc-title">Anatomie d'un trigger</span><span class="ftag f3">Triggers</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">29.1</span><strong>Des noms d'objets propres</strong></div>
+<p class="enonce">Écrivez un trigger qui, à chaque insertion ou modification du nom d'un objet, retire les espaces en début et fin et remplace les espaces multiples par un seul. Testez avec « &nbsp;&nbsp;Hache&nbsp;&nbsp;&nbsp;de&nbsp;&nbsp;&nbsp;guerre&nbsp;».</p><details class="hint"><summary>💡 Indice</summary><p><code>regexp_replace(texte, '\s+', ' ', 'g')</code> remplace chaque suite d'espaces par un seul.</p></details><div class="res"><div class="res-bar">▶ Résultat attendu <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>nom_enregistre</th></tr></thead><tbody><tr><td class="">[Épée courte]</td></tr><tr><td class="">[Arc long]</td></tr><tr><td class="">[Hache de guerre]</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION trg_nom_objet()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    NEW.nom := regexp_replace(TRIM(NEW.nom), <span class="s">'\s+'</span>, <span class="s">' '</span>, <span class="s">'g'</span>);
+    RETURN NEW;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER nom_objet
+BEFORE <span class="k">INSERT</span> <span class="k">OR</span> <span class="k">UPDATE</span> OF nom <span class="k">ON</span> objets
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION trg_nom_objet();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> objets (nom, categorie, prix, stock) <span class="k">VALUES</span> (<span class="s">'  Hache   de   guerre '</span>, <span class="s">'arme'</span>, <span class="n">260</span>, <span class="n">3</span>);
+<span class="k">SELECT</span> <span class="s">'['</span> || nom || <span class="s">']'</span> <span class="k">AS</span> nom_enregistre <span class="k">FROM</span> objets <span class="k">WHERE</span> categorie = <span class="s">'arme'</span> <span class="k">ORDER</span> <span class="k">BY</span> id;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">29.2</span><strong>Le trigger espion</strong></div>
+<p class="enonce">Posez sur <code class='inl'>inventaire</code> un trigger BEFORE qui affiche, pour chaque ligne touchée, <code class='inl'>TG_WHEN</code>, <code class='inl'>TG_OP</code> et <code class='inl'>TG_TABLE_NAME</code>. Lancez une mise à jour puis une suppression, observez les messages, puis supprimez le trigger.</p><details class="hint"><summary>💡 Indice</summary><p>Dans un trigger BEFORE DELETE, renvoyer NEW (qui vaut NULL) annulerait silencieusement la suppression.</p></details><div class="res"><div class="res-bar">▶ Résultat attendu <span>0 ligne</span></div></div><div class="res"><div class="res-bar" style="color:#1e40af;background:#eff6ff">💬 Messages attendus</div><pre class="notices">NOTICE:  BEFORE UPDATE sur inventaire
+NOTICE:  BEFORE DELETE sur inventaire</pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION trg_espion()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    RAISE NOTICE <span class="s">'% % sur %'</span>, TG_WHEN, TG_OP, TG_TABLE_NAME;
+    <span class="k">IF</span> TG_OP = <span class="s">'DELETE'</span> <span class="k">THEN</span>
+        RETURN OLD;            <span class="c">-- en DELETE, NEW est NULL : renvoyer OLD pour ne pas annuler</span>
+    <span class="k">END</span> <span class="k">IF</span>;
+    RETURN NEW;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER espion
+BEFORE <span class="k">INSERT</span> <span class="k">OR</span> <span class="k">UPDATE</span> <span class="k">OR</span> <span class="k">DELETE</span> <span class="k">ON</span> inventaire
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION trg_espion();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">UPDATE</span> inventaire <span class="k">SET</span> quantite = quantite + <span class="n">1</span> <span class="k">WHERE</span> aventurier_id = <span class="n">1</span> <span class="k">AND</span> objet_id = <span class="n">1</span>;
+<span class="k">DELETE</span> <span class="k">FROM</span> inventaire <span class="k">WHERE</span> aventurier_id = <span class="n">8</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">DROP</span> TRIGGER espion <span class="k">ON</span> inventaire;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N30"><summary><span class="num">N30</span><span class="acc-title">Triggers BEFORE</span><span class="ftag f3">Triggers</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">30.1</span><strong>Un niveau ne baisse jamais</strong></div>
+<p class="enonce">Interdisez toute baisse du niveau d'un aventurier avec un message explicite, puis testez en ramenant Mo (niveau 15) au niveau 10.</p><details class="hint"><summary>💡 Indice</summary><p>Une contrainte CHECK ne voit que la nouvelle ligne : pour comparer avant et après, il faut un trigger.</p></details><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur attendue</div><pre class="errmsg">ERROR:  Un niveau ne peut pas baisser : 15 → 10 pour mo</pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION trg_niveau()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">IF</span> NEW.niveau &lt; OLD.niveau <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Un niveau ne peut pas baisser : % → % pour %'</span>,
+              OLD.niveau, NEW.niveau, OLD.pseudo;
+    <span class="k">END</span> <span class="k">IF</span>;
+    RETURN NEW;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER niveau_croissant
+BEFORE <span class="k">UPDATE</span> OF niveau <span class="k">ON</span> aventuriers
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION trg_niveau();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">UPDATE</span> aventuriers <span class="k">SET</span> niveau = <span class="n">10</span> <span class="k">WHERE</span> pseudo = <span class="s">'mo'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">30.2</span><strong>Un prix calculé</strong></div>
+<p class="enonce">Quand un achat est enregistré sans prix total, calculez-le automatiquement à partir du prix de l'objet. Testez en enregistrant 3 élixirs de mana pour Lyna (aventurier 2, objet 2) sans préciser le prix.</p><details class="hint"><summary>💡 Indice</summary><p>La contrainte NOT NULL sur prix_total est vérifiée <strong>après</strong> les triggers BEFORE : le trigger a le temps de la remplir.</p></details><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>aventurier_id</th><th>objet_id</th><th>quantite</th><th>prix_total</th></tr></thead><tbody><tr><td class="">2</td><td class="">2</td><td class="">3</td><td class="">120</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION trg_prix_achat()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">IF</span> NEW.prix_total <span class="k">IS</span> <span class="k">NULL</span> <span class="k">THEN</span>
+        <span class="k">SELECT</span> prix * NEW.quantite <span class="k">INTO</span> NEW.prix_total
+        <span class="k">FROM</span> objets <span class="k">WHERE</span> id = NEW.objet_id;
+    <span class="k">END</span> <span class="k">IF</span>;
+    RETURN NEW;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER prix_achat
+BEFORE <span class="k">INSERT</span> <span class="k">ON</span> achats
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION trg_prix_achat();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> achats (aventurier_id, objet_id, quantite) <span class="k">VALUES</span> (<span class="n">2</span>, <span class="n">2</span>, <span class="n">3</span>);
+<span class="k">SELECT</span> aventurier_id, objet_id, quantite, prix_total <span class="k">FROM</span> achats;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N31"><summary><span class="num">N31</span><span class="acc-title">Triggers AFTER</span><span class="ftag f4">Automatisation</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">31.1</span><strong>L'historique des prix</strong></div>
+<p class="enonce">Écrivez une fonction d'audit générique qui enregistre dans <code class='inl'>audit</code> la table, l'opération et les lignes avant/après en JSONB. Branchez-la sur les modifications d'objets, augmentez de 5 le prix du bouclier en bois, et affichez l'audit.</p><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>table_nom</th><th>operation</th><th>prix_avant</th><th>prix_apres</th></tr></thead><tbody><tr><td class="">objets</td><td class="">UPDATE</td><td class="">90</td><td class="">95</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION audit_generique()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> audit (table_nom, operation, ancienne, nouvelle)
+    <span class="k">VALUES</span> (TG_TABLE_NAME, TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER audit_objets
+AFTER <span class="k">UPDATE</span> <span class="k">ON</span> objets
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION audit_generique();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">UPDATE</span> objets <span class="k">SET</span> prix = prix + <span class="n">5</span> <span class="k">WHERE</span> nom = <span class="s">'Bouclier en bois'</span>;
+<span class="k">SELECT</span> table_nom, operation, ancienne -&gt;&gt; <span class="s">'prix'</span> <span class="k">AS</span> prix_avant, nouvelle -&gt;&gt; <span class="s">'prix'</span> <span class="k">AS</span> prix_apres
+<span class="k">FROM</span> audit;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">31.2</span><strong>Le compteur des ventes</strong></div>
+<p class="enonce">Créez une table <code class='inl'>stats_ventes(objet_id, quantite_vendue)</code> et un trigger qui l'alimente à chaque nouvel achat. Enregistrez 2 potions pour Sara (aventurier 5) et 1 pour Nova (aventurier 6), puis affichez les statistiques.</p><details class="hint"><summary>💡 Indice</summary><p>On incrémente plutôt que de tout recalculer : c'est beaucoup moins coûteux à chaque achat.</p></details><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> 3 potions vendues. L'achat de 30.2, antérieur au trigger, n'est pas compté : un trigger ne rattrape pas le passé.</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>quantite_vendue</th></tr></thead><tbody><tr><td class="">Potion de soin</td><td class="">3</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">TABLE</span> stats_ventes (
+    objet_id         <span class="k">INTEGER</span> <span class="k">PRIMARY</span> <span class="k">KEY</span> <span class="k">REFERENCES</span> objets(id),
+    quantite_vendue  <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span>
+);
+
+<span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION trg_stats_ventes()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> stats_ventes (objet_id, quantite_vendue)
+    <span class="k">VALUES</span> (NEW.objet_id, NEW.quantite)
+    <span class="k">ON</span> CONFLICT (objet_id)
+        DO <span class="k">UPDATE</span> <span class="k">SET</span> quantite_vendue = stats_ventes.quantite_vendue + EXCLUDED.quantite_vendue;
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER stats_ventes
+AFTER <span class="k">INSERT</span> <span class="k">ON</span> achats
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION trg_stats_ventes();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> achats (aventurier_id, objet_id, quantite) <span class="k">VALUES</span> (<span class="n">5</span>, <span class="n">1</span>, <span class="n">2</span>), (<span class="n">6</span>, <span class="n">1</span>, <span class="n">1</span>);
+<span class="k">SELECT</span> o.nom, s.quantite_vendue
+<span class="k">FROM</span> stats_ventes s <span class="k">JOIN</span> objets o <span class="k">ON</span> o.id = s.objet_id;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N32"><summary><span class="num">N32</span><span class="acc-title">Instruction, tables de transition, WHEN</span><span class="ftag f4">Automatisation</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">32.1</span><strong>Le grand nettoyage</strong></div>
+<p class="enonce">Quand des lignes d'inventaire sont supprimées, ajoutez <strong>une seule</strong> alerte par instruction, qui indique combien de lignes ont disparu. Supprimez ensuite toutes les lignes d'inventaire de quantité 1.</p><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>message</th></tr></thead><tbody><tr><td class="">Nettoyage : 5 ligne(s) d&#x27;inventaire supprimée(s)</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION trg_nettoyage()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> alertes (message)
+    <span class="k">SELECT</span> format(<span class="s">'Nettoyage : %s ligne(s) d''inventaire supprimée(s)'</span>, <span class="k">COUNT</span>(*))
+    <span class="k">FROM</span> supprimees
+    <span class="k">HAVING</span> <span class="k">COUNT</span>(*) &gt; <span class="n">0</span>;
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER nettoyage
+AFTER <span class="k">DELETE</span> <span class="k">ON</span> inventaire
+REFERENCING OLD <span class="k">TABLE</span> <span class="k">AS</span> supprimees
+FOR EACH STATEMENT
+EXECUTE FUNCTION trg_nettoyage();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">DELETE</span> <span class="k">FROM</span> inventaire <span class="k">WHERE</span> quantite = <span class="n">1</span>;
+<span class="k">SELECT</span> message <span class="k">FROM</span> alertes;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">32.2</span><strong>Alerte au porte-monnaie vide</strong></div>
+<p class="enonce">Ajoutez une alerte quand les pièces d'un aventurier passent sous 20, et seulement au moment où il franchit ce seuil. Testez en ramenant Kenji à 10 pièces.</p><details class="hint"><summary>💡 Indice</summary><p>La condition WHEN compare OLD et NEW : l'alerte n'est émise qu'au franchissement du seuil, pas à chaque mouvement sous 20.</p></details><div class="res"><div class="res-bar">▶ Résultat attendu <span>2 lignes</span></div><div class="tbl"><table><thead><tr><th>message</th></tr></thead><tbody><tr><td class="">Nettoyage : 5 ligne(s) d&#x27;inventaire supprimée(s)</td></tr><tr><td class="">Pièces presque épuisées : kenji</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION trg_pieces_basses()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> alertes (message) <span class="k">VALUES</span> (format(<span class="s">'Pièces presque épuisées : %s'</span>, NEW.pseudo));
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER pieces_basses
+AFTER <span class="k">UPDATE</span> OF pieces <span class="k">ON</span> aventuriers
+FOR EACH <span class="k">ROW</span>
+<span class="k">WHEN</span> (OLD.pieces &gt;= <span class="n">20</span> <span class="k">AND</span> NEW.pieces &lt; <span class="n">20</span>)
+EXECUTE FUNCTION trg_pieces_basses();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">UPDATE</span> aventuriers <span class="k">SET</span> pieces = <span class="n">10</span> <span class="k">WHERE</span> pseudo = <span class="s">'kenji'</span>;
+<span class="k">SELECT</span> message <span class="k">FROM</span> alertes <span class="k">ORDER</span> <span class="k">BY</span> id;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N33"><summary><span class="num">N33</span><span class="acc-title">Maîtriser les triggers</span><span class="ftag f5">Bonnes pratiques</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">33.1</span><strong>L'inventaire des triggers</strong></div>
+<p class="enonce">Listez tous les triggers posés dans ces exercices : table, nom, moment et niveau (ligne ou instruction).</p><div class="res"><div class="res-bar">▶ Résultat attendu <span>7 lignes</span></div><div class="tbl"><table><thead><tr><th>table_cible</th><th>trigger_name</th><th>moment</th><th>niveau</th><th>evenements</th></tr></thead><tbody><tr><td class="">achats</td><td class="">prix_achat</td><td class="">BEFORE</td><td class="">ROW</td><td class="">INSERT</td></tr><tr><td class="">achats</td><td class="">stats_ventes</td><td class="">AFTER</td><td class="">ROW</td><td class="">INSERT</td></tr><tr><td class="">aventuriers</td><td class="">niveau_croissant</td><td class="">BEFORE</td><td class="">ROW</td><td class="">UPDATE</td></tr><tr><td class="">aventuriers</td><td class="">pieces_basses</td><td class="">AFTER</td><td class="">ROW</td><td class="">UPDATE</td></tr><tr><td class="">inventaire</td><td class="">nettoyage</td><td class="">AFTER</td><td class="">STATEMENT</td><td class="">DELETE</td></tr><tr><td class="">objets</td><td class="">nom_objet</td><td class="">BEFORE</td><td class="">ROW</td><td class="">INSERT, UPDATE</td></tr></tbody></table></div><div class="res-note">… 7 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> event_object_table <span class="k">AS</span> table_cible, trigger_name, action_timing <span class="k">AS</span> moment,
+       action_orientation <span class="k">AS</span> niveau,
+       STRING_AGG(event_manipulation, <span class="s">', '</span> <span class="k">ORDER</span> <span class="k">BY</span> event_manipulation) <span class="k">AS</span> evenements
+<span class="k">FROM</span> information_schema.triggers
+<span class="k">WHERE</span> event_object_schema = <span class="s">'public'</span>
+  <span class="k">AND</span> event_object_table <span class="k">IN</span> (<span class="s">'aventuriers'</span>, <span class="s">'objets'</span>, <span class="s">'inventaire'</span>, <span class="s">'achats'</span>)
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>
+<span class="k">ORDER</span> <span class="k">BY</span> table_cible, moment <span class="k">DESC</span>, trigger_name;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">33.2</span><strong>Maintenance sans triggers</strong></div>
+<p class="enonce">Pour une opération de maintenance, augmentez de 1 le prix de tous les objets <strong>sans</strong> déclencher l'audit. Comptez les lignes d'audit avant et après pour le prouver, et n'oubliez pas de réactiver les triggers.</p><details class="hint"><summary>💡 Indice</summary><p><code>DISABLE TRIGGER USER</code> désactive tous les triggers posés par les utilisateurs, mais pas ceux qui garantissent les clés étrangères.</p></details><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Le même nombre avant et après : aucun trigger utilisateur ne s'est déclenché pendant la maintenance.</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>audit_avant</th></tr></thead><tbody><tr><td class="">1</td></tr></tbody></table></div></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>audit_apres</th></tr></thead><tbody><tr><td class="">1</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> audit_avant <span class="k">FROM</span> audit;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>ALTER <span class="k">TABLE</span> objets DISABLE TRIGGER USER;
+<span class="k">UPDATE</span> objets <span class="k">SET</span> prix = prix + <span class="n">1</span>;
+ALTER <span class="k">TABLE</span> objets ENABLE TRIGGER USER;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> audit_apres <span class="k">FROM</span> audit;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details></div></section><section class="panel" id="filmbox"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">🎬</span>Projet fil rouge · FilmBox, épisode 4</div>
+<div class="objectif-box">Les applications de FilmBox (web, mobile, scripts d'import) écrivent toutes dans la base. L'équipe veut une seule façon fiable de noter un film, et des statistiques qui restent justes quoi qu'il arrive.</div>
+<h3>🗄 Ce qui change dans la base</h3>
+<p>Deux tables vides, que vos procédures et triggers vont alimenter : <code class="inl">films_stats</code> (nombre de notes et moyenne de chaque film) et <code class="inl">audit_notes</code> (historique des changements de note).</p>
+<h3>📥 Installation</h3>
+<p><button class="btn" type="button" id="dl-filmbox">⬇️ Télécharger filmbox-s4.sql</button></p>
+<div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\c</span> filmbox
+<span class="m">\i</span> C:/chemin/vers/filmbox-s4.sql</pre></div>
+<div class="instruction-box">📌 Partez d'une base FilmBox de taille normale : relancez <code class="inl">filmbox.sql</code>, <code class="inl">filmbox-s2.sql</code>, puis <code class="inl">filmbox-s4.sql</code>. Le volume de la séance 3 n'est pas nécessaire. Faites les missions dans l'ordre : M14 utilise la procédure écrite en M13.</div><div class="prog"><div class="prog-label"><span>Tâches réussies</span><span class="ptxt" id="ptxt-fb">0</span></div><div class="prog-bar"><div class="prog-fill" id="pfill-fb"></div></div></div><div class="toc"><a href="#" class="chip-m" data-anchor="mis-M13"><span class="num">M13</span>📝 Publier une note <span class="ftag f5" style="margin-left:auto">N26 · N27 · N28</span></a><a href="#" class="chip-m" data-anchor="mis-M14"><span class="num">M14</span>⚡ Des statistiques toujours justes <span class="ftag f5" style="margin-left:auto">N29 → N33</span></a></div></div><div class="card fb-card" id="mis-M13"><div class="section-title"><span class="icon-bg ib-purple">📝</span><span><span class="num">M13</span>&nbsp; Publier une note</span></div><span class="ftag f4">Notions N26 · N27 · N28</span><p style="margin-top:8px">L'équipe front veut une seule porte d'entrée pour noter un film : enregistrer la note, ajouter le visionnage au journal et renvoyer la nouvelle moyenne, le tout en une opération.</p><div class="exo"><div class="exo-head"><span class="num">M13.1</span><strong>La procédure noter</strong></div>
+<p class="enonce">Chargez <code class='inl'>filmbox-s4.sql</code>. Écrivez <code class='inl'>noter(pseudo, titre, note, INOUT moyenne)</code> : elle vérifie la note (de 0,5 à 5, par demi-point), le membre et le film ; enregistre ou remplace la note ; ajoute un visionnage au journal ; renvoie la nouvelle moyenne du film. <code class='inl'>lea.reel</code> donne 3,5 à Inception.</p><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>p_moyenne</th></tr></thead><tbody><tr><td class="">4.30</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE PROCEDURE noter(p_pseudo <span class="k">TEXT</span>, p_titre <span class="k">TEXT</span>, p_note <span class="k">NUMERIC</span>,
+                                  INOUT p_moyenne <span class="k">NUMERIC</span> <span class="k">DEFAULT</span> <span class="k">NULL</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    v_user  <span class="k">INTEGER</span>;
+    v_film  <span class="k">INTEGER</span>;
+BEGIN
+    <span class="k">IF</span> p_note <span class="k">NOT</span> <span class="k">BETWEEN</span> <span class="n">0.5</span> <span class="k">AND</span> <span class="n">5</span> <span class="k">OR</span> p_note * <span class="n">2</span> &lt;&gt; TRUNC(p_note * <span class="n">2</span>) <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Note invalide : % (de 0,5 à 5, par demi-point)'</span>, p_note;
+    <span class="k">END</span> <span class="k">IF</span>;
+    <span class="k">SELECT</span> id <span class="k">INTO</span> v_user <span class="k">FROM</span> utilisateurs <span class="k">WHERE</span> pseudo = p_pseudo;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span> RAISE EXCEPTION <span class="s">'Membre inconnu : %'</span>, p_pseudo; <span class="k">END</span> <span class="k">IF</span>;
+    <span class="k">SELECT</span> id <span class="k">INTO</span> v_film <span class="k">FROM</span> films <span class="k">WHERE</span> titre = p_titre;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span> RAISE EXCEPTION <span class="s">'Film inconnu : %'</span>, p_titre; <span class="k">END</span> <span class="k">IF</span>;
+
+    <span class="k">INSERT</span> <span class="k">INTO</span> notes (utilisateur_id, film_id, note, note_le)
+    <span class="k">VALUES</span> (v_user, v_film, p_note, CURRENT_DATE)
+    <span class="k">ON</span> CONFLICT (utilisateur_id, film_id)
+        DO <span class="k">UPDATE</span> <span class="k">SET</span> note = EXCLUDED.note, note_le = EXCLUDED.note_le;
+    <span class="k">INSERT</span> <span class="k">INTO</span> journal (utilisateur_id, film_id, date_visionnage)
+    <span class="k">VALUES</span> (v_user, v_film, CURRENT_DATE);
+
+    <span class="k">SELECT</span> <span class="k">ROUND</span>(<span class="k">AVG</span>(note), <span class="n">2</span>) <span class="k">INTO</span> p_moyenne <span class="k">FROM</span> notes <span class="k">WHERE</span> film_id = v_film;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL noter(<span class="s">'lea.reel'</span>, <span class="s">'Inception'</span>, <span class="n">3.5</span>);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">M13.2</span><strong>Les erreurs de saisie</strong></div>
+<p class="enonce">Vérifiez que la procédure refuse une note de 6 et un film absent du catalogue, avec des messages compréhensibles par l'équipe front.</p><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur attendue</div><pre class="errmsg">ERROR:  Note invalide : 6 (de 0,5 à 5, par demi-point)</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur attendue</div><pre class="errmsg">ERROR:  Film inconnu : Avatar</pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL noter(<span class="s">'lea.reel'</span>, <span class="s">'Inception'</span>, <span class="n">6</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL noter(<span class="s">'lea.reel'</span>, <span class="s">'Avatar'</span>, <span class="n">4</span>);</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">M13.3</span><strong>Initialiser les statistiques par lots</strong></div>
+<p class="enonce">La table <code class='inl'>films_stats</code> est vide. Écrivez <code class='inl'>recalculer_stats(lot)</code> qui calcule, film par film, le nombre de notes et la moyenne, en validant tous les <code class='inl'>lot</code> films. Lancez-la par lots de 10.</p><div class="res"><div class="res-bar">▶ Résultat attendu <span>0 ligne</span></div></div><div class="res"><div class="res-bar" style="color:#1e40af;background:#eff6ff">💬 Messages attendus</div><pre class="notices">NOTICE:  10 films traités
+NOTICE:  20 films traités
+NOTICE:  30 films traités</pre></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>films_avec_stats</th></tr></thead><tbody><tr><td class="">30</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE PROCEDURE recalculer_stats(p_lot <span class="k">INTEGER</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    r    RECORD;
+    v_n  <span class="k">INTEGER</span> := <span class="n">0</span>;
+BEGIN
+    FOR r <span class="k">IN</span> <span class="k">SELECT</span> <span class="k">DISTINCT</span> film_id <span class="k">FROM</span> notes <span class="k">ORDER</span> <span class="k">BY</span> film_id LOOP
+        <span class="k">INSERT</span> <span class="k">INTO</span> films_stats (film_id, nb_notes, moyenne)
+        <span class="k">SELECT</span> film_id, <span class="k">COUNT</span>(*), <span class="k">ROUND</span>(<span class="k">AVG</span>(note), <span class="n">2</span>) <span class="k">FROM</span> notes
+        <span class="k">WHERE</span> film_id = r.film_id <span class="k">GROUP</span> <span class="k">BY</span> film_id
+        <span class="k">ON</span> CONFLICT (film_id)
+            DO <span class="k">UPDATE</span> <span class="k">SET</span> nb_notes = EXCLUDED.nb_notes, moyenne = EXCLUDED.moyenne;
+        v_n := v_n + <span class="n">1</span>;
+        <span class="k">IF</span> v_n % p_lot = <span class="n">0</span> <span class="k">THEN</span>
+            COMMIT;
+            RAISE NOTICE <span class="s">'% films traités'</span>, v_n;
+        <span class="k">END</span> <span class="k">IF</span>;
+    <span class="k">END</span> LOOP;
+    COMMIT;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL recalculer_stats(<span class="n">10</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> films_avec_stats <span class="k">FROM</span> films_stats;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="card fb-card" id="mis-M14"><div class="section-title"><span class="icon-bg ib-purple">⚡</span><span><span class="num">M14</span>&nbsp; Des statistiques toujours justes</span></div><span class="ftag f4">Notions N29 → N33</span><p style="margin-top:8px">films_stats doit rester juste en permanence, et chaque note modifiée doit être tracée, quelle que soit l'application qui écrit.</p><div class="exo"><div class="exo-head"><span class="num">M14.1</span><strong>Des statistiques maintenues</strong></div>
+<p class="enonce">Écrivez un trigger sur <code class='inl'>notes</code> qui recalcule la ligne de <code class='inl'>films_stats</code> du film concerné à chaque insertion, modification ou suppression. <code class='inl'>bobine</code> donne ensuite 5 à The Artist ; affichez ses statistiques.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> La moyenne de The Artist change sans que la procédure ne s'en occupe : c'est le trigger qui tient les statistiques à jour. Le nombre de notes reste à 6, car bobine avait déjà noté ce film : sa note est remplacée.</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>nb_notes</th><th>moyenne</th></tr></thead><tbody><tr><td class="">The Artist</td><td class="">6</td><td class="">3.92</td></tr></tbody></table></div></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>p_moyenne</th></tr></thead><tbody><tr><td class="">4.08</td></tr></tbody></table></div></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>nb_notes</th><th>moyenne</th></tr></thead><tbody><tr><td class="">The Artist</td><td class="">6</td><td class="">4.08</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION trg_films_stats()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    v_film <span class="k">INTEGER</span> := <span class="k">CASE</span> <span class="k">WHEN</span> TG_OP = <span class="s">'DELETE'</span> <span class="k">THEN</span> OLD.film_id <span class="k">ELSE</span> NEW.film_id <span class="k">END</span>;
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> films_stats (film_id, nb_notes, moyenne)
+    <span class="k">SELECT</span> v_film, <span class="k">COUNT</span>(*), COALESCE(<span class="k">ROUND</span>(<span class="k">AVG</span>(note), <span class="n">2</span>), <span class="n">0</span>)
+    <span class="k">FROM</span> notes <span class="k">WHERE</span> film_id = v_film
+    <span class="k">ON</span> CONFLICT (film_id)
+        DO <span class="k">UPDATE</span> <span class="k">SET</span> nb_notes = EXCLUDED.nb_notes, moyenne = EXCLUDED.moyenne;
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER films_stats
+AFTER <span class="k">INSERT</span> <span class="k">OR</span> <span class="k">UPDATE</span> <span class="k">OR</span> <span class="k">DELETE</span> <span class="k">ON</span> notes
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION trg_films_stats();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> f.titre, s.nb_notes, s.moyenne <span class="k">FROM</span> films_stats s <span class="k">JOIN</span> films f <span class="k">ON</span> f.id = s.film_id <span class="k">WHERE</span> f.titre = <span class="s">'The Artist'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL noter(<span class="s">'bobine'</span>, <span class="s">'The Artist'</span>, <span class="n">5</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> f.titre, s.nb_notes, s.moyenne <span class="k">FROM</span> films_stats s <span class="k">JOIN</span> films f <span class="k">ON</span> f.id = s.film_id <span class="k">WHERE</span> f.titre = <span class="s">'The Artist'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">M14.2</span><strong>Tracer les changements d'avis</strong></div>
+<p class="enonce">Enregistrez dans <code class='inl'>audit_notes</code> chaque note <strong>réellement modifiée</strong> (ancienne et nouvelle valeur). <code class='inl'>lea.reel</code> passe sa note d'Inception de 3,5 à 4,5, puis la confirme à 4,5.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Une seule ligne d'audit (3,5 → 4,5) : la confirmation à 4,5 ne change rien, la clause WHEN écarte l'appel.</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>titre</th><th>ancienne</th><th>nouvelle</th></tr></thead><tbody><tr><td class="">lea.reel</td><td class="">Inception</td><td class="">3.5</td><td class="">4.5</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION trg_audit_notes()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> audit_notes (utilisateur_id, film_id, ancienne, nouvelle)
+    <span class="k">VALUES</span> (NEW.utilisateur_id, NEW.film_id, OLD.note, NEW.note);
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER audit_notes
+AFTER <span class="k">UPDATE</span> OF note <span class="k">ON</span> notes
+FOR EACH <span class="k">ROW</span>
+<span class="k">WHEN</span> (OLD.note <span class="k">IS</span> <span class="k">DISTINCT</span> <span class="k">FROM</span> NEW.note)
+EXECUTE FUNCTION trg_audit_notes();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL noter(<span class="s">'lea.reel'</span>, <span class="s">'Inception'</span>, <span class="n">4.5</span>);
+CALL noter(<span class="s">'lea.reel'</span>, <span class="s">'Inception'</span>, <span class="n">4.5</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> u.pseudo, f.titre, a.ancienne, a.nouvelle
+<span class="k">FROM</span> audit_notes a
+<span class="k">JOIN</span> utilisateurs u <span class="k">ON</span> u.id = a.utilisateur_id
+<span class="k">JOIN</span> films f        <span class="k">ON</span> f.id = a.film_id;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">M14.3</span><strong>Le contrôle de cohérence</strong></div>
+<p class="enonce">Vérifiez que <code class='inl'>films_stats</code> est parfaitement cohérente avec la table <code class='inl'>notes</code> : comptez les films dont le nombre de notes ou la moyenne diffère du calcul direct.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> 0 film incohérent. Une telle requête de contrôle, lancée régulièrement, est le filet de sécurité de toute donnée dérivée.</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>films_incoherents</th></tr></thead><tbody><tr><td class="">0</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> films_incoherents
+<span class="k">FROM</span> films_stats s
+<span class="k">JOIN</span> (<span class="k">SELECT</span> film_id, <span class="k">COUNT</span>(*) <span class="k">AS</span> nb, <span class="k">ROUND</span>(<span class="k">AVG</span>(note), <span class="n">2</span>) <span class="k">AS</span> moy
+      <span class="k">FROM</span> notes <span class="k">GROUP</span> <span class="k">BY</span> film_id) n <span class="k">ON</span> n.film_id = s.film_id
+<span class="k">WHERE</span> s.nb_notes &lt;&gt; n.nb <span class="k">OR</span> s.moyenne &lt;&gt; n.moy;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="result-panel"><h4>🎬 Et après ?</h4><p>En séance 5, FilmBox s'ouvre à des milliers de membres simultanés : il faudra protéger les compteurs contre les écritures concurrentes, et verrouiller l'accès aux données privées.</p></div></section><section class="panel" id="glossaire"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">📖</span>Glossaire de la séance</div><div id="gl-locked"><div class="instruction-box">🔒 Le glossaire se débloque une fois les 3 cas terminés.</div><div class="lock-pills"><span class="lock-pill" id="lp1">⏳ Cas 1</span><span class="lock-pill" id="lp2">⏳ Cas 2</span><span class="lock-pill" id="lp3">⏳ Cas 3</span></div></div><div id="gl-open" hidden><div><span class="ftag f1">Procédures</span><span class="ftag f2">Erreurs & lots</span><span class="ftag f3">Triggers</span><span class="ftag f4">Automatisation</span><span class="ftag f5">Bonnes pratiques</span></div><br><input class="gl-search" type="search" placeholder="Rechercher un terme…" aria-label="Rechercher un terme"><div class="gl-item"><b>%ROWTYPE</b> <span class="ftag f1">Procédures</span><p>Type d&#x27;une variable qui reprend la structure d&#x27;une ligne de table.</p></div><div class="gl-item"><b>AFTER</b> <span class="ftag f3">Triggers</span><p>Moment d&#x27;exécution après l&#x27;écriture : permet d&#x27;agir sur d&#x27;autres tables.</p></div><div class="gl-item"><b>Atomicité</b> <span class="ftag f2">Erreurs & lots</span><p>Propriété d&#x27;une opération qui réussit entièrement ou n&#x27;a aucun effet.</p></div><div class="gl-item"><b>BEFORE</b> <span class="ftag f3">Triggers</span><p>Moment d&#x27;exécution avant l&#x27;écriture : permet de modifier ou refuser la ligne.</p></div><div class="gl-item"><b>Bloc anonyme (DO)</b> <span class="ftag f1">Procédures</span><p>Code PL/pgSQL exécuté une seule fois, sans créer de fonction ni de procédure.</p></div><div class="gl-item"><b>Bloc EXCEPTION</b> <span class="ftag f2">Erreurs & lots</span><p>Partie d&#x27;un bloc qui intercepte une erreur et exécute un traitement de repli.</p></div><div class="gl-item"><b>CALL</b> <span class="ftag f1">Procédures</span><p>Instruction qui exécute une procédure.</p></div><div class="gl-item"><b>Cascade de triggers</b> <span class="ftag f5">Bonnes pratiques</span><p>Enchaînement où un trigger modifie une table qui déclenche à son tour d&#x27;autres triggers.</p></div><div class="gl-item"><b>Clause WHEN</b> <span class="ftag f4">Automatisation</span><p>Condition qui décide si la fonction trigger doit être appelée.</p></div><div class="gl-item"><b>DISABLE TRIGGER</b> <span class="ftag f5">Bonnes pratiques</span><p>Option d&#x27;ALTER TABLE qui suspend les triggers d&#x27;une table, par exemple pour un import massif.</p></div><div class="gl-item"><b>Donnée dérivée</b> <span class="ftag f4">Automatisation</span><p>Valeur calculée à partir d&#x27;autres données et stockée pour être lue rapidement.</p></div><div class="gl-item"><b>Fonction trigger</b> <span class="ftag f3">Triggers</span><p>Fonction sans paramètre, RETURNS TRIGGER, appelée par un trigger.</p></div><div class="gl-item"><b>FOR EACH ROW</b> <span class="ftag f4">Automatisation</span><p>Trigger exécuté une fois par ligne modifiée.</p></div><div class="gl-item"><b>FOR EACH STATEMENT</b> <span class="ftag f4">Automatisation</span><p>Trigger exécuté une fois par instruction, quel que soit le nombre de lignes.</p></div><div class="gl-item"><b>Journal d&#x27;audit</b> <span class="ftag f4">Automatisation</span><p>Table qui conserve l&#x27;historique des modifications : qui, quand, avant, après.</p></div><div class="gl-item"><b>NEW / OLD</b> <span class="ftag f3">Triggers</span><p>Nouvelle et ancienne version de la ligne modifiée, accessibles dans une fonction trigger.</p></div><div class="gl-item"><b>Paramètre INOUT</b> <span class="ftag f1">Procédures</span><p>Paramètre d&#x27;une procédure qui reçoit une valeur et en renvoie une à l&#x27;appelant.</p></div><div class="gl-item"><b>pg_trigger_depth()</b> <span class="ftag f5">Bonnes pratiques</span><p>Fonction qui renvoie le niveau d&#x27;imbrication des triggers en cours.</p></div><div class="gl-item"><b>Procédure stockée</b> <span class="ftag f1">Procédures</span><p>Routine enregistrée dans la base, appelée par CALL, qui enchaîne des opérations sans renvoyer de valeur.</p></div><div class="gl-item"><b>RAISE EXCEPTION</b> <span class="ftag f2">Erreurs & lots</span><p>Déclenche une erreur : l&#x27;exécution s&#x27;arrête et les modifications sont annulées.</p></div><div class="gl-item"><b>RAISE NOTICE</b> <span class="ftag f2">Erreurs & lots</span><p>Affiche un message d&#x27;information sans interrompre l&#x27;exécution.</p></div><div class="gl-item"><b>SQLSTATE / SQLERRM</b> <span class="ftag f2">Erreurs & lots</span><p>Code et message de l&#x27;erreur interceptée, disponibles dans un bloc EXCEPTION.</p></div><div class="gl-item"><b>Table de transition</b> <span class="ftag f4">Automatisation</span><p>Ensemble des lignes avant ou après modification, visible dans un trigger d&#x27;instruction.</p></div><div class="gl-item"><b>TG_OP</b> <span class="ftag f3">Triggers</span><p>Variable qui indique l&#x27;opération en cours : INSERT, UPDATE ou DELETE.</p></div><div class="gl-item"><b>Traitement par lots</b> <span class="ftag f2">Erreurs & lots</span><p>Découpage d&#x27;un long traitement en portions validées successivement par COMMIT.</p></div><div class="gl-item"><b>Trigger</b> <span class="ftag f3">Triggers</span><p>Déclencheur qui exécute automatiquement une fonction lors d&#x27;une modification de table.</p></div></div></div></section></main>
+<footer>SQL avancé avec PostgreSQL · M1 Tech Lead</footer>
+<script>const TERMS=[["Procédure stockée", "f1", "Routine enregistrée dans la base, appelée par CALL, qui enchaîne des opérations sans renvoyer de valeur."], ["CALL", "f1", "Instruction qui exécute une procédure."], ["Paramètre INOUT", "f1", "Paramètre d'une procédure qui reçoit une valeur et en renvoie une à l'appelant."], ["%ROWTYPE", "f1", "Type d'une variable qui reprend la structure d'une ligne de table."], ["Bloc anonyme (DO)", "f1", "Code PL/pgSQL exécuté une seule fois, sans créer de fonction ni de procédure."], ["RAISE NOTICE", "f2", "Affiche un message d'information sans interrompre l'exécution."], ["RAISE EXCEPTION", "f2", "Déclenche une erreur : l'exécution s'arrête et les modifications sont annulées."], ["Bloc EXCEPTION", "f2", "Partie d'un bloc qui intercepte une erreur et exécute un traitement de repli."], ["SQLSTATE / SQLERRM", "f2", "Code et message de l'erreur interceptée, disponibles dans un bloc EXCEPTION."], ["Atomicité", "f2", "Propriété d'une opération qui réussit entièrement ou n'a aucun effet."], ["Traitement par lots", "f2", "Découpage d'un long traitement en portions validées successivement par COMMIT."], ["Trigger", "f3", "Déclencheur qui exécute automatiquement une fonction lors d'une modification de table."], ["Fonction trigger", "f3", "Fonction sans paramètre, RETURNS TRIGGER, appelée par un trigger."], ["NEW / OLD", "f3", "Nouvelle et ancienne version de la ligne modifiée, accessibles dans une fonction trigger."], ["TG_OP", "f3", "Variable qui indique l'opération en cours : INSERT, UPDATE ou DELETE."], ["BEFORE", "f3", "Moment d'exécution avant l'écriture : permet de modifier ou refuser la ligne."], ["AFTER", "f3", "Moment d'exécution après l'écriture : permet d'agir sur d'autres tables."], ["FOR EACH ROW", "f4", "Trigger exécuté une fois par ligne modifiée."], ["FOR EACH STATEMENT", "f4", "Trigger exécuté une fois par instruction, quel que soit le nombre de lignes."], ["Table de transition", "f4", "Ensemble des lignes avant ou après modification, visible dans un trigger d'instruction."], ["Clause WHEN", "f4", "Condition qui décide si la fonction trigger doit être appelée."], ["Journal d'audit", "f4", "Table qui conserve l'historique des modifications : qui, quand, avant, après."], ["Donnée dérivée", "f4", "Valeur calculée à partir d'autres données et stockée pour être lue rapidement."], ["Cascade de triggers", "f5", "Enchaînement où un trigger modifie une table qui déclenche à son tour d'autres triggers."], ["pg_trigger_depth()", "f5", "Fonction qui renvoie le niveau d'imbrication des triggers en cours."], ["DISABLE TRIGGER", "f5", "Option d'ALTER TABLE qui suspend les triggers d'une table, par exemple pour un import massif."]];const GROUPS=[["Procédure stockée", "f1", [["Enregistrer un achat : vérifier le stock, débiter, mettre à jour l'inventaire, historiser.", false], ["Clôturer le mois comptable en plusieurs étapes dépendantes.", false], ["Effectuer un virement entre deux comptes.", false], ["Purger dix millions de lignes d'historique en validant par lots.", false], ["Calculer le prix TTC d'un produit directement dans un SELECT.", true]], "Un calcul utilisé dans une requête, qui renvoie une valeur : c'est le rôle d'une fonction, appelée par SELECT. Une procédure ne s'utilise qu'avec CALL."], ["Trigger BEFORE", "f3", [["Mettre un email en minuscules avant de l'enregistrer.", false], ["Poser automatiquement la date de dernière modification.", false], ["Refuser qu'un prix augmente de plus de 50 % d'un coup.", false], ["Calculer un montant total manquant avant l'insertion.", false], ["Écrire l'ancienne et la nouvelle version de la ligne dans une table d'audit.", true]], "Journaliser une modification se fait une fois qu'elle a eu lieu, sans toucher à la ligne : c'est un trigger AFTER."], ["Trigger AFTER", "f4", [["Tenir un journal d'audit de toutes les modifications.", false], ["Mettre à jour le total des ventes d'un produit dans une autre table.", false], ["Créer une alerte quand un stock tombe à zéro.", false], ["Résumer en une ligne une modification de prix de masse.", false], ["Supprimer les espaces en trop dans un nom avant qu'il soit enregistré.", true]], "Corriger la ligne avant son écriture n'est possible qu'en BEFORE, en modifiant NEW. En AFTER, la ligne est déjà écrite."], ["Une contrainte CHECK suffit", "f2", [["Un prix doit être strictement positif.", false], ["Une note doit être comprise entre 0,5 et 5.", false], ["La date de fin d'un événement doit suivre sa date de début (même ligne).", false], ["Une quantité en stock ne peut pas être négative.", false], ["Un nouveau prix ne peut pas dépasser l'ancien de plus de 50 %.", true]], "La règle compare l'ancienne et la nouvelle valeur : une contrainte CHECK ne voit que la nouvelle ligne. Il faut un trigger BEFORE UPDATE."], ["Logique à garder dans l'application", "f5", [["Envoyer un email de bienvenue après l'inscription.", false], ["Appeler l'API d'un prestataire de paiement.", false], ["Appliquer une promotion marketing valable une semaine.", false], ["Envoyer une notification push sur mobile.", false], ["Garantir que toute modification des soldes est tracée, même via un script SQL lancé à la main.", true]], "Une garantie qui doit tenir quel que soit le programme qui écrit relève de la base : un trigger d'audit ne peut pas être contourné par un accès direct."]];const VF=[["Une procédure s'appelle avec SELECT.", false, "Une procédure s'appelle avec CALL ; SELECT est réservé aux fonctions."], ["Une procédure peut renvoyer une valeur grâce à un paramètre INOUT.", true, "Elle ne renvoie rien avec RETURN, mais ses paramètres INOUT sont renvoyés à l'appelant."], ["Si une erreur survient au milieu d'un CALL, les modifications déjà faites sont conservées.", false, "Tout le CALL est annulé : c'est l'atomicité."], ["RAISE NOTICE interrompt l'exécution.", false, "NOTICE affiche un message et continue. Seul RAISE EXCEPTION interrompt."], ["Un WHEN OTHERS qui se contente d'afficher un message est une bonne pratique.", false, "Il avale toutes les erreurs : l'appelant croit que tout s'est bien passé."], ["Un bloc BEGIN … EXCEPTION annule seulement ce qu'il a fait en cas d'erreur.", true, "Il crée un point de reprise : le reste de la transaction est conservé."], ["Une fonction peut contenir un COMMIT.", false, "Seule une procédure peut piloter la transaction ; dans une fonction, COMMIT provoque une erreur."], ["Une procédure avec COMMIT peut être appelée à l'intérieur d'un BEGIN … COMMIT.", false, "Elle ne peut pas valider une transaction ouverte par l'appelant : erreur invalid transaction termination."], ["Dans un trigger BEFORE, RETURN NULL annule l'écriture de la ligne.", true, "Silencieusement, sans aucune erreur : c'est souvent un oubli de RETURN NEW."], ["NEW est disponible dans un trigger sur DELETE.", false, "En DELETE, seule OLD existe ; NEW vaut NULL."], ["Un trigger AFTER peut modifier la ligne qui vient d'être écrite en changeant NEW.", false, "Il est trop tard : la ligne est écrite. Pour la modifier, il faut un trigger BEFORE."], ["Un trigger FOR EACH STATEMENT s'exécute même si l'instruction ne modifie aucune ligne.", true, "D'où l'intérêt de vérifier le nombre de lignes dans la table de transition."], ["Les tables de transition sont disponibles dans un trigger BEFORE.", false, "Elles ne sont disponibles qu'avec AFTER."], ["La clause WHEN évite d'appeler la fonction trigger quand elle n'est pas utile.", true, "La condition est évaluée avant l'appel : moins de travail à chaque écriture."], ["Quand plusieurs triggers répondent au même événement, PostgreSQL les exécute dans l'ordre de création.", false, "Il les exécute par ordre alphabétique de leur nom."], ["Un trigger qui met à jour sa propre table peut provoquer une boucle infinie.", true, "Chaque mise à jour relance le trigger, jusqu'au dépassement de pile."], ["DISABLE TRIGGER USER désactive aussi la vérification des clés étrangères.", false, "Seuls les triggers utilisateur sont suspendus ; les triggers internes des clés étrangères restent actifs."]];const FILMBOX_SQL="-- =====================================================================\n--  FilmBox — complément séance 4\n--  À exécuter sur la base filmbox, APRÈS filmbox.sql et filmbox-s2.sql.\n--  (Inutile de recharger le volume de la séance 3.)\n--  Crée les tables alimentées par les procédures et triggers des missions M13 et M14,\n--  et supprime ce qui a été créé lors d'une exécution précédente.\n-- =====================================================================\n\nDROP TABLE IF EXISTS films_stats, audit_notes CASCADE;\nDROP PROCEDURE IF EXISTS noter(TEXT, TEXT, NUMERIC, NUMERIC), recalculer_stats(INTEGER);\nDROP FUNCTION IF EXISTS trg_films_stats(), trg_audit_notes() CASCADE;\n\nCREATE TABLE films_stats (                       -- statistiques dénormalisées, pour un affichage rapide\n    film_id   INTEGER PRIMARY KEY REFERENCES films(id),\n    nb_notes  INTEGER      NOT NULL,\n    moyenne   NUMERIC(3,2) NOT NULL\n);\n\nCREATE TABLE audit_notes (                       -- historique des notes modifiées\n    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    utilisateur_id  INTEGER      NOT NULL,\n    film_id         INTEGER      NOT NULL,\n    ancienne        NUMERIC(2,1),\n    nouvelle        NUMERIC(2,1),\n    le              TIMESTAMP    NOT NULL DEFAULT now()\n);\n\nSELECT 'films_stats' AS table_name, COUNT(*) AS lignes FROM films_stats\nUNION ALL SELECT 'audit_notes', COUNT(*) FROM audit_notes;\n";
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+function show(id){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});}
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{const txt=b.closest('.code').querySelector('pre').innerText;
+ const ok=()=>{b.textContent='Copié ✓';b.classList.add('done');setTimeout(()=>{b.textContent='Copier';b.classList.remove('done')},1500)};
+ if(navigator.clipboard){navigator.clipboard.writeText(txt).then(ok).catch(()=>fb(txt,ok))}else fb(txt,ok);}));
+function fb(t,ok){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){}a.remove();}
+const s=document.querySelector('.gl-search');if(s){s.addEventListener('input',()=>{const q=s.value.toLowerCase();
+ document.querySelectorAll('#gl-open .gl-item').forEach(i=>i.style.display=i.innerText.toLowerCase().includes(q)?'':'none');});}
+
+const FORMATEUR = /[?&#]formateur\b/.test(location.search + location.hash);
+if (FORMATEUR) document.body.classList.add('formateur');
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FAM = {f1:'Procédures',f2:'Erreurs & lots',f3:'Triggers',f4:'Automatisation',f5:'Bonnes pratiques'};
+const done = {c1:false,c2:false,c3:false};
+function setProg(fill, txt, a, b){ document.getElementById(fill).style.width = (b ? a/b*100 : 0) + '%'; document.getElementById(txt).textContent = a + ' / ' + b; }
+function finish(k){ done[k] = true; document.getElementById('lp' + k[1]).classList.add('done'); document.getElementById('lp' + k[1]).textContent = '✅ Cas ' + k[1];
+  if (done.c1 && done.c2 && done.c3){ document.getElementById('gl-locked').hidden = true; document.getElementById('gl-open').hidden = false; document.querySelector('[data-tab="glossaire"]').classList.remove('locked'); } }
+function panel(id, html){ document.getElementById(id).innerHTML = html; }
+
+/* ---------- CAS 1 ---------- */
+let c1 = {};
+function c1Init(){ const all = shuffle(TERMS); c1 = {rounds: [], idx: 0, score: 0, checked: 0};
+  for (let i = 0; i < all.length; i += 10) c1.rounds.push(all.slice(i, i + 10));
+  panel('c1-result',''); c1Render(); }
+function c1Render(){ const r = c1.rounds[c1.idx]; const defs = shuffle(r); const L = 'ABCDEFGHIJ';
+  c1.map = {}; defs.forEach((d, i) => c1.map[d[0]] = L[i]);
+  const opts = '<option value="">—</option>' + defs.map((d, i) => `<option>${L[i]}</option>`).join('');
+  panel('c1-zone', `<div class="term-grid"><div>${r.map(t => `<div class="term-item" data-t="${esc(t[0])}"><span>${esc(t[0])}</span><select aria-label="Définition de ${esc(t[0])}">${opts}</select></div>`).join('')}</div>
+   <div>${defs.map((d, i) => `<div class="def-item"><b>${L[i]}</b><span>${esc(d[2])}</span></div>`).join('')}</div></div>`);
+  document.getElementById('c1-round-lbl').textContent = `Round ${c1.idx + 1} / ${c1.rounds.length}`;
+  document.getElementById('c1-check').disabled = false; document.getElementById('c1-next').hidden = true;
+  setProg('c1-fill','c1-ptxt', c1.checked, TERMS.length); }
+document.getElementById('c1-check').onclick = () => { let ok = 0; const items = document.querySelectorAll('#c1-zone .term-item');
+  if ([...items].some(it => !it.querySelector('select').value)) { panel('c1-result','<div class="instruction-box">Associez une lettre à chaque terme avant de vérifier.</div>'); return; }
+  items.forEach(it => { const good = it.querySelector('select').value === c1.map[it.dataset.t]; it.classList.toggle('ok', good); it.classList.toggle('ko', !good); if (good) ok++; });
+  c1.score += ok; c1.checked += items.length; document.getElementById('c1-check').disabled = true;
+  setProg('c1-fill','c1-ptxt', c1.checked, TERMS.length);
+  const last = c1.idx === c1.rounds.length - 1;
+  panel('c1-result', `<div class="result-panel"><h4>Round ${c1.idx + 1} : <span class="score">${ok} / ${items.length}</span></h4>${last ? `<p>Score total : <span class="score">${c1.score} / ${TERMS.length}</span></p>` : '<p>Les bordures vertes et rouges indiquent vos réponses. Passez au round suivant.</p>'}</div>`);
+  if (last) finish('c1'); else document.getElementById('c1-next').hidden = false; };
+document.getElementById('c1-next').onclick = () => { c1.idx++; panel('c1-result',''); c1Render(); };
+document.getElementById('c1-reveal').onclick = () => document.querySelectorAll('#c1-zone .term-item').forEach(it => it.querySelector('select').value = c1.map[it.dataset.t]);
+document.getElementById('c1-reset').onclick = c1Init;
+
+/* ---------- CAS 2 ---------- */
+let c2sel = {};
+function c2Init(){ c2sel = {}; panel('c2-result','');
+  panel('c2-zone', GROUPS.map((g, gi) => `<div class="group" data-g="${gi}"><h4>Groupe ${gi + 1} · ${esc(g[0])} <span class="ftag ${g[1]}">${FAM[g[1]]}</span></h4>
+   ${shuffle(g[2].map((s, si) => [s, si])).map(([s, si]) => `<button type="button" class="sit" data-s="${si}">${esc(s[0])}</button>`).join('')}<div class="expl" hidden></div></div>`).join(''));
+  document.querySelectorAll('#c2-zone .sit').forEach(b => b.onclick = () => { const g = b.closest('.group'); g.querySelectorAll('.sit').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); c2sel[g.dataset.g] = +b.dataset.s; setProg('c2-fill','c2-ptxt', Object.keys(c2sel).length, GROUPS.length); });
+  document.getElementById('c2-check').disabled = false; setProg('c2-fill','c2-ptxt', 0, GROUPS.length); }
+document.getElementById('c2-check').onclick = () => { if (Object.keys(c2sel).length < GROUPS.length) { panel('c2-result','<div class="instruction-box">Désignez une intruse dans chaque groupe avant de vérifier.</div>'); return; }
+  let ok = 0; document.querySelectorAll('#c2-zone .group').forEach(g => { const G = GROUPS[g.dataset.g]; const intr = G[2].findIndex(s => s[1]);
+    g.querySelectorAll('.sit').forEach(b => { const s = +b.dataset.s; if (s === intr) b.classList.add('good'); else if (s === c2sel[g.dataset.g]) b.classList.add('bad'); });
+    if (c2sel[g.dataset.g] === intr) ok++; const e = g.querySelector('.expl'); e.hidden = false; e.innerHTML = '💡 ' + esc(G[3]); });
+  document.getElementById('c2-check').disabled = true;
+  panel('c2-result', `<div class="result-panel"><h4>Intruses trouvées : <span class="score">${ok} / ${GROUPS.length}</span></h4><p>L'intruse de chaque groupe est encadrée en vert, avec son explication.</p></div>`); finish('c2'); };
+document.getElementById('c2-reveal').onclick = () => document.querySelectorAll('#c2-zone .group').forEach(g => { const intr = GROUPS[g.dataset.g][2].findIndex(s => s[1]); g.querySelector(`.sit[data-s="${intr}"]`).click(); });
+document.getElementById('c2-reset').onclick = c2Init;
+
+/* ---------- CAS 3 ---------- */
+let c3ans = {};
+function c3Init(){ c3ans = {}; panel('c3-result','');
+  panel('c3-zone', shuffle(VF.map((v, i) => [v, i])).map(([v, i], n) => `<div class="vf" data-i="${i}"><div class="vf-row"><p><strong>${n + 1}.</strong> ${esc(v[0])}</p><div class="vf-btns"><button type="button" data-v="1">Vrai</button><button type="button" data-v="0">Faux</button></div></div><div class="expl" hidden></div></div>`).join(''));
+  document.querySelectorAll('#c3-zone .vf-btns button').forEach(b => b.onclick = () => { const q = b.closest('.vf'); q.querySelectorAll('button').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); c3ans[q.dataset.i] = b.dataset.v === '1'; setProg('c3-fill','c3-ptxt', Object.keys(c3ans).length, VF.length); });
+  document.getElementById('c3-check').disabled = false; setProg('c3-fill','c3-ptxt', 0, VF.length); }
+document.getElementById('c3-check').onclick = () => { if (Object.keys(c3ans).length < VF.length) { panel('c3-result','<div class="instruction-box">Répondez à toutes les affirmations avant de vérifier.</div>'); return; }
+  let ok = 0; document.querySelectorAll('#c3-zone .vf').forEach(q => { const v = VF[q.dataset.i]; const good = c3ans[q.dataset.i] === v[1]; if (good) ok++;
+    q.classList.add(good ? 'good' : 'bad'); const e = q.querySelector('.expl'); e.hidden = false; e.innerHTML = `${good ? '✅' : '❌'} <strong>${v[1] ? 'Vrai' : 'Faux'}</strong> — ${esc(v[2])}`; });
+  document.getElementById('c3-check').disabled = true;
+  panel('c3-result', `<div class="result-panel"><h4>Score : <span class="score">${ok} / ${VF.length}</span></h4><p>Relisez les explications des affirmations encadrées en rouge.</p></div>`); finish('c3'); };
+document.getElementById('c3-reveal').onclick = () => document.querySelectorAll('#c3-zone .vf').forEach(q => q.querySelector(`button[data-v="${VF[q.dataset.i][1] ? 1 : 0}"]`).click());
+document.getElementById('c3-reset').onclick = c3Init;
+
+c1Init(); c2Init(); c3Init();
+
+/* ---------- exos : progression + navigation ---------- */
+function exoProg(){ [['exos','.exos-card'],['fb','.fb-card']].forEach(([k, sel]) => { const all = document.querySelectorAll(sel + ' .understood input'); const d = [...all].filter(i => i.checked).length;
+  document.getElementById('pfill-' + k).style.width = (all.length ? d/all.length*100 : 0) + '%'; document.getElementById('ptxt-' + k).textContent = d + ' / ' + all.length; }); }
+
+exoProg();
+document.querySelectorAll('.chip-m').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.getElementById(a.dataset.anchor).scrollIntoView({behavior:'smooth'}); }));
+document.getElementById('dl-filmbox').addEventListener('click', () => { const b = new Blob([FILMBOX_SQL], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'filmbox-s4.sql'; document.body.appendChild(a); a.click(); a.remove(); });
+
+function accCount(){ document.querySelectorAll('details.acc').forEach(d => { const all = d.querySelectorAll('.understood input'); if(!all.length) return; const k = [...all].filter(i => i.checked).length; const c = d.querySelector('.acc-count'); c.textContent = k + ' / ' + all.length; c.classList.toggle('full', k === all.length); }); }
+document.querySelectorAll('.exo .understood input').forEach(i => i.addEventListener('change', () => { i.closest('.understood').classList.toggle('done', i.checked); exoProg(); accCount(); }));
+document.querySelectorAll('.chip[data-acc]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const d = document.getElementById(a.dataset.acc); d.open = true; d.scrollIntoView({behavior:'smooth'}); }));
+document.querySelectorAll('.acc-open').forEach(b => b.onclick = () => b.closest('.panel').querySelectorAll('details.acc').forEach(d => d.open = true));
+document.querySelectorAll('.acc-close').forEach(b => b.onclick = () => b.closest('.panel').querySelectorAll('details.acc').forEach(d => d.open = false));
+</script></body></html>

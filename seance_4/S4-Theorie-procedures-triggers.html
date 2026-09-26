@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance 4 — Procédures stockées & triggers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;
+--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f1f5f9;--card:#fff;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15.5px}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:44px 20px 34px}
+.wrap{max-width:1000px;margin:0 auto}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+header h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.2;margin-bottom:10px}
+header p.lead{color:#cbd5e1;max-width:700px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:13px;font-weight:500}
+.gprog{margin-top:22px;max-width:480px}
+.gprog-label{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:6px}
+.gprog-bar{height:8px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+.gprog-fill{height:100%;width:0;background:#34d399;transition:width .4s}
+.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(15,23,42,.05)}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 10px}
+.tab{background:none;border:none;border-bottom:3px solid transparent;padding:15px 15px;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--primary)} .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+main{padding:28px 14px 60px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;margin-bottom:14px;line-height:1.3}
+.icon-bg{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.ib-blue{background:var(--primary-light)}.ib-green{background:var(--secondary-light)}.ib-amber{background:var(--accent-light)}.ib-red{background:var(--danger-light)}.ib-purple{background:var(--purple-light)}
+.num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--primary);background:var(--primary-light);padding:3px 9px;border-radius:7px}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+p+p{margin-top:8px}
+ul.clean{list-style:none;margin:6px 0}
+ul.clean li{padding:4px 0 4px 22px;position:relative}
+ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--primary);font-weight:700}
+ol.steps{margin:6px 0 6px 22px} ol.steps li{margin:4px 0}
+.objectif-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:14px;color:var(--primary-dark)}
+.instruction-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;margin:14px 0;color:#78350f}
+.warn-box{background:var(--danger-light);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;margin:14px 0;color:#7f1d1d}
+.ok-box{background:var(--secondary-light);border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin:14px 0;color:#064e3b}
+.analogie{background:var(--purple-light);border-left:4px solid var(--purple);border-radius:10px;padding:14px 18px;margin:14px 0;color:#4c1d95}
+.ftag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0}
+.f1{background:#dbeafe;color:#1e40af}.f2{background:#d1fae5;color:#065f46}.f3{background:#fef3c7;color:#92400e}.f4{background:#fee2e2;color:#991b1b}.f5{background:#ede9fe;color:#5b21b6}
+code.inl{background:#e2e8f0;padding:1px 6px;border-radius:5px;font-size:13px}
+.code{margin:10px 0;border-radius:10px;overflow:hidden;background:var(--dark)}
+.code-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#1e293b;color:#94a3b8;font-size:12px;font-family:'JetBrains Mono',monospace}
+.copy{background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.copy:hover{background:#475569}.copy.done{background:var(--secondary)}
+.code pre{color:#e2e8f0;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0}
+pre .c{color:#64748b;font-style:italic} pre .k{color:#93c5fd;font-weight:500} pre .s{color:#86efac} pre .n{color:#fcd34d} pre .m{color:#f9a8d4}
+pre.sh{color:#a7f3d0}
+.res{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:4px 0 12px}
+.res-bar{display:flex;justify-content:space-between;background:#f8fafc;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;font-weight:700;color:var(--secondary)}
+.res-bar span{color:var(--muted);font-weight:500}
+.tbl{overflow-x:auto}
+.tbl table,.grid-table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#f1f5f9;text-align:left;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate,#334155);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 12px;border-bottom:1px solid #f1f5f9;font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap}
+.tbl td.null{color:#94a3b8;font-style:italic}
+.res-note{padding:9px 12px;font-size:13px;color:var(--muted);background:#f8fafc;border-top:1px solid var(--border)}
+.grid-table th{background:var(--dark-2);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:13px}
+.grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.grid-table tr:nth-child(even) td{background:#f8fafc}
+.grid-table td:first-child{font-weight:600}
+.understood{display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.understood input{accent-color:var(--secondary);width:18px;height:18px}
+.understood.done{border-color:var(--secondary);color:var(--secondary);background:var(--secondary-light)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.toc a{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.toc a:hover{border-color:var(--primary)}
+.result-panel{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:var(--radius);padding:22px 24px;margin:6px 0 22px}
+.result-panel h4{color:#fff;font-size:16px;margin-bottom:8px}
+.result-panel .score{color:#34d399;font-weight:800;font-family:'JetBrains Mono',monospace}
+.result-panel ul{margin-left:18px}.result-panel li{margin:3px 0}
+.os-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.os{font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--muted)}
+.os.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.os-panel{display:none}.os-panel.active{display:block}
+.gl-search{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px}
+.gl-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.gl-item b{font-family:'JetBrains Mono',monospace;font-size:14px}
+.gl-item p{font-size:14px;color:#334155;margin-top:2px}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--primary);background:var(--primary);color:#fff}
+.btn:hover{filter:brightness(.95)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 40px}
+@media (max-width:700px){.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+pre.notices{margin:0;padding:10px 12px;font-size:12.5px;color:#1e3a8a;background:#fff;white-space:pre-wrap;font-family:'JetBrains Mono',monospace}
+.res.msgbox{border-color:#bfdbfe}
+</style></head><body>
+<header><div class="wrap"><span class="badge">🐘 SQL avancé avec PostgreSQL · Séance 4</span><h1>Procédures stockées & triggers</h1><p class="lead">Encapsuler les opérations métier dans des procédures fiables, puis automatiser les règles de gestion avec des triggers, sans perdre le contrôle.</p>
+<div class="meta"><span class="pill">📚 8 notions (N26 → N33)</span><span class="pill">🧪 Exemples testés sur PostgreSQL</span><span class="pill">🗄 Un jeu de rôle en ligne</span><span class="pill">📌 Fiche mémo + glossaire</span></div><div class="gprog"><div class="gprog-label"><span>Notions comprises</span><span id="gprog-txt">0</span></div><div class="gprog-bar"><div class="gprog-fill" id="gprog-fill"></div></div></div></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" role="tablist"><button class="tab active" data-tab="intro" role="tab">🎯 Introduction</button><button class="tab" data-tab="p1" role="tab">1 · Procédures</button><button class="tab" data-tab="p2" role="tab">2 · Triggers</button><button class="tab" data-tab="p3" role="tab">3 · Maîtriser</button><button class="tab" data-tab="memo" role="tab">📌 Fiche mémo</button><button class="tab" data-tab="glossaire" role="tab">📖 Glossaire</button></div></nav>
+<main class="wrap"><section class="panel active" id="intro">
+<div class="card"><div class="section-title"><span class="icon-bg ib-blue">🎯</span>Objectifs de la séance</div>
+<div class="objectif-box">Encapsuler les opérations métier dans des procédures fiables, puis automatiser les règles de gestion avec des triggers, en gardant le contrôle sur ce qui s'exécute à chaque écriture.</div>
+<ul class="clean">
+<li><strong>Partie 1 — Procédures stockées</strong> : CREATE PROCEDURE et CALL, gestion des erreurs, validation par lots.</li>
+<li><strong>Partie 2 — Triggers</strong> : anatomie, BEFORE pour compléter et valider, AFTER pour tracer et synchroniser, triggers d'instruction.</li>
+<li><strong>Partie 3 — Maîtriser</strong> : cascades, boucles, ordre, import massif, et la question « base ou application ».</li></ul>
+<p>Même structure que les séances précédentes ; la numérotation continue (N26 à N33).</p></div>
+
+<div class="card"><div class="section-title"><span class="icon-bg ib-green">🔗</span>Ce que l'on réutilise des séances précédentes</div>
+<table class="grid-table"><tr><th>Notion</th><th>Réutilisée dans</th></tr>
+<tr><td>N2 · Contraintes CHECK</td><td>N27 : le dernier rempart qui annule tout ; N30 : contrainte ou trigger ?</td></tr>
+<tr><td>N13 · JSONB</td><td>N31 : l'audit stocke les lignes entières avant/après en JSONB</td></tr>
+<tr><td>N17 · PL/pgSQL (DECLARE, IF, RAISE)</td><td>Toute la séance : procédures et fonctions trigger s'écrivent en PL/pgSQL</td></tr>
+<tr><td>N15 · Vues matérialisées</td><td>N31 : l'alternative à une donnée dérivée maintenue par trigger</td></tr></table>
+<div class="instruction-box">📌 La séance 5 approfondira les <strong>transactions</strong> (isolation, verrous, concurrence). Ici, une seule idée suffit : un <code class="inl">CALL</code> ou une instruction s'exécute en <strong>tout ou rien</strong>.</div></div>
+
+<div class="card" id="setup"><div class="section-title"><span class="icon-bg ib-amber">📥</span>Avant de commencer : charger le jeu de rôle</div>
+<p>Cette séance se déroule dans un jeu de rôle en ligne : des <strong>aventuriers</strong> qui possèdent des pièces d'or, une <strong>boutique</strong> d'objets avec leur stock, des <strong>inventaires</strong> et un historique d'<strong>achats</strong>. Trois tables vides recevront ce que produiront les triggers : <code class="inl">audit</code>, <code class="inl">journal_prix</code> et <code class="inl">alertes</code>.</p>
+<p><button class="btn" type="button" id="dl-demo4">⬇️ Télécharger demo-s4.sql</button></p>
+<div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\c</span> cours_sql
+<span class="m">\i</span> C:/chemin/vers/demo-s4.sql</pre></div>
+<p>Contrôle attendu :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="s">'aventuriers'</span> <span class="k">AS</span> table_name, <span class="k">COUNT</span>(*) <span class="k">AS</span> lignes <span class="k">FROM</span> aventuriers
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'objets'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> objets
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'inventaire'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> inventaire;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>table_name</th><th>lignes</th></tr></thead><tbody><tr><td class="">aventuriers</td><td class="">10</td></tr><tr><td class="">objets</td><td class="">8</td></tr><tr><td class="">inventaire</td><td class="">12</td></tr></tbody></table></div></div>
+<div class="instruction-box">📌 <strong>Suivez les notions dans l'ordre</strong> : chaque exemple s'appuie sur les procédures et triggers créés avant lui, et les soldes évoluent au fil des achats. Relancer <code class="inl">demo-s4.sql</code> supprime tout ce qui a été créé et remet les données à zéro.</div>
+<div class="ok-box">💬 Les messages <code class="inl">RAISE NOTICE</code> s'affichent dans psql sous la forme <code class="inl">NOTICE: …</code>, dans l'onglet <em>Messages</em> de pgAdmin, et dans l'onglet <em>Output</em> de DBeaver (à activer avec le bouton « Afficher la sortie du serveur »).</div>
+<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Voir le contenu de demo-s4.sql</summary><div class="code"><div class="code-bar"><span>demo-s4.sql</span><button class="copy" type="button">Copier</button></div><pre><span class="c">-- =====================================================================</span>
+<span class="c">--  Complément séance 4 — SQL avancé avec PostgreSQL</span>
+<span class="c">--  À exécuter sur la base cours_sql (indépendant des autres tables).</span>
+<span class="c">--  Un jeu de rôle en ligne : aventuriers, pièces d'or, boutique d'objets, inventaires.</span>
+<span class="c">--  Script ré-exécutable : il supprime aussi les procédures, fonctions et triggers</span>
+<span class="c">--  créés pendant la séance, pour repartir de zéro.</span>
+<span class="c">-- =====================================================================</span>
+
+<span class="k">DROP</span> <span class="k">TABLE</span> <span class="k">IF</span> <span class="k">EXISTS</span> stats_ventes, audit, journal_prix, alertes, achats, inventaire, objets, aventuriers <span class="k">CASCADE</span>;
+<span class="k">DROP</span> PROCEDURE <span class="k">IF</span> <span class="k">EXISTS</span> crediter(<span class="k">TEXT</span>, <span class="k">INTEGER</span>), acheter(<span class="k">TEXT</span>, <span class="k">TEXT</span>, <span class="k">INTEGER</span>, <span class="k">INTEGER</span>),
+                         inscrire(<span class="k">TEXT</span>), distribuer_bonus(<span class="k">INTEGER</span>, <span class="k">INTEGER</span>);
+<span class="k">DROP</span> FUNCTION <span class="k">IF</span> <span class="k">EXISTS</span> trg_normaliser_pseudo(), trg_maj_objet(), trg_audit(),
+                        trg_nb_objets(), trg_journal_prix(), trg_alerte_rupture(), trg_boucle() <span class="k">CASCADE</span>;
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> aventuriers (
+    id         <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">ALWAYS</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    pseudo     <span class="k">VARCHAR</span>(<span class="n">30</span>) <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">UNIQUE</span>,
+    niveau     <span class="k">INTEGER</span>     <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="n">1</span> <span class="k">CHECK</span> (niveau &gt;= <span class="n">1</span>),
+    pieces     <span class="k">INTEGER</span>     <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="n">100</span> <span class="k">CHECK</span> (pieces &gt;= <span class="n">0</span>),   <span class="c">-- pièces d'or</span>
+    nb_objets  <span class="k">INTEGER</span>     <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> <span class="n">0</span>                          <span class="c">-- total des objets possédés</span>
+);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> objets (
+    id         <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">ALWAYS</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    nom        <span class="k">VARCHAR</span>(<span class="n">40</span>) <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">UNIQUE</span>,
+    categorie  <span class="k">VARCHAR</span>(<span class="n">20</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    prix       <span class="k">INTEGER</span>     <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">CHECK</span> (prix &gt; <span class="n">0</span>),
+    stock      <span class="k">INTEGER</span>     <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">CHECK</span> (stock &gt;= <span class="n">0</span>),
+    maj_le     TIMESTAMP                                <span class="c">-- dernière modification</span>
+);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> inventaire (
+    aventurier_id  <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> aventuriers(id),
+    objet_id       <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> objets(id),
+    quantite       <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">CHECK</span> (quantite &gt; <span class="n">0</span>),
+    <span class="k">PRIMARY</span> <span class="k">KEY</span> (aventurier_id, objet_id)
+);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> achats (
+    id             <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">ALWAYS</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    aventurier_id  <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> aventuriers(id),
+    objet_id       <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> objets(id),
+    quantite       <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span>,
+    prix_total     <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span>,
+    achete_le      TIMESTAMP <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> now()
+);
+
+<span class="c">-- Tables alimentées par les triggers de la séance</span>
+<span class="k">CREATE</span> <span class="k">TABLE</span> audit (
+    id         <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">ALWAYS</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    table_nom  <span class="k">TEXT</span>      <span class="k">NOT</span> <span class="k">NULL</span>,
+    operation  <span class="k">TEXT</span>      <span class="k">NOT</span> <span class="k">NULL</span>,
+    ancienne   JSONB,
+    nouvelle   JSONB,
+    par        <span class="k">TEXT</span>      <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> current_user,
+    le         TIMESTAMP <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> now()
+);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> journal_prix (
+    id              <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">ALWAYS</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    nb_objets       <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span>,
+    variation_moy   <span class="k">NUMERIC</span>(<span class="n">6</span>,<span class="n">2</span>) <span class="k">NOT</span> <span class="k">NULL</span>,          <span class="c">-- en %</span>
+    le              TIMESTAMP <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> now()
+);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> alertes (
+    id        <span class="k">INTEGER</span> <span class="k">GENERATED</span> <span class="k">ALWAYS</span> <span class="k">AS</span> <span class="k">IDENTITY</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    message   <span class="k">TEXT</span> <span class="k">NOT</span> <span class="k">NULL</span>,
+    le        TIMESTAMP <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">DEFAULT</span> now()
+);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> aventuriers (pseudo, niveau, pieces) <span class="k">VALUES</span>
+  (<span class="s">'zed'</span>, <span class="n">12</span>, <span class="n">540</span>), (<span class="s">'lyna'</span>, <span class="n">8</span>, <span class="n">320</span>), (<span class="s">'mo'</span>, <span class="n">15</span>, <span class="n">1200</span>), (<span class="s">'kenji'</span>, <span class="n">3</span>, <span class="n">45</span>),
+  (<span class="s">'sara'</span>, <span class="n">6</span>, <span class="n">210</span>), (<span class="s">'nova'</span>, <span class="n">20</span>, <span class="n">2500</span>), (<span class="s">'kairo'</span>, <span class="n">1</span>, <span class="n">100</span>), (<span class="s">'atlas'</span>, <span class="n">9</span>, <span class="n">380</span>);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> objets (nom, categorie, prix, stock) <span class="k">VALUES</span>
+  (<span class="s">'Potion de soin'</span>, <span class="s">'potion'</span>, <span class="n">25</span>, <span class="n">50</span>),
+  (<span class="s">'Élixir de mana'</span>, <span class="s">'potion'</span>, <span class="n">40</span>, <span class="n">30</span>),
+  (<span class="s">'Épée courte'</span>, <span class="s">'arme'</span>, <span class="n">150</span>, <span class="n">10</span>),
+  (<span class="s">'Arc long'</span>, <span class="s">'arme'</span>, <span class="n">220</span>, <span class="n">5</span>),
+  (<span class="s">'Bouclier en bois'</span>, <span class="s">'armure'</span>, <span class="n">90</span>, <span class="n">8</span>),
+  (<span class="s">'Cotte de mailles'</span>, <span class="s">'armure'</span>, <span class="n">480</span>, <span class="n">2</span>),
+  (<span class="s">'Parchemin de téléportation'</span>, <span class="s">'magie'</span>, <span class="n">300</span>, <span class="n">1</span>),
+  (<span class="s">'Carte au trésor'</span>, <span class="s">'quête'</span>, <span class="n">999</span>, <span class="n">1</span>);
+
+<span class="k">INSERT</span> <span class="k">INTO</span> inventaire (aventurier_id, objet_id, quantite) <span class="k">VALUES</span>
+  (<span class="n">1</span>, <span class="n">1</span>, <span class="n">3</span>), (<span class="n">1</span>, <span class="n">3</span>, <span class="n">1</span>), (<span class="n">2</span>, <span class="n">1</span>, <span class="n">2</span>), (<span class="n">2</span>, <span class="n">4</span>, <span class="n">1</span>), (<span class="n">3</span>, <span class="n">3</span>, <span class="n">1</span>), (<span class="n">3</span>, <span class="n">6</span>, <span class="n">1</span>),
+  (<span class="n">3</span>, <span class="n">2</span>, <span class="n">5</span>), (<span class="n">6</span>, <span class="n">7</span>, <span class="n">1</span>), (<span class="n">6</span>, <span class="n">5</span>, <span class="n">1</span>), (<span class="n">8</span>, <span class="n">1</span>, <span class="n">4</span>);
+
+<span class="c">-- nb_objets cohérent avec l'inventaire de départ</span>
+<span class="k">UPDATE</span> aventuriers a
+<span class="k">SET</span> nb_objets = COALESCE((<span class="k">SELECT</span> <span class="k">SUM</span>(quantite) <span class="k">FROM</span> inventaire i <span class="k">WHERE</span> i.aventurier_id = a.id), <span class="n">0</span>);
+
+<span class="c">-- ---------- Contrôle ----------</span>
+<span class="k">SELECT</span> <span class="s">'aventuriers'</span> <span class="k">AS</span> table_name, <span class="k">COUNT</span>(*) <span class="k">AS</span> lignes <span class="k">FROM</span> aventuriers
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'objets'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> objets
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'inventaire'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> inventaire;</pre></div></details></div>
+
+<div class="card"><div class="section-title"><span class="icon-bg ib-purple">🗺</span>Les 8 notions</div>
+<div class="toc">
+<a href="#" data-go="p1" data-anchor="n26"><span class="num">N26</span>CREATE PROCEDURE et CALL</a>
+<a href="#" data-go="p1" data-anchor="n27"><span class="num">N27</span>Gérer les erreurs</a>
+<a href="#" data-go="p1" data-anchor="n28"><span class="num">N28</span>Valider par lots</a>
+<a href="#" data-go="p2" data-anchor="n29"><span class="num">N29</span>Anatomie d'un trigger</a>
+<a href="#" data-go="p2" data-anchor="n30"><span class="num">N30</span>Triggers BEFORE</a>
+<a href="#" data-go="p2" data-anchor="n31"><span class="num">N31</span>Triggers AFTER</a>
+<a href="#" data-go="p2" data-anchor="n32"><span class="num">N32</span>Instruction, transition, WHEN</a>
+<a href="#" data-go="p3" data-anchor="n33"><span class="num">N33</span>Maîtriser les triggers</a>
+</div></div></section><section class="panel" id="p1"><div class="card" id="n26">
+<div class="section-title"><span class="icon-bg ib-blue">📜</span><span><span class="num">N26</span>&nbsp; Les procédures stockées : CREATE PROCEDURE et CALL</span></div>
+<span class="ftag f1">Procédures</span>
+<h3>🎯 À quoi ça sert</h3><p>Une <strong>procédure</strong> enregistre dans la base une <strong>opération métier complète</strong> : acheter un objet, valider une commande, clôturer un mois. Comme une fonction (N17), elle s'écrit en PL/pgSQL ; mais elle est faite pour <strong>agir</strong> plutôt que pour calculer une valeur, et elle peut piloter la transaction (N28).</p>
+<div class="analogie">💡 <strong>Analogie</strong> — la fonction est une calculatrice : on lui donne des nombres, elle renvoie un résultat. La procédure est un guichetier : on lui confie une démarche, il enchaîne toutes les étapes (vérifier, débiter, enregistrer) et vous dit si c'est fait.</div>
+<h3>🧩 Syntaxe</h3><table class="grid-table"><tr><th></th><th>Fonction (N16, N17)</th><th>Procédure</th></tr>
+<tr><td>Appel</td><td class="mono">SELECT f(…)</td><td class="mono">CALL p(…)</td></tr>
+<tr><td>Utilisable dans une requête</td><td>Oui (SELECT, WHERE…)</td><td>Non, uniquement par CALL</td></tr>
+<tr><td>Valeur de retour</td><td>Oui (RETURNS)</td><td>Non, mais des paramètres INOUT</td></tr>
+<tr><td>COMMIT / ROLLBACK à l'intérieur</td><td>Interdit</td><td>Autorisé (N28)</td></tr>
+<tr><td>Usage typique</td><td>Calculer, transformer</td><td>Enchaîner des écritures métier</td></tr></table><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> [<span class="k">OR</span> REPLACE] PROCEDURE nom(p_param TYPE, INOUT p_resultat TYPE <span class="k">DEFAULT</span> <span class="k">NULL</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    v_ligne  une_table%ROWTYPE;      <span class="c">-- variable qui a la structure d'une ligne de la table</span>
+BEGIN
+    ...
+<span class="k">END</span>;
+$$;
+
+CALL nom(valeur);</pre></div>
+<h3>🔬 Exemple commenté</h3><p>Une première procédure simple : créditer des pièces d'or à un aventurier.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> PROCEDURE crediter(p_pseudo <span class="k">TEXT</span>, p_montant <span class="k">INTEGER</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">UPDATE</span> aventuriers <span class="k">SET</span> pieces = pieces + p_montant <span class="k">WHERE</span> pseudo = p_pseudo;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span>                          <span class="c">-- aucune ligne modifiée</span>
+        RAISE EXCEPTION <span class="s">'Aventurier inconnu : %'</span>, p_pseudo;
+    <span class="k">END</span> <span class="k">IF</span>;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL crediter(<span class="s">'kairo'</span>, <span class="n">50</span>);
+<span class="k">SELECT</span> pseudo, pieces <span class="k">FROM</span> aventuriers <span class="k">WHERE</span> pseudo = <span class="s">'kairo'</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>pieces</th></tr></thead><tbody><tr><td class="">kairo</td><td class="">150</td></tr></tbody></table></div></div><p>Une vraie opération métier : l'achat d'un objet. Six étapes qui doivent réussir <strong>ensemble</strong>. Le paramètre <code class='inl'>INOUT</code> renvoie le prix payé.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> PROCEDURE acheter(p_pseudo <span class="k">TEXT</span>, p_objet <span class="k">TEXT</span>, p_quantite <span class="k">INTEGER</span> <span class="k">DEFAULT</span> <span class="n">1</span>,
+                         INOUT p_total <span class="k">INTEGER</span> <span class="k">DEFAULT</span> <span class="k">NULL</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    v_av   aventuriers%ROWTYPE;
+    v_obj  objets%ROWTYPE;
+BEGIN
+    <span class="c">-- 1. L'aventurier et l'objet existent-ils ?</span>
+    <span class="k">SELECT</span> * <span class="k">INTO</span> v_av <span class="k">FROM</span> aventuriers <span class="k">WHERE</span> pseudo = p_pseudo;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span> RAISE EXCEPTION <span class="s">'Aventurier inconnu : %'</span>, p_pseudo; <span class="k">END</span> <span class="k">IF</span>;
+    <span class="k">SELECT</span> * <span class="k">INTO</span> v_obj <span class="k">FROM</span> objets <span class="k">WHERE</span> nom = p_objet;
+    <span class="k">IF</span> <span class="k">NOT</span> FOUND <span class="k">THEN</span> RAISE EXCEPTION <span class="s">'Objet inconnu : %'</span>, p_objet; <span class="k">END</span> <span class="k">IF</span>;
+
+    <span class="c">-- 2. Stock suffisant ?</span>
+    <span class="k">IF</span> v_obj.stock &lt; p_quantite <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Stock insuffisant pour « % » : % disponible(s)'</span>, p_objet, v_obj.stock;
+    <span class="k">END</span> <span class="k">IF</span>;
+
+    <span class="c">-- 3. Fonds suffisants ?</span>
+    p_total := v_obj.prix * p_quantite;
+    <span class="k">IF</span> v_av.pieces &lt; p_total <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Fonds insuffisants : % pièces pour un achat de %'</span>, v_av.pieces, p_total
+              <span class="k">USING</span> HINT = <span class="s">'Terminez des quêtes pour gagner des pièces.'</span>;
+    <span class="k">END</span> <span class="k">IF</span>;
+
+    <span class="c">-- 4. Mouvements : stock, pièces, inventaire, historique</span>
+    <span class="k">UPDATE</span> objets      <span class="k">SET</span> stock  = stock  - p_quantite <span class="k">WHERE</span> id = v_obj.id;
+    <span class="k">UPDATE</span> aventuriers <span class="k">SET</span> pieces = pieces - p_total    <span class="k">WHERE</span> id = v_av.id;
+    <span class="k">INSERT</span> <span class="k">INTO</span> inventaire (aventurier_id, objet_id, quantite)
+    <span class="k">VALUES</span> (v_av.id, v_obj.id, p_quantite)
+    <span class="k">ON</span> CONFLICT (aventurier_id, objet_id)
+        DO <span class="k">UPDATE</span> <span class="k">SET</span> quantite = inventaire.quantite + EXCLUDED.quantite;
+    <span class="k">INSERT</span> <span class="k">INTO</span> achats (aventurier_id, objet_id, quantite, prix_total)
+    <span class="k">VALUES</span> (v_av.id, v_obj.id, p_quantite, p_total);
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL acheter(<span class="s">'lyna'</span>, <span class="s">'Potion de soin'</span>, <span class="n">3</span>);</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>p_total</th></tr></thead><tbody><tr><td class="">75</td></tr></tbody></table></div></div><div class="res-note" style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px">Le paramètre INOUT est renvoyé comme une ligne de résultat : 3 potions à 25 pièces.</div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> a.pseudo, a.pieces, o.nom, o.stock, i.quantite <span class="k">AS</span> en_inventaire
+<span class="k">FROM</span> aventuriers a
+<span class="k">JOIN</span> inventaire i <span class="k">ON</span> i.aventurier_id = a.id
+<span class="k">JOIN</span> objets o     <span class="k">ON</span> o.id = i.objet_id
+<span class="k">WHERE</span> a.pseudo = <span class="s">'lyna'</span> <span class="k">AND</span> o.nom = <span class="s">'Potion de soin'</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>pieces</th><th>nom</th><th>stock</th><th>en_inventaire</th></tr></thead><tbody><tr><td class="">lyna</td><td class="">245</td><td class="">Potion de soin</td><td class="">47</td><td class="">5</td></tr></tbody></table></div></div><div class="res-note" style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px">Lyna avait 320 pièces et 2 potions ; il restait 50 potions en boutique.</div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Écrire une procédure qui renvoie un résultat avec <code class='inl'>RETURN valeur;</code> : c'est interdit, une procédure ne renvoie rien. Utilisez un paramètre <code class='inl'>INOUT</code>, ou une fonction si l'objectif est de calculer. Autre confusion fréquente : <code class='inl'>SELECT acheter(…)</code> au lieu de <code class='inl'>CALL acheter(…)</code>, qui provoque l'erreur <code class='inl'>acheter(…) is a procedure</code>.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n27">
+<div class="section-title"><span class="icon-bg ib-green">🛡️</span><span><span class="num">N27</span>&nbsp; Gérer les erreurs : RAISE et EXCEPTION</span></div>
+<span class="ftag f1">Procédures</span>
+<h3>🎯 À quoi ça sert</h3><p>Une opération métier doit échouer <strong>proprement</strong> : avec un message compréhensible, et sans laisser la base à moitié modifiée. PL/pgSQL offre deux outils : <code class='inl'>RAISE</code> pour signaler (information ou erreur), et le bloc <code class='inl'>EXCEPTION</code> pour <strong>intercepter</strong> une erreur et réagir.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — un distributeur de billets : si le solde est insuffisant, il refuse avec un message clair (RAISE EXCEPTION) et ne débite rien. S'il manque de billets en cours d'opération, il annule tout et rend la carte : on ne ressort jamais débité sans ses billets.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>RAISE NOTICE  <span class="s">'Information : %'</span>, valeur;            <span class="c">-- message, l'exécution continue</span>
+RAISE WARNING <span class="s">'Attention : %'</span>, valeur;              <span class="c">-- avertissement, l'exécution continue</span>
+RAISE EXCEPTION <span class="s">'Erreur : %'</span>, valeur                <span class="c">-- stoppe et annule</span>
+      <span class="k">USING</span> HINT = <span class="s">'Conseil pour corriger'</span>, ERRCODE = <span class="s">'P0001'</span>;
+
+BEGIN
+    ...                                             <span class="c">-- instructions protégées</span>
+EXCEPTION
+    <span class="k">WHEN</span> unique_violation <span class="k">THEN</span> ...                  <span class="c">-- erreur précise</span>
+    <span class="k">WHEN</span> check_violation  <span class="k">THEN</span> ...
+    <span class="k">WHEN</span> OTHERS <span class="k">THEN</span> ...                            <span class="c">-- toute autre erreur (SQLSTATE, SQLERRM)</span>
+<span class="k">END</span>;
+
+DO $$ BEGIN ... <span class="k">END</span> $$;                             <span class="c">-- bloc anonyme, pour tester sans créer de procédure</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p><strong>Une erreur métier.</strong> Kenji veut une épée à 150 pièces ; il n'en a que 45 :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL acheter(<span class="s">'kenji'</span>, <span class="s">'Épée courte'</span>);</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap;margin:0">ERROR:  Fonds insuffisants : 45 pièces pour un achat de 150
+HINT:  Terminez des quêtes pour gagner des pièces.</pre></div><p><strong>Tout ou rien.</strong> Même quand l'erreur survient <em>après</em> une première modification, tout est annulé. Ce bloc retire un arc du stock, puis tente de débiter 10 000 pièces à Kairo, ce que la contrainte <code class='inl'>CHECK (pieces >= 0)</code> refuse :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>DO $$
+BEGIN
+    <span class="k">UPDATE</span> objets      <span class="k">SET</span> stock  = stock  - <span class="n">1</span>     <span class="k">WHERE</span> nom = <span class="s">'Arc long'</span>;   <span class="c">-- réussit…</span>
+    <span class="k">UPDATE</span> aventuriers <span class="k">SET</span> pieces = pieces - <span class="n">10000</span> <span class="k">WHERE</span> pseudo = <span class="s">'kairo'</span>;   <span class="c">-- …échoue</span>
+<span class="k">END</span> $$;</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap;margin:0">ERROR:  new row for relation &quot;aventuriers&quot; violates check constraint &quot;aventuriers_pieces_check&quot;
+DETAIL:  Failing row contains (7, kairo, 1, -9850, 0).</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> nom, stock <span class="k">FROM</span> objets <span class="k">WHERE</span> nom = <span class="s">'Arc long'</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>stock</th></tr></thead><tbody><tr><td class="">Arc long</td><td class="">5</td></tr></tbody></table></div></div><div class="res-note" style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px">Toujours 5 arcs : la première modification a été annulée avec le reste.</div><p><strong>Intercepter une erreur.</strong> Une procédure d'inscription qui transforme un pseudo déjà pris en simple message :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> PROCEDURE inscrire(p_pseudo <span class="k">TEXT</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> aventuriers (pseudo) <span class="k">VALUES</span> (p_pseudo);
+    RAISE NOTICE <span class="s">'Bienvenue, % ! 100 pièces offertes.'</span>, p_pseudo;
+EXCEPTION
+    <span class="k">WHEN</span> unique_violation <span class="k">THEN</span>
+        RAISE NOTICE <span class="s">'Le pseudo « % » est déjà pris.'</span>, p_pseudo;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL inscrire(<span class="s">'sara'</span>);
+CALL inscrire(<span class="s">'Pixel'</span>);</pre></div><div class="res msgbox"><div class="res-bar" style="color:#1e40af;background:#eff6ff">💬 Messages</div><pre class="notices">NOTICE:  Le pseudo « sara » est déjà pris.
+NOTICE:  Bienvenue, Pixel ! 100 pièces offertes.</pre></div>
+<div class='instruction-box'>📌 Un bloc avec <code class='inl'>EXCEPTION</code> crée un <strong>point de reprise</strong> : en cas d'erreur, seules les modifications faites <em>dans ce bloc</em> sont annulées, puis le code du <code class='inl'>WHEN</code> s'exécute. C'est pratique, mais plus coûteux qu'un bloc simple : n'en mettez pas dans une boucle de milliers d'itérations sans raison.</div>
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Le <code class='inl'>WHEN OTHERS THEN RAISE NOTICE …</code> qui avale toutes les erreurs. La procédure « réussit », l'appelant croit que tout s'est bien passé, et les données sont incomplètes sans que personne ne le sache. N'interceptez que les erreurs que vous savez traiter ; pour les autres, laissez-les remonter, ou relancez-les avec <code class='inl'>RAISE;</code> après avoir journalisé.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n28">
+<div class="section-title"><span class="icon-bg ib-amber">📦</span><span><span class="num">N28</span>&nbsp; Valider par lots : COMMIT dans une procédure</span></div>
+<span class="ftag f1">Procédures</span>
+<h3>🎯 À quoi ça sert</h3><p>Par défaut, tout ce que fait un <code class='inl'>CALL</code> est validé ou annulé d'un bloc. Pour un traitement très long (recalculer un million de lignes, purger des années d'historique), ce « tout ou rien » devient un problème : verrous tenus pendant des minutes, et tout le travail perdu à la moindre erreur. Une procédure peut alors <strong>valider par lots</strong> avec <code class='inl'>COMMIT</code>. C'est ce qu'une fonction ne peut pas faire.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — déménager un appartement. Tout charger dans un seul camion (une seule transaction) : si le camion tombe en panne, tout est bloqué. Faire des allers-retours (des lots validés) : chaque voyage terminé est acquis, et une panne ne fait perdre que le voyage en cours.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> PROCEDURE traitement_par_lots(p_lot <span class="k">INTEGER</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    v_compteur <span class="k">INTEGER</span> := <span class="n">0</span>;
+BEGIN
+    FOR r <span class="k">IN</span> <span class="k">SELECT</span> id <span class="k">FROM</span> une_table <span class="k">ORDER</span> <span class="k">BY</span> id LOOP
+        <span class="k">UPDATE</span> une_table <span class="k">SET</span> ... <span class="k">WHERE</span> id = r.id;
+        v_compteur := v_compteur + <span class="n">1</span>;
+        <span class="k">IF</span> v_compteur % p_lot = <span class="n">0</span> <span class="k">THEN</span>
+            COMMIT;                          <span class="c">-- valide le lot en cours</span>
+        <span class="k">END</span> <span class="k">IF</span>;
+    <span class="k">END</span> LOOP;
+    COMMIT;                                  <span class="c">-- valide le dernier lot incomplet</span>
+<span class="k">END</span>;
+$$;</pre></div>
+<h3>🔬 Exemple commenté</h3><p>Distribuer un bonus de pièces à tous les aventuriers, en validant par lots de 3 :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> PROCEDURE distribuer_bonus(p_montant <span class="k">INTEGER</span>, p_lot <span class="k">INTEGER</span>)
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    r          RECORD;
+    v_compteur <span class="k">INTEGER</span> := <span class="n">0</span>;
+BEGIN
+    FOR r <span class="k">IN</span> <span class="k">SELECT</span> id <span class="k">FROM</span> aventuriers <span class="k">ORDER</span> <span class="k">BY</span> id LOOP
+        <span class="k">UPDATE</span> aventuriers <span class="k">SET</span> pieces = pieces + p_montant <span class="k">WHERE</span> id = r.id;
+        v_compteur := v_compteur + <span class="n">1</span>;
+        <span class="k">IF</span> v_compteur % p_lot = <span class="n">0</span> <span class="k">THEN</span>
+            COMMIT;
+            RAISE NOTICE <span class="s">'Lot validé : % aventuriers traités'</span>, v_compteur;
+        <span class="k">END</span> <span class="k">IF</span>;
+    <span class="k">END</span> LOOP;
+    COMMIT;
+    RAISE NOTICE <span class="s">'Terminé : % aventuriers au total'</span>, v_compteur;
+<span class="k">END</span>;
+$$;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL distribuer_bonus(<span class="n">10</span>, <span class="n">3</span>);</pre></div><div class="res msgbox"><div class="res-bar" style="color:#1e40af;background:#eff6ff">💬 Messages</div><pre class="notices">NOTICE:  Lot validé : 3 aventuriers traités
+NOTICE:  Lot validé : 6 aventuriers traités
+NOTICE:  Lot validé : 9 aventuriers traités
+NOTICE:  Terminé : 9 aventuriers au total</pre></div><div class="res-note" style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px">Si une erreur survenait au 8e aventurier, les 6 premiers garderaient leur bonus : les deux premiers lots sont déjà validés.</div><p>Sur 9 aventuriers, c'est symbolique. Sur des millions de lignes, les lots raccourcissent la durée des verrous, limitent le volume à annuler en cas d'échec et permettent de reprendre là où le traitement s'est arrêté.</p>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Une procédure qui contient un <code class='inl'>COMMIT</code> ne peut pas être appelée à l'intérieur d'une transaction ouverte par l'appelant : elle ne peut pas valider un travail qui ne lui appartient pas.<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>BEGIN;
+CALL distribuer_bonus(<span class="n">10</span>, <span class="n">3</span>);
+ROLLBACK;</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap;margin:0">ERROR:  invalid transaction termination</pre></div>Même règle si l'appel vient d'une fonction, ou si le <code class='inl'>COMMIT</code> se trouve dans un bloc qui possède une clause <code class='inl'>EXCEPTION</code>. Ce mode de validation par lots est réservé aux traitements lancés seuls, par exemple depuis une tâche planifiée.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="result-panel"><h4>🚦 Point d'étape</h4>
+<p>Les procédures encapsulent les opérations métier, et leurs erreurs sont propres et annulent tout. Mais elles ne s'exécutent que si l'on pense à les appeler. La partie 2 présente le mécanisme qui s'exécute <strong>tout seul</strong>, à chaque modification : le trigger.</p></div></section><section class="panel" id="p2"><div class="card" id="n29">
+<div class="section-title"><span class="icon-bg ib-blue">⚡</span><span><span class="num">N29</span>&nbsp; Anatomie d'un trigger</span></div>
+<span class="ftag f2">Triggers</span>
+<h3>🎯 À quoi ça sert</h3><p>Un <strong>trigger</strong> (déclencheur) exécute automatiquement une fonction quand une table est modifiée : avant ou après un <code class='inl'>INSERT</code>, un <code class='inl'>UPDATE</code> ou un <code class='inl'>DELETE</code>. Aucune application ne peut l'oublier ni le contourner : la règle est appliquée par la base elle-même, quel que soit le programme qui écrit.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — un détecteur de mouvement : on ne l'appelle jamais, il se déclenche quand quelqu'un passe. BEFORE, c'est le portique qui peut refuser l'entrée ou vous faire vider vos poches ; AFTER, c'est la caméra qui enregistre votre passage.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="c">-- 1. La fonction trigger : sans paramètre, RETURNS TRIGGER</span>
+<span class="k">CREATE</span> <span class="k">OR</span> REPLACE FUNCTION trg_nom()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="c">-- NEW : la ligne après modification (INSERT, UPDATE)</span>
+    <span class="c">-- OLD : la ligne avant modification (UPDATE, DELETE)</span>
+    RETURN NEW;       <span class="c">-- BEFORE : la ligne à écrire (NULL = annuler l'écriture)</span>
+<span class="k">END</span>;
+$$;
+
+<span class="c">-- 2. Le trigger : quand appeler la fonction</span>
+<span class="k">CREATE</span> TRIGGER nom_trigger
+{BEFORE | AFTER} {<span class="k">INSERT</span> | <span class="k">UPDATE</span> [OF colonne] | <span class="k">DELETE</span>} [<span class="k">OR</span> …] <span class="k">ON</span> table
+FOR EACH {<span class="k">ROW</span> | STATEMENT}
+[<span class="k">WHEN</span> (condition)]
+EXECUTE FUNCTION trg_nom();</pre></div><table class="grid-table"><tr><th>Variable</th><th>Contenu</th></tr>
+<tr><td class="mono">NEW</td><td>La nouvelle version de la ligne (INSERT, UPDATE)</td></tr>
+<tr><td class="mono">OLD</td><td>L'ancienne version de la ligne (UPDATE, DELETE)</td></tr>
+<tr><td class="mono">TG_OP</td><td>L'opération : 'INSERT', 'UPDATE' ou 'DELETE'</td></tr>
+<tr><td class="mono">TG_TABLE_NAME</td><td>Le nom de la table concernée</td></tr>
+<tr><td class="mono">TG_WHEN</td><td>'BEFORE' ou 'AFTER'</td></tr></table>
+<h3>🔬 Exemple commenté</h3><p>Des pseudos toujours propres, quelle que soit l'application qui les saisit : sans espaces superflus et en minuscules.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION trg_normaliser_pseudo()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    NEW.pseudo := LOWER(TRIM(NEW.pseudo));    <span class="c">-- on corrige la ligne avant son écriture</span>
+    RETURN NEW;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER normaliser_pseudo
+BEFORE <span class="k">INSERT</span> <span class="k">OR</span> <span class="k">UPDATE</span> OF pseudo <span class="k">ON</span> aventuriers
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION trg_normaliser_pseudo();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> aventuriers (pseudo) <span class="k">VALUES</span> (<span class="s">'  DarkSasuke  '</span>);
+<span class="k">UPDATE</span> aventuriers <span class="k">SET</span> pseudo = pseudo <span class="k">WHERE</span> pseudo = <span class="s">'Pixel'</span>;      <span class="c">-- inscrit en N27</span>
+<span class="k">SELECT</span> id, pseudo <span class="k">FROM</span> aventuriers <span class="k">WHERE</span> id &gt;= <span class="n">9</span> <span class="k">ORDER</span> <span class="k">BY</span> id;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>2 lignes</span></div><div class="tbl"><table><thead><tr><th>id</th><th>pseudo</th></tr></thead><tbody><tr><td class="">10</td><td class="">pixel</td></tr><tr><td class="">11</td><td class="">darksasuke</td></tr></tbody></table></div></div><div class="res-note" style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px">« Pixel », inscrit avant le trigger, est corrigé à la première mise à jour de son pseudo. L'identifiant 9 n'apparaît pas : il a été consommé par l'inscription refusée de « sara » en N27. Une séquence ne revient jamais en arrière, même après une erreur.</div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Dans un trigger <code class='inl'>BEFORE … FOR EACH ROW</code>, <code class='inl'>RETURN NULL</code> <strong>annule silencieusement</strong> l'écriture de la ligne : aucune erreur, juste une ligne qui n'arrive jamais.<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">TABLE</span> test_trigger (x <span class="k">INTEGER</span>);
+<span class="k">CREATE</span> FUNCTION trg_oubli() RETURNS TRIGGER LANGUAGE plpgsql
+<span class="k">AS</span> $$ BEGIN RETURN <span class="k">NULL</span>; <span class="k">END</span>; $$;              <span class="c">-- au lieu de RETURN NEW</span>
+<span class="k">CREATE</span> TRIGGER oubli BEFORE <span class="k">INSERT</span> <span class="k">ON</span> test_trigger
+FOR EACH <span class="k">ROW</span> EXECUTE FUNCTION trg_oubli();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">INSERT</span> <span class="k">INTO</span> test_trigger <span class="k">VALUES</span> (<span class="n">1</span>), (<span class="n">2</span>), (<span class="n">3</span>);
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> lignes <span class="k">FROM</span> test_trigger;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>lignes</th></tr></thead><tbody><tr><td class="">0</td></tr></tbody></table></div></div><div class="res-note" style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px">3 lignes insérées, 0 enregistrée, aucun message d'erreur.</div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">DROP</span> <span class="k">TABLE</span> test_trigger; <span class="k">DROP</span> FUNCTION trg_oubli();</pre></div>C'est parfois voulu (ignorer une ligne), mais c'est le plus souvent un oubli. Dans un trigger BEFORE, terminez par <code class='inl'>RETURN NEW</code> (ou <code class='inl'>RETURN OLD</code> pour un DELETE).</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n30">
+<div class="section-title"><span class="icon-bg ib-green">🚧</span><span><span class="num">N30</span>&nbsp; Triggers BEFORE : compléter et valider</span></div>
+<span class="ftag f2">Triggers</span>
+<h3>🎯 À quoi ça sert</h3><p>Un trigger <strong>BEFORE</strong> intervient avant l'écriture : il peut <strong>modifier la ligne</strong> (horodatage, valeur calculée) ou la <strong>refuser</strong> avec un message métier. C'est l'endroit des règles qu'une simple contrainte <code class='inl'>CHECK</code> ne sait pas exprimer, parce qu'elles comparent l'ancienne et la nouvelle valeur.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — le contrôle qualité en bout de chaîne : il appose la date de fabrication sur chaque produit et écarte ceux qui ne respectent pas les règles, avant la mise en rayon.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION trg_regles()
+RETURNS TRIGGER LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    NEW.maj_le := now();                              <span class="c">-- compléter</span>
+    <span class="k">IF</span> NEW.valeur &gt; OLD.valeur * <span class="n">2</span> <span class="k">THEN</span>               <span class="c">-- valider (UPDATE)</span>
+        RAISE EXCEPTION <span class="s">'Règle métier non respectée'</span>;
+    <span class="k">END</span> <span class="k">IF</span>;
+    RETURN NEW;
+<span class="k">END</span>;
+$$;</pre></div>
+<h3>🔬 Exemple commenté</h3><p>Pour les objets de la boutique : dater chaque modification, et interdire une hausse de prix de plus de 50 % d'un coup (protection contre une faute de frappe).</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION trg_maj_objet()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">IF</span> TG_OP = <span class="s">'UPDATE'</span> <span class="k">AND</span> NEW.prix &gt; OLD.prix * <span class="n">1.5</span> <span class="k">THEN</span>
+        RAISE EXCEPTION <span class="s">'Hausse de prix trop forte pour « % » : % → % (maximum +50 %%)'</span>,
+              NEW.nom, OLD.prix, NEW.prix;
+    <span class="k">END</span> <span class="k">IF</span>;
+    NEW.maj_le := now();
+    RETURN NEW;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER maj_objet
+BEFORE <span class="k">INSERT</span> <span class="k">OR</span> <span class="k">UPDATE</span> <span class="k">ON</span> objets
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION trg_maj_objet();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">UPDATE</span> objets <span class="k">SET</span> prix = <span class="n">30</span> <span class="k">WHERE</span> nom = <span class="s">'Potion de soin'</span>;
+<span class="k">SELECT</span> nom, prix, maj_le <span class="k">IS</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">AS</span> date_renseignee
+<span class="k">FROM</span> objets <span class="k">WHERE</span> nom = <span class="s">'Potion de soin'</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>nom</th><th>prix</th><th>date_renseignee</th></tr></thead><tbody><tr><td class="">Potion de soin</td><td class="">30</td><td class="">t</td></tr></tbody></table></div></div><div class="res-note" style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px">Le prix passe de 25 à 30 (+20 %) et la date de modification est posée automatiquement.</div><p>Une faute de frappe (1 500 au lieu de 150) est bloquée avec un message explicite :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">UPDATE</span> objets <span class="k">SET</span> prix = <span class="n">1500</span> <span class="k">WHERE</span> nom = <span class="s">'Épée courte'</span>;</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap;margin:0">ERROR:  Hausse de prix trop forte pour « Épée courte » : 150 → 1500 (maximum +50 %)</pre></div>
+<div class='instruction-box'>📌 Contrainte ou trigger ? Une règle qui ne dépend que de la ligne (<code class='inl'>prix &gt; 0</code>) s'écrit en <code class='inl'>CHECK</code> : plus simple, plus rapide, visible dans <code class='inl'>\d</code>. Le trigger est réservé aux règles qui comparent avant/après, consultent d'autres tables ou complètent la ligne.</div>
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Dans une chaîne de format <code class='inl'>RAISE</code>, le caractère <code class='inl'>%</code> est réservé aux valeurs à insérer. Pour afficher un pourcentage, il faut le doubler (<code class='inl'>%%</code>), sinon le message est faux ou provoque une erreur de nombre de paramètres. Autre piège : un trigger <code class='inl'>BEFORE UPDATE</code> s'exécute même si la mise à jour ne change rien ; ajoutez <code class='inl'>WHEN (OLD IS DISTINCT FROM NEW)</code> pour l'éviter.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n31">
+<div class="section-title"><span class="icon-bg ib-amber">🎥</span><span><span class="num">N31</span>&nbsp; Triggers AFTER : tracer et synchroniser</span></div>
+<span class="ftag f3">Automatisation</span>
+<h3>🎯 À quoi ça sert</h3><p>Un trigger <strong>AFTER</strong> s'exécute une fois la modification faite : il ne peut plus changer la ligne, mais il peut <strong>agir ailleurs</strong>. Deux usages classiques : tenir un <strong>journal d'audit</strong> (qui a modifié quoi, avant/après) et <strong>maintenir une donnée dérivée</strong> (un total, un compteur) toujours à jour.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — la boîte noire d'un avion : elle n'influence pas le vol, elle enregistre tout ce qui s'est passé, pour pouvoir le reconstituer ensuite.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION trg_audit()
+RETURNS TRIGGER LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> audit (table_nom, operation, ancienne, nouvelle)
+    <span class="k">VALUES</span> (TG_TABLE_NAME, TG_OP, to_jsonb(OLD), to_jsonb(NEW));   <span class="c">-- la ligne entière en JSONB (N13)</span>
+    RETURN <span class="k">NULL</span>;                                                   <span class="c">-- ignoré pour un trigger AFTER</span>
+<span class="k">END</span>;
+$$;</pre></div>
+<h3>🔬 Exemple commenté</h3><p><strong>Le problème.</strong> La colonne <code class='inl'>nb_objets</code> doit refléter l'inventaire. Mais la procédure d'achat (N26) ne la met pas à jour : depuis l'achat de Lyna, elle est fausse.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> a.pseudo, a.nb_objets,
+       (<span class="k">SELECT</span> <span class="k">SUM</span>(quantite) <span class="k">FROM</span> inventaire i <span class="k">WHERE</span> i.aventurier_id = a.id) <span class="k">AS</span> reel
+<span class="k">FROM</span> aventuriers a <span class="k">WHERE</span> a.pseudo = <span class="s">'lyna'</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>nb_objets</th><th>reel</th></tr></thead><tbody><tr><td class="">lyna</td><td class="">3</td><td class="">6</td></tr></tbody></table></div></div><p>Plutôt que de corriger chaque procédure (et d'en oublier une), un trigger sur <code class='inl'>inventaire</code> recalcule le total à chaque changement. Un second trigger journalise toutes les modifications des aventuriers :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION trg_nb_objets()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+DECLARE
+    v_id <span class="k">INTEGER</span> := <span class="k">CASE</span> <span class="k">WHEN</span> TG_OP = <span class="s">'DELETE'</span> <span class="k">THEN</span> OLD.aventurier_id <span class="k">ELSE</span> NEW.aventurier_id <span class="k">END</span>;
+BEGIN
+    <span class="k">UPDATE</span> aventuriers
+    <span class="k">SET</span> nb_objets = COALESCE((<span class="k">SELECT</span> <span class="k">SUM</span>(quantite) <span class="k">FROM</span> inventaire <span class="k">WHERE</span> aventurier_id = v_id), <span class="n">0</span>)
+    <span class="k">WHERE</span> id = v_id;
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER nb_objets
+AFTER <span class="k">INSERT</span> <span class="k">OR</span> <span class="k">UPDATE</span> <span class="k">OR</span> <span class="k">DELETE</span> <span class="k">ON</span> inventaire
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION trg_nb_objets();
+
+<span class="k">CREATE</span> FUNCTION trg_audit()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> audit (table_nom, operation, ancienne, nouvelle)
+    <span class="k">VALUES</span> (TG_TABLE_NAME, TG_OP, to_jsonb(OLD), to_jsonb(NEW));
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER audit_aventuriers
+AFTER <span class="k">INSERT</span> <span class="k">OR</span> <span class="k">UPDATE</span> <span class="k">OR</span> <span class="k">DELETE</span> <span class="k">ON</span> aventuriers
+FOR EACH <span class="k">ROW</span>
+EXECUTE FUNCTION trg_audit();</pre></div><p>Lyna achète un élixir :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL acheter(<span class="s">'lyna'</span>, <span class="s">'Élixir de mana'</span>, <span class="n">1</span>);</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>p_total</th></tr></thead><tbody><tr><td class="">40</td></tr></tbody></table></div></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pseudo, pieces, nb_objets <span class="k">FROM</span> aventuriers <span class="k">WHERE</span> pseudo = <span class="s">'lyna'</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>pseudo</th><th>pieces</th><th>nb_objets</th></tr></thead><tbody><tr><td class="">lyna</td><td class="">215</td><td class="">7</td></tr></tbody></table></div></div><div class="res-note" style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px">nb_objets est à nouveau juste : 5 potions, 1 arc et le nouvel élixir, soit 7 objets. Le trigger a recalculé le total à partir de l'inventaire.</div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> id, table_nom, operation,
+       ancienne -&gt;&gt; <span class="s">'pieces'</span>    <span class="k">AS</span> pieces_avant,  nouvelle -&gt;&gt; <span class="s">'pieces'</span>    <span class="k">AS</span> pieces_apres,
+       ancienne -&gt;&gt; <span class="s">'nb_objets'</span> <span class="k">AS</span> objets_avant,  nouvelle -&gt;&gt; <span class="s">'nb_objets'</span> <span class="k">AS</span> objets_apres
+<span class="k">FROM</span> audit <span class="k">ORDER</span> <span class="k">BY</span> id;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>2 lignes</span></div><div class="tbl"><table><thead><tr><th>id</th><th>table_nom</th><th>operation</th><th>pieces_avant</th><th>pieces_apres</th><th>objets_avant</th><th>objets_apres</th></tr></thead><tbody><tr><td class="">1</td><td class="">aventuriers</td><td class="">UPDATE</td><td class="">255</td><td class="">215</td><td class="">3</td><td class="">3</td></tr><tr><td class="">2</td><td class="">aventuriers</td><td class="">UPDATE</td><td class="">215</td><td class="">215</td><td class="">3</td><td class="">7</td></tr></tbody></table></div></div><div class="res-note" style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px">Un seul achat, deux lignes d'audit : le débit des pièces (procédure) puis la mise à jour de nb_objets (trigger sur l'inventaire). Chaque trigger en déclenche d'autres : voir N33.</div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Maintenir une donnée dérivée par trigger, c'est garantir sa cohérence <strong>au prix de chaque écriture</strong>. Sur une table très sollicitée (des milliers d'insertions par seconde), un trigger qui recalcule une somme à chaque ligne devient un goulot d'étranglement. Alternatives : incrémenter plutôt que recalculer (<code class='inl'>nb_objets = nb_objets + NEW.quantite</code>), ou calculer à la demande avec une vue, voire une vue matérialisée (N14, N15).</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n32">
+<div class="section-title"><span class="icon-bg ib-purple">🎚️</span><span><span class="num">N32</span>&nbsp; Triggers d'instruction, tables de transition et WHEN</span></div>
+<span class="ftag f3">Automatisation</span>
+<h3>🎯 À quoi ça sert</h3><p>Un trigger <code class='inl'>FOR EACH ROW</code> s'exécute une fois <strong>par ligne</strong> : un <code class='inl'>UPDATE</code> de 10 000 lignes l'appelle 10 000 fois. Un trigger <code class='inl'>FOR EACH STATEMENT</code> s'exécute une fois <strong>par instruction</strong>, et voit l'ensemble des lignes modifiées grâce aux <strong>tables de transition</strong>. La clause <code class='inl'>WHEN</code>, elle, évite d'appeler la fonction quand ce n'est pas utile.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — le facteur qui sonne pour chaque lettre (par ligne) ou qui dépose tout le courrier d'un coup avec un bordereau récapitulatif (par instruction).</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> TRIGGER nom
+AFTER <span class="k">UPDATE</span> <span class="k">ON</span> table
+REFERENCING OLD <span class="k">TABLE</span> <span class="k">AS</span> avant NEW <span class="k">TABLE</span> <span class="k">AS</span> apres   <span class="c">-- tables de transition (AFTER uniquement)</span>
+FOR EACH STATEMENT
+EXECUTE FUNCTION trg_resume();
+
+<span class="k">CREATE</span> TRIGGER nom
+AFTER <span class="k">UPDATE</span> OF colonne <span class="k">ON</span> table
+FOR EACH <span class="k">ROW</span>
+<span class="k">WHEN</span> (OLD.colonne &gt; <span class="n">0</span> <span class="k">AND</span> NEW.colonne = <span class="n">0</span>)           <span class="c">-- appelé seulement si la condition est vraie</span>
+EXECUTE FUNCTION trg_alerte();</pre></div>
+<h3>🔬 Exemple commenté</h3><p><strong>Un résumé par instruction.</strong> Chaque changement de prix groupé est journalisé en une ligne : nombre d'objets concernés et variation moyenne.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION trg_journal_prix()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> journal_prix (nb_objets, variation_moy)
+    <span class="k">SELECT</span> <span class="k">COUNT</span>(*), <span class="k">ROUND</span>(<span class="k">AVG</span>(<span class="n">100.0</span> * (n.prix - o.prix) / o.prix), <span class="n">2</span>)
+    <span class="k">FROM</span> avant o
+    <span class="k">JOIN</span> apres n <span class="k">ON</span> n.id = o.id
+    <span class="k">WHERE</span> n.prix &lt;&gt; o.prix                       <span class="c">-- seulement les prix réellement modifiés</span>
+    <span class="k">HAVING</span> <span class="k">COUNT</span>(*) &gt; <span class="n">0</span>;                         <span class="c">-- rien à journaliser : aucune ligne</span>
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER journal_prix
+AFTER <span class="k">UPDATE</span> <span class="k">ON</span> objets
+REFERENCING OLD <span class="k">TABLE</span> <span class="k">AS</span> avant NEW <span class="k">TABLE</span> <span class="k">AS</span> apres
+FOR EACH STATEMENT
+EXECUTE FUNCTION trg_journal_prix();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">UPDATE</span> objets <span class="k">SET</span> prix = <span class="k">ROUND</span>(prix * <span class="n">1.10</span>) <span class="k">WHERE</span> categorie <span class="k">IN</span> (<span class="s">'potion'</span>, <span class="s">'arme'</span>);
+<span class="k">SELECT</span> id, nb_objets, variation_moy <span class="k">FROM</span> journal_prix;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>id</th><th>nb_objets</th><th>variation_moy</th></tr></thead><tbody><tr><td class="">1</td><td class="">4</td><td class="">10.00</td></tr></tbody></table></div></div><div class="res-note" style="border:1px solid var(--border);border-radius:10px;margin-bottom:12px">4 objets modifiés (2 potions, 2 armes), une seule ligne de journal.</div><p><strong>Une alerte ciblée.</strong> Prévenir quand un objet tombe en rupture, sans exécuter de fonction à chaque mouvement de stock :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION trg_alerte_rupture()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">INSERT</span> <span class="k">INTO</span> alertes (message) <span class="k">VALUES</span> (format(<span class="s">'Rupture de stock : %s'</span>, NEW.nom));
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+
+<span class="k">CREATE</span> TRIGGER alerte_rupture
+AFTER <span class="k">UPDATE</span> OF stock <span class="k">ON</span> objets
+FOR EACH <span class="k">ROW</span>
+<span class="k">WHEN</span> (OLD.stock &gt; <span class="n">0</span> <span class="k">AND</span> NEW.stock = <span class="n">0</span>)
+EXECUTE FUNCTION trg_alerte_rupture();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>CALL acheter(<span class="s">'mo'</span>, <span class="s">'Parchemin de téléportation'</span>, <span class="n">1</span>);    <span class="c">-- le dernier exemplaire</span></pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>p_total</th></tr></thead><tbody><tr><td class="">300</td></tr></tbody></table></div></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> message <span class="k">FROM</span> alertes;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>message</th></tr></thead><tbody><tr><td class="">Rupture de stock : Parchemin de téléportation</td></tr></tbody></table></div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Les tables de transition ne sont disponibles qu'avec <code class='inl'>AFTER</code>, et pas avec une liste de colonnes (<code class='inl'>UPDATE OF …</code>). Et un trigger d'instruction se déclenche <strong>même si aucune ligne n'est modifiée</strong> : un <code class='inl'>UPDATE … WHERE</code> qui ne trouve rien l'appelle quand même. D'où le <code class='inl'>HAVING COUNT(*) &gt; 0</code> ci-dessus, sans lequel chaque achat (qui modifie un stock, pas un prix) ajouterait une ligne vide au journal.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="result-panel"><h4>🚦 Point d'étape</h4>
+<p>Normaliser, valider, dater, auditer, synchroniser, résumer, alerter : les triggers automatisent tout cela. Mais chaque trigger en ajoute un peu plus à chaque écriture, et ils s'enchaînent sans être visibles dans le code de l'application. La partie 3 apprend à les garder sous contrôle.</p></div></section><section class="panel" id="p3"><div class="card" id="n33">
+<div class="section-title"><span class="icon-bg ib-red">🧯</span><span><span class="num">N33</span>&nbsp; Maîtriser les triggers : cascades, boucles et arbitrages</span></div>
+<span class="ftag f4">Bonnes pratiques</span>
+<h3>🎯 À quoi ça sert</h3><p>Les triggers sont puissants parce qu'ils sont <strong>invisibles</strong> : c'est aussi leur principal danger. Un développeur qui écrit un simple <code class='inl'>UPDATE</code> ne voit pas les cinq triggers qu'il déclenche. Le tech lead doit savoir les inventorier, éviter les boucles, les suspendre pour un import massif, et décider ce qui relève de la base ou de l'application.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — des dominos : pousser le premier est anodin ; savoir combien vont tomber, et s'il y en a un qui revient pousser le premier, demande d'avoir le plan de la chaîne sous les yeux.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="c">-- Inventaire des triggers</span>
+<span class="k">SELECT</span> event_object_table, trigger_name, action_timing, event_manipulation
+<span class="k">FROM</span> information_schema.triggers;
+
+<span class="c">-- Suspendre les triggers utilisateur d'une table (import massif, maintenance)</span>
+ALTER <span class="k">TABLE</span> t DISABLE TRIGGER USER;
+ALTER <span class="k">TABLE</span> t ENABLE TRIGGER USER;
+
+<span class="c">-- Profondeur d'imbrication courante (0 hors trigger)</span>
+<span class="k">SELECT</span> pg_trigger_depth();</pre></div>
+<h3>🔬 Exemple commenté</h3><p><strong>1. Inventorier.</strong> Tous les triggers posés pendant la séance :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> event_object_table <span class="k">AS</span> table_cible, trigger_name, action_timing <span class="k">AS</span> moment,
+       STRING_AGG(event_manipulation, <span class="s">', '</span> <span class="k">ORDER</span> <span class="k">BY</span> event_manipulation) <span class="k">AS</span> evenements
+<span class="k">FROM</span> information_schema.triggers
+<span class="k">WHERE</span> event_object_table <span class="k">IN</span> (<span class="s">'aventuriers'</span>, <span class="s">'objets'</span>, <span class="s">'inventaire'</span>)
+<span class="k">GROUP</span> <span class="k">BY</span> event_object_table, trigger_name, action_timing
+<span class="k">ORDER</span> <span class="k">BY</span> table_cible, moment <span class="k">DESC</span>, trigger_name;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>6 lignes</span></div><div class="tbl"><table><thead><tr><th>table_cible</th><th>trigger_name</th><th>moment</th><th>evenements</th></tr></thead><tbody><tr><td class="">aventuriers</td><td class="">normaliser_pseudo</td><td class="">BEFORE</td><td class="">INSERT, UPDATE</td></tr><tr><td class="">aventuriers</td><td class="">audit_aventuriers</td><td class="">AFTER</td><td class="">DELETE, INSERT, UPDATE</td></tr><tr><td class="">inventaire</td><td class="">nb_objets</td><td class="">AFTER</td><td class="">DELETE, INSERT, UPDATE</td></tr><tr><td class="">objets</td><td class="">maj_objet</td><td class="">BEFORE</td><td class="">INSERT, UPDATE</td></tr><tr><td class="">objets</td><td class="">alerte_rupture</td><td class="">AFTER</td><td class="">UPDATE</td></tr><tr><td class="">objets</td><td class="">journal_prix</td><td class="">AFTER</td><td class="">UPDATE</td></tr></tbody></table></div></div><p>Ce que déclenche <strong>un seul</strong> <code class='inl'>CALL acheter(…)</code> :</p><div class="code"><div class="code-bar"><span>Cascade</span><button class="copy" type="button">Copier</button></div><pre>CALL acheter(…)
+├── <span class="k">UPDATE</span> objets (stock)
+│   ├── BEFORE <span class="k">ROW</span>   maj_objet         → date de modification
+│   ├── AFTER  <span class="k">ROW</span>   alerte_rupture    → seulement si le stock tombe à <span class="n">0</span> (<span class="k">WHEN</span>)
+│   └── AFTER  STMT  journal_prix      → rien à journaliser (le prix n<span class="s">'a pas changé)
+├── UPDATE aventuriers (pièces)
+│   └── AFTER  ROW   audit_aventuriers → 1 ligne d'</span>audit
+├── <span class="k">INSERT</span>/<span class="k">UPDATE</span> inventaire
+│   └── AFTER  <span class="k">ROW</span>   nb_objets
+│       └── <span class="k">UPDATE</span> aventuriers (nb_objets)
+│           └── AFTER <span class="k">ROW</span> audit_aventuriers → <span class="n">1</span> ligne d'audit de plus
+└── <span class="k">INSERT</span> achats</pre></div><p><strong>2. La boucle infinie.</strong> Un trigger AFTER UPDATE qui met à jour sa propre table se redéclenche lui-même :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> FUNCTION trg_boucle() RETURNS TRIGGER LANGUAGE plpgsql
+<span class="k">AS</span> $$
+BEGIN
+    <span class="k">UPDATE</span> aventuriers <span class="k">SET</span> niveau = NEW.niveau <span class="k">WHERE</span> id = NEW.id;   <span class="c">-- relance le trigger…</span>
+    RETURN <span class="k">NULL</span>;
+<span class="k">END</span>;
+$$;
+<span class="k">CREATE</span> TRIGGER boucle AFTER <span class="k">UPDATE</span> <span class="k">ON</span> aventuriers
+FOR EACH <span class="k">ROW</span> EXECUTE FUNCTION trg_boucle();</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">UPDATE</span> aventuriers <span class="k">SET</span> niveau = niveau + <span class="n">1</span> <span class="k">WHERE</span> pseudo = <span class="s">'kairo'</span>;</pre></div><div class="res" style="border-color:#fecaca"><div class="res-bar" style="color:#dc2626;background:#fef2f2">✖ Erreur PostgreSQL</div><pre style="padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap;margin:0">ERROR:  stack depth limit exceeded
+HINT:  Increase the configuration parameter &quot;max_stack_depth&quot; (currently 2048kB), after ensuring the platform&#x27;s stack depth limit is adequate.</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">DROP</span> TRIGGER boucle <span class="k">ON</span> aventuriers;
+<span class="k">DROP</span> FUNCTION trg_boucle();</pre></div><p>PostgreSQL finit par s'arrêter sur un dépassement de pile, et toute l'instruction est annulée. Deux remèdes : modifier <code class='inl'>NEW</code> dans un trigger <strong>BEFORE</strong> plutôt que de relancer un UPDATE, ou, en dernier recours, sortir si <code class='inl'>pg_trigger_depth() &gt; 1</code>.</p><p><strong>3. L'ordre d'exécution.</strong> Quand plusieurs triggers répondent au même événement, au même moment, PostgreSQL les exécute par <strong>ordre alphabétique de leur nom</strong>. Si l'ordre compte, nommez-les en conséquence (<code class='inl'>t10_normaliser</code>, <code class='inl'>t20_valider</code>…).</p><p><strong>4. L'import massif.</strong> Pour charger un million de lignes déjà contrôlées, désactiver temporairement les triggers utilisateur évite un million d'appels :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>ALTER <span class="k">TABLE</span> inventaire DISABLE TRIGGER USER;
+<span class="c">-- … chargement massif …</span>
+ALTER <span class="k">TABLE</span> inventaire ENABLE TRIGGER USER;
+<span class="c">-- puis recalculer une fois pour toutes les données dérivées (nb_objets)</span></pre></div>
+<h3>⚖️ Logique en base ou dans l'application ? Les arguments du tech lead</h3>
+<table class="grid-table"><tr><th></th><th>Dans la base (procédures, triggers)</th><th>Dans l'application</th></tr>
+<tr><td>Garantie</td><td>Appliquée par tous les programmes, y compris un script SQL ou un outil d'administration</td><td>Contournable par tout accès direct à la base</td></tr>
+<tr><td>Performance</td><td>Pas d'aller-retour réseau entre les étapes d'une opération</td><td>Un aller-retour par requête</td></tr>
+<tr><td>Lisibilité</td><td>Comportement caché, à documenter</td><td>Visible dans le code, avec les outils habituels</td></tr>
+<tr><td>Tests et versionnement</td><td>Scripts de migration, outils spécifiques (pgTAP)</td><td>Tests unitaires et CI classiques</td></tr>
+<tr><td>Portabilité</td><td>Liée à PostgreSQL</td><td>Indépendante du SGBD</td></tr>
+<tr><td>Idéal pour</td><td>Intégrité, audit, normalisation, opérations atomiques critiques</td><td>Règles métier changeantes, appels externes, orchestration</td></tr></table>
+<div class="ok-box">✅ Une règle simple pour trancher : <strong>ce qui protège les données va dans la base ; ce qui décrit le métier va dans l'application</strong>. Et dans les deux cas, on documente : un trigger non documenté est une dette technique.</div>
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Tout mettre en triggers « pour être sûr ». Chaque trigger rend les écritures plus lentes et le comportement plus difficile à comprendre : un bug devient une enquête. Un trigger se justifie quand la règle doit être garantie <strong>quel que soit le programme qui écrit</strong> (audit, intégrité, normalisation). La logique métier qui dépend du contexte (envoyer un email, appeler une API, appliquer une promotion) reste dans l'application.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div></section><section class="panel" id="memo"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">📌</span>Fiche mémo — Séance 4</div><div class="tbl" style="border:1px solid var(--border);border-radius:10px"><table class="grid-table" style="margin:0"><tr><th>#</th><th>Notion</th><th>Syntaxe clé</th><th>À retenir</th></tr><tr><td class="mono">N26</td><td>Procédure</td><td class="mono" style="font-size:12.5px;font-weight:500">CREATE PROCEDURE p(…, INOUT r TYPE DEFAULT NULL) LANGUAGE plpgsql AS $$ … $$ · CALL p(…)</td><td>CALL, pas SELECT</td></tr><tr><td class="mono">N27</td><td>Erreurs</td><td class="mono" style="font-size:12.5px;font-weight:500">RAISE NOTICE | EXCEPTION &#x27;…%&#x27;, v USING HINT = &#x27;…&#x27; · EXCEPTION WHEN unique_violation THEN …</td><td>Ne pas tout avaler</td></tr><tr><td class="mono">N28</td><td>Lots</td><td class="mono" style="font-size:12.5px;font-weight:500">FOR r IN SELECT … LOOP … IF n % lot = 0 THEN COMMIT; END IF; END LOOP;</td><td>Pas de CALL dans BEGIN</td></tr><tr><td class="mono">N29</td><td>Trigger</td><td class="mono" style="font-size:12.5px;font-weight:500">CREATE FUNCTION f() RETURNS TRIGGER … · CREATE TRIGGER t BEFORE|AFTER … FOR EACH ROW EXECUTE FUNCTION f()</td><td>RETURN NEW en BEFORE</td></tr><tr><td class="mono">N30</td><td>BEFORE</td><td class="mono" style="font-size:12.5px;font-weight:500">NEW.col := … · IF NEW.x &gt; OLD.x … THEN RAISE EXCEPTION …</td><td>%% pour afficher %</td></tr><tr><td class="mono">N31</td><td>AFTER</td><td class="mono" style="font-size:12.5px;font-weight:500">INSERT INTO audit … to_jsonb(OLD), to_jsonb(NEW) · RETURN NULL</td><td>Coût à chaque écriture</td></tr><tr><td class="mono">N32</td><td>Instruction</td><td class="mono" style="font-size:12.5px;font-weight:500">REFERENCING OLD TABLE AS avant NEW TABLE AS apres FOR EACH STATEMENT · WHEN (…)</td><td>Déclenché même sans ligne</td></tr><tr><td class="mono">N33</td><td>Maîtrise</td><td class="mono" style="font-size:12.5px;font-weight:500">information_schema.triggers · DISABLE/ENABLE TRIGGER USER · pg_trigger_depth()</td><td>Ordre alphabétique</td></tr></table></div>
+<h3>🧭 Quel trigger pour quel besoin ?</h3>
+<table class="grid-table"><tr><th>Besoin</th><th>Moment</th><th>Niveau</th><th>Retour</th></tr>
+<tr><td>Corriger ou compléter la ligne (normaliser, dater)</td><td>BEFORE</td><td>ROW</td><td class="mono">RETURN NEW</td></tr>
+<tr><td>Refuser une ligne avec un message métier</td><td>BEFORE</td><td>ROW</td><td class="mono">RAISE EXCEPTION</td></tr>
+<tr><td>Journaliser chaque modification</td><td>AFTER</td><td>ROW</td><td class="mono">RETURN NULL</td></tr>
+<tr><td>Maintenir un total dans une autre table</td><td>AFTER</td><td>ROW</td><td class="mono">RETURN NULL</td></tr>
+<tr><td>Résumer une modification de masse</td><td>AFTER</td><td>STATEMENT + tables de transition</td><td class="mono">RETURN NULL</td></tr>
+<tr><td>Réagir seulement dans un cas précis</td><td>AFTER</td><td>ROW + WHEN (…)</td><td class="mono">RETURN NULL</td></tr></table>
+<div class="instruction-box">💡 Dans psql : <code class="inl">\df</code> liste les fonctions et procédures, <code class="inl">\sf nom</code> affiche leur code, et <code class="inl">\d nom_table</code> liste les triggers de la table en bas de sa description.</div></div></section><section class="panel" id="glossaire"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">📖</span>Glossaire — Séance 4</div><div><span class="ftag f1">Procédures</span><span class="ftag f2">Erreurs & lots</span><span class="ftag f3">Triggers</span><span class="ftag f4">Automatisation</span><span class="ftag f5">Bonnes pratiques</span></div><br><input class="gl-search" type="search" placeholder="Rechercher un terme…" aria-label="Rechercher un terme"><div class="gl-item"><b>AFTER</b> <span class="ftag f3">Triggers</span><p>Moment d&#x27;exécution après l&#x27;écriture : permet d&#x27;agir sur d&#x27;autres tables.</p></div><div class="gl-item"><b>Atomicité</b> <span class="ftag f2">Erreurs & lots</span><p>Propriété d&#x27;une opération qui réussit entièrement ou n&#x27;a aucun effet.</p></div><div class="gl-item"><b>BEFORE</b> <span class="ftag f3">Triggers</span><p>Moment d&#x27;exécution avant l&#x27;écriture : permet de modifier ou refuser la ligne.</p></div><div class="gl-item"><b>Bloc anonyme (DO)</b> <span class="ftag f1">Procédures</span><p>Code PL/pgSQL exécuté une seule fois, sans créer de fonction ni de procédure.</p></div><div class="gl-item"><b>Bloc EXCEPTION</b> <span class="ftag f2">Erreurs & lots</span><p>Partie d&#x27;un bloc qui intercepte une erreur et exécute un traitement de repli.</p></div><div class="gl-item"><b>CALL</b> <span class="ftag f1">Procédures</span><p>Instruction qui exécute une procédure.</p></div><div class="gl-item"><b>Cascade de triggers</b> <span class="ftag f5">Bonnes pratiques</span><p>Enchaînement où un trigger modifie une table qui déclenche à son tour d&#x27;autres triggers.</p></div><div class="gl-item"><b>Clause WHEN</b> <span class="ftag f4">Automatisation</span><p>Condition qui décide si la fonction trigger doit être appelée.</p></div><div class="gl-item"><b>DISABLE TRIGGER</b> <span class="ftag f5">Bonnes pratiques</span><p>Option d&#x27;ALTER TABLE qui suspend les triggers d&#x27;une table, par exemple pour un import massif.</p></div><div class="gl-item"><b>Donnée dérivée</b> <span class="ftag f4">Automatisation</span><p>Valeur calculée à partir d&#x27;autres données et stockée pour être lue rapidement.</p></div><div class="gl-item"><b>Fonction trigger</b> <span class="ftag f3">Triggers</span><p>Fonction sans paramètre, RETURNS TRIGGER, appelée par un trigger.</p></div><div class="gl-item"><b>FOR EACH ROW</b> <span class="ftag f4">Automatisation</span><p>Trigger exécuté une fois par ligne modifiée.</p></div><div class="gl-item"><b>FOR EACH STATEMENT</b> <span class="ftag f4">Automatisation</span><p>Trigger exécuté une fois par instruction, quel que soit le nombre de lignes.</p></div><div class="gl-item"><b>Journal d&#x27;audit</b> <span class="ftag f4">Automatisation</span><p>Table qui conserve l&#x27;historique des modifications : qui, quand, avant, après.</p></div><div class="gl-item"><b>NEW / OLD</b> <span class="ftag f3">Triggers</span><p>Nouvelle et ancienne version de la ligne modifiée, accessibles dans une fonction trigger.</p></div><div class="gl-item"><b>Paramètre INOUT</b> <span class="ftag f1">Procédures</span><p>Paramètre d&#x27;une procédure qui reçoit une valeur et en renvoie une à l&#x27;appelant.</p></div><div class="gl-item"><b>pg_trigger_depth()</b> <span class="ftag f5">Bonnes pratiques</span><p>Fonction qui renvoie le niveau d&#x27;imbrication des triggers en cours.</p></div><div class="gl-item"><b>Procédure stockée</b> <span class="ftag f1">Procédures</span><p>Routine enregistrée dans la base, appelée par CALL, qui enchaîne des opérations sans renvoyer de valeur.</p></div><div class="gl-item"><b>RAISE EXCEPTION</b> <span class="ftag f2">Erreurs & lots</span><p>Déclenche une erreur : l&#x27;exécution s&#x27;arrête et les modifications sont annulées.</p></div><div class="gl-item"><b>RAISE NOTICE</b> <span class="ftag f2">Erreurs & lots</span><p>Affiche un message d&#x27;information sans interrompre l&#x27;exécution.</p></div><div class="gl-item"><b>%ROWTYPE</b> <span class="ftag f1">Procédures</span><p>Type d&#x27;une variable qui reprend la structure d&#x27;une ligne de table.</p></div><div class="gl-item"><b>SQLSTATE / SQLERRM</b> <span class="ftag f2">Erreurs & lots</span><p>Code et message de l&#x27;erreur interceptée, disponibles dans un bloc EXCEPTION.</p></div><div class="gl-item"><b>Table de transition</b> <span class="ftag f4">Automatisation</span><p>Ensemble des lignes avant ou après modification, visible dans un trigger d&#x27;instruction.</p></div><div class="gl-item"><b>TG_OP</b> <span class="ftag f3">Triggers</span><p>Variable qui indique l&#x27;opération en cours : INSERT, UPDATE ou DELETE.</p></div><div class="gl-item"><b>Traitement par lots</b> <span class="ftag f2">Erreurs & lots</span><p>Découpage d&#x27;un long traitement en portions validées successivement par COMMIT.</p></div><div class="gl-item"><b>Trigger</b> <span class="ftag f3">Triggers</span><p>Déclencheur qui exécute automatiquement une fonction lors d&#x27;une modification de table.</p></div></div></section></main>
+<footer>SQL avancé avec PostgreSQL · M1 Tech Lead</footer>
+<script>
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+function show(id){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});}
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.go);
+if(a.dataset.anchor){setTimeout(()=>document.getElementById(a.dataset.anchor).scrollIntoView({behavior:'smooth'}),60);}}));
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{
+ const txt=b.closest('.code').querySelector('pre').innerText;
+ const done=()=>{b.textContent='Copié ✓';b.classList.add('done');setTimeout(()=>{b.textContent='Copier';b.classList.remove('done')},1500)};
+ if(navigator.clipboard){navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(txt,done))}else fallback(txt,done);}));
+function fallback(t,done){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){}a.remove();}
+function refresh(){const all=document.querySelectorAll('.understood input');const d=[...all].filter(i=>i.checked).length;
+ const f=document.getElementById('gprog-fill');if(!f)return;f.style.width=(all.length?d/all.length*100:0)+'%';
+ document.getElementById('gprog-txt').textContent=d+' / '+all.length;}
+document.querySelectorAll('.understood input').forEach(i=>i.addEventListener('change',()=>{i.closest('.understood').classList.toggle('done',i.checked);refresh();}));
+refresh();
+document.querySelectorAll('.os-tabs').forEach(g=>g.querySelectorAll('.os').forEach(b=>b.addEventListener('click',()=>{
+ const box=g.parentElement;g.querySelectorAll('.os').forEach(x=>x.classList.toggle('active',x===b));
+ box.querySelectorAll(':scope > .os-panel').forEach(p=>p.classList.toggle('active',p.dataset.os===b.dataset.os));})));
+const s=document.querySelector('.gl-search');if(s){s.addEventListener('input',()=>{const q=s.value.toLowerCase();
+ document.querySelectorAll('.gl-item').forEach(i=>i.style.display=i.innerText.toLowerCase().includes(q)?'':'none');});}
+const DEMO4_SQL="-- =====================================================================\n--  Compl\u00e9ment s\u00e9ance 4 \u2014 SQL avanc\u00e9 avec PostgreSQL\n--  \u00c0 ex\u00e9cuter sur la base cours_sql (ind\u00e9pendant des autres tables).\n--  Un jeu de r\u00f4le en ligne : aventuriers, pi\u00e8ces d'or, boutique d'objets, inventaires.\n--  Script r\u00e9-ex\u00e9cutable : il supprime aussi les proc\u00e9dures, fonctions et triggers\n--  cr\u00e9\u00e9s pendant la s\u00e9ance, pour repartir de z\u00e9ro.\n-- =====================================================================\n\nDROP TABLE IF EXISTS stats_ventes, audit, journal_prix, alertes, achats, inventaire, objets, aventuriers CASCADE;\nDROP PROCEDURE IF EXISTS crediter(TEXT, INTEGER), acheter(TEXT, TEXT, INTEGER, INTEGER),\n                         inscrire(TEXT), distribuer_bonus(INTEGER, INTEGER);\nDROP FUNCTION IF EXISTS trg_normaliser_pseudo(), trg_maj_objet(), trg_audit(),\n                        trg_nb_objets(), trg_journal_prix(), trg_alerte_rupture(), trg_boucle() CASCADE;\n\nCREATE TABLE aventuriers (\n    id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    pseudo     VARCHAR(30) NOT NULL UNIQUE,\n    niveau     INTEGER     NOT NULL DEFAULT 1 CHECK (niveau >= 1),\n    pieces     INTEGER     NOT NULL DEFAULT 100 CHECK (pieces >= 0),   -- pi\u00e8ces d'or\n    nb_objets  INTEGER     NOT NULL DEFAULT 0                          -- total des objets poss\u00e9d\u00e9s\n);\n\nCREATE TABLE objets (\n    id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    nom        VARCHAR(40) NOT NULL UNIQUE,\n    categorie  VARCHAR(20) NOT NULL,\n    prix       INTEGER     NOT NULL CHECK (prix > 0),\n    stock      INTEGER     NOT NULL CHECK (stock >= 0),\n    maj_le     TIMESTAMP                                -- derni\u00e8re modification\n);\n\nCREATE TABLE inventaire (\n    aventurier_id  INTEGER NOT NULL REFERENCES aventuriers(id),\n    objet_id       INTEGER NOT NULL REFERENCES objets(id),\n    quantite       INTEGER NOT NULL CHECK (quantite > 0),\n    PRIMARY KEY (aventurier_id, objet_id)\n);\n\nCREATE TABLE achats (\n    id             INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    aventurier_id  INTEGER NOT NULL REFERENCES aventuriers(id),\n    objet_id       INTEGER NOT NULL REFERENCES objets(id),\n    quantite       INTEGER NOT NULL,\n    prix_total     INTEGER NOT NULL,\n    achete_le      TIMESTAMP NOT NULL DEFAULT now()\n);\n\n-- Tables aliment\u00e9es par les triggers de la s\u00e9ance\nCREATE TABLE audit (\n    id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    table_nom  TEXT      NOT NULL,\n    operation  TEXT      NOT NULL,\n    ancienne   JSONB,\n    nouvelle   JSONB,\n    par        TEXT      NOT NULL DEFAULT current_user,\n    le         TIMESTAMP NOT NULL DEFAULT now()\n);\n\nCREATE TABLE journal_prix (\n    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    nb_objets       INTEGER NOT NULL,\n    variation_moy   NUMERIC(6,2) NOT NULL,          -- en %\n    le              TIMESTAMP NOT NULL DEFAULT now()\n);\n\nCREATE TABLE alertes (\n    id        INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n    message   TEXT NOT NULL,\n    le        TIMESTAMP NOT NULL DEFAULT now()\n);\n\nINSERT INTO aventuriers (pseudo, niveau, pieces) VALUES\n  ('zed', 12, 540), ('lyna', 8, 320), ('mo', 15, 1200), ('kenji', 3, 45),\n  ('sara', 6, 210), ('nova', 20, 2500), ('kairo', 1, 100), ('atlas', 9, 380);\n\nINSERT INTO objets (nom, categorie, prix, stock) VALUES\n  ('Potion de soin', 'potion', 25, 50),\n  ('\u00c9lixir de mana', 'potion', 40, 30),\n  ('\u00c9p\u00e9e courte', 'arme', 150, 10),\n  ('Arc long', 'arme', 220, 5),\n  ('Bouclier en bois', 'armure', 90, 8),\n  ('Cotte de mailles', 'armure', 480, 2),\n  ('Parchemin de t\u00e9l\u00e9portation', 'magie', 300, 1),\n  ('Carte au tr\u00e9sor', 'qu\u00eate', 999, 1);\n\nINSERT INTO inventaire (aventurier_id, objet_id, quantite) VALUES\n  (1, 1, 3), (1, 3, 1), (2, 1, 2), (2, 4, 1), (3, 3, 1), (3, 6, 1),\n  (3, 2, 5), (6, 7, 1), (6, 5, 1), (8, 1, 4);\n\n-- nb_objets coh\u00e9rent avec l'inventaire de d\u00e9part\nUPDATE aventuriers a\nSET nb_objets = COALESCE((SELECT SUM(quantite) FROM inventaire i WHERE i.aventurier_id = a.id), 0);\n\n-- ---------- Contr\u00f4le ----------\nSELECT 'aventuriers' AS table_name, COUNT(*) AS lignes FROM aventuriers\nUNION ALL SELECT 'objets', COUNT(*) FROM objets\nUNION ALL SELECT 'inventaire', COUNT(*) FROM inventaire;\n";
+document.getElementById('dl-demo4').addEventListener('click',()=>{const b=new Blob([DEMO4_SQL],{type:'text/plain'});
+const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='demo-s4.sql';document.body.appendChild(a);a.click();a.remove();});</script></body></html>

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance 3 — Index & optimisation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;
+--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f1f5f9;--card:#fff;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15.5px}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:44px 20px 34px}
+.wrap{max-width:1000px;margin:0 auto}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+header h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.2;margin-bottom:10px}
+header p.lead{color:#cbd5e1;max-width:700px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:13px;font-weight:500}
+.gprog{margin-top:22px;max-width:480px}
+.gprog-label{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:6px}
+.gprog-bar{height:8px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+.gprog-fill{height:100%;width:0;background:#34d399;transition:width .4s}
+.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(15,23,42,.05)}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 10px}
+.tab{background:none;border:none;border-bottom:3px solid transparent;padding:15px 15px;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--primary)} .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+main{padding:28px 14px 60px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;margin-bottom:14px;line-height:1.3}
+.icon-bg{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.ib-blue{background:var(--primary-light)}.ib-green{background:var(--secondary-light)}.ib-amber{background:var(--accent-light)}.ib-red{background:var(--danger-light)}.ib-purple{background:var(--purple-light)}
+.num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--primary);background:var(--primary-light);padding:3px 9px;border-radius:7px}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+p+p{margin-top:8px}
+ul.clean{list-style:none;margin:6px 0}
+ul.clean li{padding:4px 0 4px 22px;position:relative}
+ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--primary);font-weight:700}
+ol.steps{margin:6px 0 6px 22px} ol.steps li{margin:4px 0}
+.objectif-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:14px;color:var(--primary-dark)}
+.instruction-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;margin:14px 0;color:#78350f}
+.warn-box{background:var(--danger-light);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;margin:14px 0;color:#7f1d1d}
+.ok-box{background:var(--secondary-light);border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin:14px 0;color:#064e3b}
+.analogie{background:var(--purple-light);border-left:4px solid var(--purple);border-radius:10px;padding:14px 18px;margin:14px 0;color:#4c1d95}
+.ftag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0}
+.f1{background:#dbeafe;color:#1e40af}.f2{background:#d1fae5;color:#065f46}.f3{background:#fef3c7;color:#92400e}.f4{background:#fee2e2;color:#991b1b}.f5{background:#ede9fe;color:#5b21b6}
+code.inl{background:#e2e8f0;padding:1px 6px;border-radius:5px;font-size:13px}
+.code{margin:10px 0;border-radius:10px;overflow:hidden;background:var(--dark)}
+.code-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#1e293b;color:#94a3b8;font-size:12px;font-family:'JetBrains Mono',monospace}
+.copy{background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.copy:hover{background:#475569}.copy.done{background:var(--secondary)}
+.code pre{color:#e2e8f0;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0}
+pre .c{color:#64748b;font-style:italic} pre .k{color:#93c5fd;font-weight:500} pre .s{color:#86efac} pre .n{color:#fcd34d} pre .m{color:#f9a8d4}
+pre.sh{color:#a7f3d0}
+.res{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:4px 0 12px}
+.res-bar{display:flex;justify-content:space-between;background:#f8fafc;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;font-weight:700;color:var(--secondary)}
+.res-bar span{color:var(--muted);font-weight:500}
+.tbl{overflow-x:auto}
+.tbl table,.grid-table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#f1f5f9;text-align:left;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate,#334155);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 12px;border-bottom:1px solid #f1f5f9;font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap}
+.tbl td.null{color:#94a3b8;font-style:italic}
+.res-note{padding:9px 12px;font-size:13px;color:var(--muted);background:#f8fafc;border-top:1px solid var(--border)}
+.grid-table th{background:var(--dark-2);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:13px}
+.grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.grid-table tr:nth-child(even) td{background:#f8fafc}
+.grid-table td:first-child{font-weight:600}
+.understood{display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.understood input{accent-color:var(--secondary);width:18px;height:18px}
+.understood.done{border-color:var(--secondary);color:var(--secondary);background:var(--secondary-light)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.toc a{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.toc a:hover{border-color:var(--primary)}
+.result-panel{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:var(--radius);padding:22px 24px;margin:6px 0 22px}
+.result-panel h4{color:#fff;font-size:16px;margin-bottom:8px}
+.result-panel .score{color:#34d399;font-weight:800;font-family:'JetBrains Mono',monospace}
+.result-panel ul{margin-left:18px}.result-panel li{margin:3px 0}
+.os-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.os{font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--muted)}
+.os.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.os-panel{display:none}.os-panel.active{display:block}
+.gl-search{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px}
+.gl-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.gl-item b{font-family:'JetBrains Mono',monospace;font-size:14px}
+.gl-item p{font-size:14px;color:#334155;margin-top:2px}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--primary);background:var(--primary);color:#fff}
+.btn:hover{filter:brightness(.95)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 40px}
+@media (max-width:700px){.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+pre.plantxt{margin:0;padding:12px 14px;background:#0f172a;color:#cbd5e1;font-size:12px;line-height:1.55;overflow-x:auto;white-space:pre}
+.res.plan{border-color:#1e293b}
+.plantxt .bad{color:#fca5a5;font-weight:700}.plantxt .good{color:#6ee7b7;font-weight:700}.plantxt .nd{color:#93c5fd;font-weight:700}
+.plantxt .pt{color:#fcd34d;font-weight:700}.plantxt .pb{color:#c4b5fd}.plantxt .pw{color:#fdba74}.plantxt .pa{color:#e2e8f0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;margin:8px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+</style></head><body>
+<header><div class="wrap"><span class="badge">🐘 SQL avancé avec PostgreSQL · Séance 3</span><h1>Index & optimisation de requêtes</h1><p class="lead">Lire un plan d'exécution, choisir le bon index, réécrire les requêtes lentes et prouver chaque gain par la mesure.</p>
+<div class="meta"><span class="pill">📚 8 notions (N18 → N25)</span><span class="pill">🧪 Plans réels mesurés sur PostgreSQL</span><span class="pill">🗄 1 million d'écoutes</span><span class="pill">📌 Fiche mémo + glossaire</span></div><div class="gprog"><div class="gprog-label"><span>Notions comprises</span><span id="gprog-txt">0</span></div><div class="gprog-bar"><div class="gprog-fill" id="gprog-fill"></div></div></div></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" role="tablist"><button class="tab active" data-tab="intro" role="tab">🎯 Introduction</button><button class="tab" data-tab="p1" role="tab">1 · Lire un plan</button><button class="tab" data-tab="p2" role="tab">2 · Choisir les index</button><button class="tab" data-tab="p3" role="tab">3 · Optimiser</button><button class="tab" data-tab="memo" role="tab">📌 Fiche mémo</button><button class="tab" data-tab="glossaire" role="tab">📖 Glossaire</button></div></nav>
+<main class="wrap"><section class="panel active" id="intro">
+<div class="card"><div class="section-title"><span class="icon-bg ib-blue">🎯</span>Objectifs de la séance</div>
+<div class="objectif-box">Lire un plan d'exécution, identifier ce qui ralentit une requête, choisir le bon index et <strong>prouver le gain par la mesure</strong>, sans multiplier les index inutiles.</div>
+<ul class="clean">
+<li><strong>Partie 1 — Lire un plan</strong> : EXPLAIN, modes de lecture, jointures et statistiques.</li>
+<li><strong>Partie 2 — Choisir les bons index</strong> : B-tree simple et composite, partiel, sur expression, couvrant, GIN.</li>
+<li><strong>Partie 3 — Optimiser avec méthode</strong> : réécritures, coût des index, entretien, pg_stat_statements, IA et sobriété.</li></ul>
+<p>Dans les plans, un code couleur guide la lecture :</p><div class="legend"><span><i style="background:#fca5a5"></i>Lecture complète / tri</span><span><i style="background:#6ee7b7"></i>Accès par index</span><span><i style="background:#fcd34d"></i>Temps total</span><span><i style="background:#c4b5fd"></i>Blocs lus</span><span><i style="background:#fdba74"></i>Lignes lues pour rien</span></div><p>Même structure que les séances précédentes ; la numérotation continue (N18 à N25).</p></div>
+
+<div class="card"><div class="section-title"><span class="icon-bg ib-green">🔗</span>Ce que l'on réutilise des séances 1 et 2</div>
+<table class="grid-table"><tr><th>Notion</th><th>Réutilisée dans</th></tr>
+<tr><td>N2 · Clés primaires et contraintes</td><td>N19 : une clé primaire crée automatiquement un index B-tree</td></tr>
+<tr><td>N4 · Jointures</td><td>N20 : les trois algorithmes de jointure</td></tr>
+<tr><td>N13 · JSONB</td><td>N23 : l'index GIN rend @&gt; rapide… mais pas -&gt;&gt;</td></tr>
+<tr><td>N15 · Vues matérialisées</td><td>Une autre forme d'optimisation : calculer une fois plutôt qu'à chaque lecture</td></tr></table></div>
+
+<div class="card" id="setup"><div class="section-title"><span class="icon-bg ib-amber">📥</span>Avant de commencer : générer le jeu de données volumineux</div>
+<p>Un index ne fait aucune différence sur 12 lignes. Cette séance travaille sur une plateforme de streaming fictive : <strong>1 million d'écoutes</strong>, 200 000 morceaux, 50 000 utilisateurs et 5 000 artistes. Le script génère les données en 10 à 60 secondes et occupe environ 90 Mo.</p>
+<p><button class="btn" type="button" id="dl-demo3">⬇️ Télécharger demo-s3.sql</button></p>
+<div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\c</span> cours_sql
+<span class="m">\i</span> C:/chemin/vers/demo-s3.sql</pre></div>
+<p>Contrôle attendu :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="s">'artistes'</span> <span class="k">AS</span> table_name, <span class="k">COUNT</span>(*) <span class="k">AS</span> lignes <span class="k">FROM</span> artistes
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'utilisateurs_app'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> utilisateurs_app
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'morceaux'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> morceaux
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'ecoutes'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>4 lignes</span></div><div class="tbl"><table><thead><tr><th>table_name</th><th>lignes</th></tr></thead><tbody><tr><td class="">artistes</td><td class="">5000</td></tr><tr><td class="">utilisateurs_app</td><td class="">50000</td></tr><tr><td class="">morceaux</td><td class="">200000</td></tr><tr><td class="">ecoutes</td><td class="">1000000</td></tr></tbody></table></div></div>
+<div class="instruction-box">📌 <strong>Suivez les notions dans l'ordre</strong> : chaque plan dépend des index créés juste avant. Pour repartir de zéro (sans aucun index secondaire), relancez <code class="inl">demo-s3.sql</code>.</div>
+<div class="warn-box">⏱ <strong>Vos temps seront différents</strong> de ceux affichés, qui ont été mesurés sur la machine de test. Comparez plutôt la <strong>forme du plan</strong>, les <strong>lignes</strong> et les <strong>blocs lus</strong> (Buffers), qui varient très peu d'une machine à l'autre.</div>
+<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Voir le contenu de demo-s3.sql</summary><div class="code"><div class="code-bar"><span>demo-s3.sql</span><button class="copy" type="button">Copier</button></div><pre><span class="c">-- =====================================================================</span>
+<span class="c">--  Complément séance 3 — SQL avancé avec PostgreSQL</span>
+<span class="c">--  À exécuter sur la base cours_sql (indépendant des autres tables).</span>
+<span class="c">--  Génère une plateforme de streaming musical volumineuse :</span>
+<span class="c">--  5 000 artistes, 50 000 utilisateurs, 200 000 morceaux, 1 000 000 d'écoutes.</span>
+<span class="c">--  Données fictives et déterministes : tout le monde obtient les mêmes lignes.</span>
+<span class="c">--  Durée : 10 à 60 secondes selon la machine.</span>
+<span class="c">--  Script ré-exécutable : il supprime puis recrée ses tables (et leurs index).</span>
+<span class="c">-- =====================================================================</span>
+
+<span class="k">DROP</span> <span class="k">TABLE</span> <span class="k">IF</span> <span class="k">EXISTS</span> ecoutes, morceaux, utilisateurs_app, artistes <span class="k">CASCADE</span>;
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> artistes (
+    id     <span class="k">INTEGER</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    nom    <span class="k">VARCHAR</span>(<span class="n">60</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    pays   <span class="k">VARCHAR</span>(<span class="n">2</span>)  <span class="k">NOT</span> <span class="k">NULL</span>
+);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> utilisateurs_app (
+    id          <span class="k">INTEGER</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    pseudo      <span class="k">VARCHAR</span>(<span class="n">30</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    pays        <span class="k">VARCHAR</span>(<span class="n">2</span>)  <span class="k">NOT</span> <span class="k">NULL</span>,
+    inscrit_le  <span class="k">DATE</span>        <span class="k">NOT</span> <span class="k">NULL</span>
+);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> morceaux (
+    id          <span class="k">INTEGER</span> <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    artiste_id  <span class="k">INTEGER</span> <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> artistes(id),
+    titre       <span class="k">VARCHAR</span>(<span class="n">80</span>) <span class="k">NOT</span> <span class="k">NULL</span>,
+    infos       JSONB <span class="k">NOT</span> <span class="k">NULL</span>                 <span class="c">-- tags, bpm, explicite</span>
+);
+
+<span class="k">CREATE</span> <span class="k">TABLE</span> ecoutes (
+    id              BIGINT <span class="k">PRIMARY</span> <span class="k">KEY</span>,
+    utilisateur_id  <span class="k">INTEGER</span>   <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> utilisateurs_app(id),
+    morceau_id      <span class="k">INTEGER</span>   <span class="k">NOT</span> <span class="k">NULL</span> <span class="k">REFERENCES</span> morceaux(id),
+    ecoute_le       TIMESTAMP <span class="k">NOT</span> <span class="k">NULL</span>,
+    duree_s         <span class="k">INTEGER</span>   <span class="k">NOT</span> <span class="k">NULL</span>,        <span class="c">-- secondes écoutées</span>
+    plateforme      <span class="k">VARCHAR</span>(<span class="n">10</span>) <span class="k">NOT</span> <span class="k">NULL</span>,      <span class="c">-- mobile, web, tv, enceinte</span>
+    terminee        <span class="k">BOOLEAN</span>   <span class="k">NOT</span> <span class="k">NULL</span>         <span class="c">-- morceau écouté jusqu'au bout ?</span>
+);
+
+<span class="c">-- ---------- Artistes ----------</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> artistes (id, nom, pays)
+<span class="k">SELECT</span> i,
+       (ARRAY[<span class="s">'Nova'</span>,<span class="s">'Kairo'</span>,<span class="s">'Lune'</span>,<span class="s">'Atlas'</span>,<span class="s">'Echo'</span>,<span class="s">'Vega'</span>,<span class="s">'Orion'</span>,<span class="s">'Sia'</span>,<span class="s">'Milo'</span>,<span class="s">'Zephyr'</span>])[<span class="n">1</span> + i % <span class="n">10</span>]
+         || <span class="s">' '</span> || (ARRAY[<span class="s">'Collective'</span>,<span class="s">'Project'</span>,<span class="s">'Band'</span>,<span class="s">'Crew'</span>,<span class="s">'Sound'</span>,<span class="s">'Club'</span>,<span class="s">'Trio'</span>,<span class="s">'Duo'</span>])[<span class="n">1</span> + (i / <span class="n">10</span>) % <span class="n">8</span>]
+         || <span class="s">' '</span> || i,
+       (ARRAY[<span class="s">'FR'</span>,<span class="s">'FR'</span>,<span class="s">'FR'</span>,<span class="s">'US'</span>,<span class="s">'US'</span>,<span class="s">'GB'</span>,<span class="s">'DE'</span>,<span class="s">'BE'</span>,<span class="s">'CA'</span>,<span class="s">'JP'</span>])[<span class="n">1</span> + (i * <span class="n">7</span>) % <span class="n">10</span>]
+<span class="k">FROM</span> generate_series(<span class="n">1</span>, <span class="n">5000</span>) <span class="k">AS</span> i;
+
+<span class="c">-- ---------- Utilisateurs ----------</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> utilisateurs_app (id, pseudo, pays, inscrit_le)
+<span class="k">SELECT</span> i,
+       <span class="s">'user_'</span> || i,
+       (ARRAY[<span class="s">'FR'</span>,<span class="s">'FR'</span>,<span class="s">'FR'</span>,<span class="s">'FR'</span>,<span class="s">'BE'</span>,<span class="s">'CH'</span>,<span class="s">'CA'</span>,<span class="s">'MA'</span>,<span class="s">'SN'</span>,<span class="s">'CI'</span>])[<span class="n">1</span> + (i * <span class="n">3</span>) % <span class="n">10</span>],
+       <span class="k">DATE</span> <span class="s">'2020-01-01'</span> + (i * <span class="n">37</span>) % <span class="n">1800</span>
+<span class="k">FROM</span> generate_series(<span class="n">1</span>, <span class="n">50000</span>) <span class="k">AS</span> i;
+
+<span class="c">-- ---------- Morceaux ----------</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> morceaux (id, artiste_id, titre, infos)
+<span class="k">SELECT</span> i,
+       <span class="n">1</span> + (i * <span class="n">7919</span>) % <span class="n">5000</span>,
+       (ARRAY[<span class="s">'Midnight'</span>,<span class="s">'Golden'</span>,<span class="s">'Electric'</span>,<span class="s">'Silent'</span>,<span class="s">'Crazy'</span>,<span class="s">'Broken'</span>,<span class="s">'Endless'</span>,<span class="s">'Neon'</span>,<span class="s">'Wild'</span>,<span class="s">'Lost'</span>,
+              <span class="s">'Blue'</span>,<span class="s">'Summer'</span>,<span class="s">'Frozen'</span>,<span class="s">'Burning'</span>,<span class="s">'Hidden'</span>,<span class="s">'Velvet'</span>,<span class="s">'Paper'</span>,<span class="s">'Crystal'</span>,<span class="s">'Shadow'</span>,<span class="s">'Sweet'</span>])[<span class="n">1</span> + i % <span class="n">20</span>]
+         || <span class="s">' '</span> ||
+       (ARRAY[<span class="s">'Dreams'</span>,<span class="s">'City'</span>,<span class="s">'Heart'</span>,<span class="s">'Rain'</span>,<span class="s">'Lullaby'</span>,<span class="s">'Fire'</span>,<span class="s">'Road'</span>,<span class="s">'Night'</span>,<span class="s">'Waves'</span>,<span class="s">'Lights'</span>,
+              <span class="s">'Story'</span>,<span class="s">'Garden'</span>,<span class="s">'Echoes'</span>,<span class="s">'Skies'</span>,<span class="s">'River'</span>,<span class="s">'Mirror'</span>,<span class="s">'Storm'</span>,<span class="s">'Party'</span>,<span class="s">'Memories'</span>,<span class="s">'Horizon'</span>])[<span class="n">1</span> + (i / <span class="n">20</span>) % <span class="n">20</span>],
+       jsonb_build_object(
+           <span class="s">'tags'</span>, <span class="k">CASE</span> <span class="k">WHEN</span> i % <span class="n">100</span> = <span class="n">0</span> <span class="k">THEN</span> jsonb_build_array(<span class="s">'acoustique'</span>, <span class="s">'live'</span>)
+                        <span class="k">ELSE</span> jsonb_build_array(
+                             (ARRAY[<span class="s">'pop'</span>,<span class="s">'rock'</span>,<span class="s">'rap'</span>,<span class="s">'electro'</span>,<span class="s">'chill'</span>,<span class="s">'jazz'</span>,<span class="s">'rnb'</span>,<span class="s">'indie'</span>,<span class="s">'dance'</span>,<span class="s">'folk'</span>])[<span class="n">1</span> + i % <span class="n">10</span>],
+                             (ARRAY[<span class="s">'energique'</span>,<span class="s">'calme'</span>,<span class="s">'triste'</span>,<span class="s">'festif'</span>,<span class="s">'romantique'</span>])[<span class="n">1</span> + (i / <span class="n">10</span>) % <span class="n">5</span>])
+                   <span class="k">END</span>,
+           <span class="s">'bpm'</span>, <span class="n">60</span> + (i * <span class="n">13</span>) % <span class="n">121</span>,
+           <span class="s">'explicite'</span>, (i % <span class="n">10</span> = <span class="n">3</span>))
+<span class="k">FROM</span> generate_series(<span class="n">1</span>, <span class="n">200000</span>) <span class="k">AS</span> i;
+
+<span class="c">-- ---------- Écoutes ----------</span>
+<span class="c">-- Les petits identifiants de morceaux sont plus écoutés (distribution réaliste des tubes)</span>
+<span class="k">INSERT</span> <span class="k">INTO</span> ecoutes (id, utilisateur_id, morceau_id, ecoute_le, duree_s, plateforme, terminee)
+<span class="k">SELECT</span> i,
+       <span class="n">1</span> + (i * <span class="n">7919</span>) % <span class="n">50000</span>,
+       <span class="n">1</span> + FLOOR(<span class="n">200000</span> * POWER(((i * <span class="n">104729</span>) % <span class="n">1000003</span>) / <span class="n">1000003.0</span>, <span class="n">3</span>))::<span class="k">INTEGER</span>,
+       TIMESTAMP <span class="s">'2025-01-01 00:00'</span> + ((i * <span class="n">7907</span>) % <span class="n">525600</span>) * INTERVAL <span class="s">'1 minute'</span>,
+       <span class="n">30</span> + (i * <span class="n">31</span>) % <span class="n">240</span>,
+       (ARRAY[<span class="s">'mobile'</span>,<span class="s">'mobile'</span>,<span class="s">'mobile'</span>,<span class="s">'mobile'</span>,<span class="s">'mobile'</span>,<span class="s">'mobile'</span>,<span class="s">'web'</span>,<span class="s">'web'</span>,<span class="s">'enceinte'</span>,<span class="s">'tv'</span>])[<span class="n">1</span> + (i * <span class="n">11</span>) % <span class="n">10</span>],
+       (i * <span class="n">17</span>) % <span class="n">20</span> &lt;&gt; <span class="n">0</span>                       <span class="c">-- 95 % des écoutes vont jusqu'au bout</span>
+<span class="k">FROM</span> generate_series(<span class="n">1</span>::BIGINT, <span class="n">1000000</span>) <span class="k">AS</span> i;
+
+<span class="c">-- Statistiques à jour pour le planificateur + carte de visibilité (index-only scans)</span>
+<span class="k">VACUUM</span> <span class="k">ANALYZE</span> artistes, utilisateurs_app, morceaux, ecoutes;
+
+<span class="c">-- ---------- Contrôle ----------</span>
+<span class="k">SELECT</span> <span class="s">'artistes'</span> <span class="k">AS</span> table_name, <span class="k">COUNT</span>(*) <span class="k">AS</span> lignes <span class="k">FROM</span> artistes
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'utilisateurs_app'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> utilisateurs_app
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'morceaux'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> morceaux
+<span class="k">UNION</span> <span class="k">ALL</span> <span class="k">SELECT</span> <span class="s">'ecoutes'</span>, <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes;</pre></div></details></div>
+
+<div class="card"><div class="section-title"><span class="icon-bg ib-purple">🗺</span>Les 8 notions</div>
+<div class="toc">
+<a href="#" data-go="p1" data-anchor="n18"><span class="num">N18</span>Lire un plan : EXPLAIN</a>
+<a href="#" data-go="p1" data-anchor="n19"><span class="num">N19</span>Les modes de lecture</a>
+<a href="#" data-go="p1" data-anchor="n20"><span class="num">N20</span>Jointures et statistiques</a>
+<a href="#" data-go="p2" data-anchor="n21"><span class="num">N21</span>B-tree simple et composite</a>
+<a href="#" data-go="p2" data-anchor="n22"><span class="num">N22</span>Partiel, expression, couvrant</a>
+<a href="#" data-go="p2" data-anchor="n23"><span class="num">N23</span>Index GIN</a>
+<a href="#" data-go="p3" data-anchor="n24"><span class="num">N24</span>Réécrire les requêtes lentes</a>
+<a href="#" data-go="p3" data-anchor="n25"><span class="num">N25</span>Mesurer, entretenir, rester sobre</a>
+</div></div></section><section class="panel" id="p1"><div class="card" id="n18">
+<div class="section-title"><span class="icon-bg ib-blue">🔭</span><span><span class="num">N18</span>&nbsp; Lire un plan : EXPLAIN et EXPLAIN ANALYZE</span></div>
+<span class="ftag f1">Plans</span>
+<h3>🎯 À quoi ça sert</h3><p>Avant d'optimiser, il faut <strong>savoir ce que fait PostgreSQL</strong>. Le <strong>planificateur</strong> choisit, pour chaque requête, une stratégie : quelles tables lire, dans quel ordre, avec quel index. <code class='inl'>EXPLAIN</code> affiche ce plan sans exécuter la requête ; <code class='inl'>EXPLAIN ANALYZE</code> l'exécute et ajoute les mesures réelles.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — le GPS qui propose un itinéraire (EXPLAIN) puis le trajet réellement parcouru, avec le temps et les bouchons rencontrés (EXPLAIN ANALYZE). On compare l'estimation et la réalité pour trouver où ça coince.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> requête;                              <span class="c">-- plan estimé, requête NON exécutée</span>
+<span class="k">EXPLAIN</span> <span class="k">ANALYZE</span> requête;                      <span class="c">-- exécute et mesure</span>
+<span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>) requête;           <span class="c">-- + blocs de données lus</span>
+
+<span class="c">-- Pendant cette séance, plans plus lisibles sans parallélisme :</span>
+<span class="k">SET</span> max_parallel_workers_per_gather = <span class="n">0</span>;      <span class="c">-- valable pour la session en cours</span></pre></div><table class="grid-table"><tr><th>Élément du plan</th><th>Signification</th></tr>
+<tr><td class="mono">cost=0.00..20765.00</td><td>Coût estimé (unité abstraite) : avant la 1re ligne .. pour toutes les lignes</td></tr>
+<tr><td class="mono">rows=20</td><td>Nombre de lignes <strong>estimé</strong> par le planificateur</td></tr>
+<tr><td class="mono">actual time=0.01..47.1</td><td>Temps <strong>réel</strong> en ms : 1re ligne .. dernière ligne</td></tr>
+<tr><td class="mono">rows=20 loops=1</td><td>Lignes <strong>réellement</strong> produites, et nombre d'exécutions du nœud</td></tr>
+<tr><td class="mono">Rows Removed by Filter</td><td>Lignes lues pour rien : le signal n°1 d'un index manquant</td></tr>
+<tr><td class="mono">Buffers: shared hit / read</td><td>Blocs de 8 Ko lus en mémoire (hit) ou sur disque (read) : la vraie mesure du travail</td></tr>
+<tr><td class="mono">Execution Time</td><td>Temps total d'exécution</td></tr></table>
+<div class="instruction-box">📌 Un plan se lit <strong>de l'intérieur vers l'extérieur</strong> : les lignes les plus indentées (précédées de <code class="inl">-&gt;</code>) s'exécutent en premier et alimentent leur parent.</div>
+<h3>🔬 Exemple commenté</h3><p>Retrouver les écoutes de l'utilisateur 4242. Par défaut, PostgreSQL répartit la lecture entre plusieurs processus (<em>workers</em>) que le nœud <code class='inl'>Gather</code> rassemble :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Gather</span>  (cost=1000.00..14475.33 rows=20 width=35)
+  Workers Planned: 2
+  -&gt;  <span class="bad">Parallel Seq Scan</span> on ecoutes  (cost=0.00..13473.33 rows=8 width=35)
+        Filter: (utilisateur_id = 4242)</pre><div class="res-note">Plan estimé seulement : la requête n'a pas été exécutée.</div></div><p>Même requête, parallélisme désactivé, exécutée et mesurée :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> * <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="bad">Seq Scan</span> on ecoutes  (cost=0.00..20765.00 rows=20 width=35) (<span class="pa">actual time=1.214..40.645 rows=20 loops=1</span>)
+  Filter: (utilisateur_id = 4242)
+  <span class="pw">Rows Removed by Filter: 999980</span>
+  <span class="pb">Buffers: shared hit=8265</span>
+Planning:
+  <span class="pb">Buffers: shared hit=78</span>
+Planning Time: 0.224 ms
+<span class="pt">Execution Time: 40.681 ms</span></pre><div class="res-note">Pour trouver 20 lignes, PostgreSQL en a lu un million et écarté 999 980 : 8 265 blocs, soit 65 Mo parcourus. Vos temps seront différents ; comparez surtout les lignes et les blocs lus, beaucoup plus stables.</div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box"><code class='inl'>EXPLAIN ANALYZE</code> <strong>exécute réellement</strong> la requête. Sur un <code class='inl'>UPDATE</code> ou un <code class='inl'>DELETE</code>, les données sont modifiées ! Pour analyser une écriture sans conséquence, encadrez-la : <code class='inl'>BEGIN; EXPLAIN ANALYZE DELETE …; ROLLBACK;</code></div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n19">
+<div class="section-title"><span class="icon-bg ib-green">🚪</span><span><span class="num">N19</span>&nbsp; Les modes de lecture d'une table</span></div>
+<span class="ftag f2">Accès & jointures</span>
+<h3>🎯 À quoi ça sert</h3><p>Pour lire une table, PostgreSQL a plusieurs stratégies. Il choisit celle qui lui semble la moins coûteuse selon le <strong>nombre de lignes attendues</strong>. Un index n'est pas toujours la meilleure option : pour ramener 60 % d'une table, tout lire d'un bloc est plus rapide que sauter d'une page à l'autre.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — une bibliothèque. Seq Scan : parcourir tous les rayons. Index Scan : consulter le fichier puis aller chercher chaque livre. Bitmap Scan : noter toutes les cotes, les trier par rayon, puis faire une seule tournée. Index Only Scan : la fiche du fichier contient déjà l'information, inutile d'aller en rayon.</div>
+<h3>🧩 Syntaxe</h3><table class="grid-table"><tr><th>Mode</th><th>Principe</th><th>Quand PostgreSQL le choisit</th></tr>
+<tr><td class="mono">Seq Scan</td><td>Lit toute la table, bloc après bloc</td><td>Pas d'index utilisable, ou une grande part de la table à lire</td></tr>
+<tr><td class="mono">Index Scan</td><td>Parcourt l'index, puis lit chaque ligne dans la table</td><td>Très peu de lignes, ou un ordre fourni par l'index</td></tr>
+<tr><td class="mono">Bitmap Heap Scan</td><td>Repère toutes les lignes dans l'index, puis lit les blocs dans l'ordre</td><td>Quelques dizaines à quelques milliers de lignes</td></tr>
+<tr><td class="mono">Index Only Scan</td><td>Répond avec l'index seul, sans lire la table</td><td>Toutes les colonnes demandées sont dans l'index</td></tr></table><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> nom_index <span class="k">ON</span> table (colonne);</pre></div>
+<h3>🔬 Exemple commenté</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_utilisateur <span class="k">ON</span> ecoutes (utilisateur_id);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> * <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="good">Bitmap Heap Scan</span> on ecoutes  (cost=4.58..81.88 rows=20 width=35) (<span class="pa">actual time=0.031..0.118 rows=20 loops=1</span>)
+  Recheck Cond: (utilisateur_id = 4242)
+  Heap Blocks: exact=20
+  <span class="pb">Buffers: shared hit=20 read=3</span>
+  -&gt;  <span class="good">Bitmap Index Scan</span> on idx_ecoutes_utilisateur  (cost=0.00..4.58 rows=20 width=0) (<span class="pa">actual time=0.021..0.021 rows=20 loops=1</span>)
+        Index Cond: (utilisateur_id = 4242)
+        <span class="pb">Buffers: shared read=3</span>
+Planning:
+  <span class="pb">Buffers: shared hit=98 read=1</span>
+Planning Time: 0.301 ms
+<span class="pt">Execution Time: 0.163 ms</span></pre><div class="res-note">Même requête qu'en N18 : 23 blocs lus au lieu de 8 265, et un temps divisé par plusieurs centaines.</div></div><p>Si l'on ne demande qu'un comptage, l'index suffit : la table n'est même pas lue.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=4.83..4.83 rows=1 width=8) (<span class="pa">actual time=0.022..0.022 rows=1 loops=1</span>)
+  <span class="pb">Buffers: shared hit=4</span>
+  -&gt;  <span class="good">Index Only Scan</span> using idx_ecoutes_utilisateur on ecoutes  (cost=0.42..4.78 rows=20 width=0) (<span class="pa">actual time=0.014..0.016 rows=20 loops=1</span>)
+        Index Cond: (utilisateur_id = 4242)
+        <span class="pa">Heap Fetches: 0</span>
+        <span class="pb">Buffers: shared hit=4</span>
+Planning:
+  <span class="pb">Buffers: shared hit=84</span>
+Planning Time: 0.255 ms
+<span class="pt">Execution Time: 0.061 ms</span></pre><div class="res-note">Heap Fetches: 0 : aucune ligne n'a été lue dans la table.</div></div><p>Une recherche par clé primaire, qui ramène une seule ligne :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> * <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> id = <span class="n">500000</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="good">Index Scan</span> using ecoutes_pkey on ecoutes  (cost=0.42..8.44 rows=1 width=35) (<span class="pa">actual time=0.027..0.028 rows=1 loops=1</span>)
+  Index Cond: (id = 500000)
+  <span class="pb">Buffers: shared hit=7</span>
+Planning:
+  <span class="pb">Buffers: shared hit=96</span>
+Planning Time: 0.241 ms
+<span class="pt">Execution Time: 0.063 ms</span></pre></div><p>Enfin, un index sur la plateforme, puis une requête qui ramène 60 % de la table :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_plateforme <span class="k">ON</span> ecoutes (plateforme);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> plateforme = <span class="s">'mobile'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="bad">Seq Scan</span> on ecoutes  (cost=0.00..20765.00 rows=600333 width=35) (<span class="pa">actual time=0.007..78.577 rows=600000 loops=1</span>)
+  Filter: ((plateforme)::text = 'mobile'::text)
+  <span class="pw">Rows Removed by Filter: 400000</span>
+Planning Time: 0.302 ms
+<span class="pt">Execution Time: 98.798 ms</span></pre><div class="res-note">L'index existe, mais PostgreSQL l'ignore : pour 600 000 lignes sur un million, tout lire est moins coûteux.</div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Croire qu'un index est utilisé dès qu'il existe. PostgreSQL l'ignore si la condition est <strong>peu sélective</strong> (beaucoup de lignes ramenées), si les statistiques sont fausses, ou si la requête est écrite d'une façon qui l'empêche de s'en servir (N24). Seul le plan fait foi.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n20">
+<div class="section-title"><span class="icon-bg ib-amber">🔗</span><span><span class="num">N20</span>&nbsp; Jointures et statistiques du planificateur</span></div>
+<span class="ftag f2">Accès & jointures</span>
+<h3>🎯 À quoi ça sert</h3><p>Pour joindre deux tables, PostgreSQL choisit entre trois algorithmes. Son choix repose sur une <strong>estimation du nombre de lignes</strong>, elle-même tirée des <strong>statistiques</strong> qu'il tient sur chaque colonne. Des statistiques fausses donnent des estimations fausses, donc de mauvais plans.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — trois façons d'apparier des invités à leur table lors d'un mariage : chercher chaque invité dans la liste un par un (Nested Loop), afficher un plan de table au mur que chacun consulte (Hash Join), ou trier les deux listes par ordre alphabétique et les dérouler ensemble (Merge Join).</div>
+<h3>🧩 Syntaxe</h3><table class="grid-table"><tr><th>Algorithme</th><th>Principe</th><th>Idéal quand</th></tr>
+<tr><td class="mono">Nested Loop</td><td>Pour chaque ligne de gauche, chercher les correspondances à droite</td><td>Peu de lignes à gauche et un index à droite</td></tr>
+<tr><td class="mono">Hash Join</td><td>Charger la petite table dans une table de hachage en mémoire, puis parcourir la grande</td><td>Beaucoup de lignes, jointure par égalité</td></tr>
+<tr><td class="mono">Merge Join</td><td>Parcourir les deux côtés déjà triés, en parallèle</td><td>Deux entrées déjà triées sur la clé de jointure</td></tr></table><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">ANALYZE</span> nom_table;               <span class="c">-- met à jour les statistiques d'une table</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> pg_stats <span class="k">WHERE</span> tablename = <span class="s">'nom_table'</span>;   <span class="c">-- les consulter</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p>Les titres écoutés par un utilisateur : 20 lignes à gauche, un index sur la clé primaire à droite.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> m.titre, e.ecoute_le
+<span class="k">FROM</span> ecoutes e
+<span class="k">JOIN</span> morceaux m <span class="k">ON</span> m.id = e.morceau_id
+<span class="k">WHERE</span> e.utilisateur_id = <span class="n">4242</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Nested Loop</span>  (cost=5.00..250.63 rows=20 width=21) (<span class="pa">actual time=0.034..0.229 rows=20 loops=1</span>)
+  -&gt;  <span class="good">Bitmap Heap Scan</span> on ecoutes e  (cost=4.58..81.88 rows=20 width=12) (<span class="pa">actual time=0.018..0.107 rows=20 loops=1</span>)
+        Recheck Cond: (utilisateur_id = 4242)
+        Heap Blocks: exact=20
+        -&gt;  <span class="good">Bitmap Index Scan</span> on idx_ecoutes_utilisateur  (cost=0.00..4.58 rows=20 width=0) (<span class="pa">actual time=0.009..0.009 rows=20 loops=1</span>)
+              Index Cond: (utilisateur_id = 4242)
+  -&gt;  <span class="good">Index Scan</span> using morceaux_pkey on morceaux m  (cost=0.42..8.44 rows=1 width=17) (<span class="pa">actual time=0.006..0.006 rows=1 loops=20</span>)
+        Index Cond: (id = e.morceau_id)
+Planning Time: 0.678 ms
+<span class="pt">Execution Time: 0.280 ms</span></pre><div class="res-note">Nested Loop : la recherche dans morceaux est répétée 20 fois (loops=20), une fois par écoute.</div></div><p>Le nombre de morceaux par pays d'artiste : on joint deux tables entières.</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> a.pays, <span class="k">COUNT</span>(*)
+<span class="k">FROM</span> morceaux m
+<span class="k">JOIN</span> artistes a <span class="k">ON</span> a.id = m.artiste_id
+<span class="k">GROUP</span> <span class="k">BY</span> a.pays;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">HashAggregate</span>  (cost=6855.94..6856.01 rows=7 width=11) (<span class="pa">actual time=64.484..64.487 rows=7 loops=1</span>)
+  Group Key: a.pays
+  Batches: 1  Memory Usage: 24kB
+  -&gt;  <span class="nd">Hash Join</span>  (cost=146.50..5855.94 rows=200000 width=3) (<span class="pa">actual time=0.896..42.571 rows=200000 loops=1</span>)
+        Hash Cond: (m.artiste_id = a.id)
+        -&gt;  <span class="bad">Seq Scan</span> on morceaux m  (cost=0.00..5184.00 rows=200000 width=4) (<span class="pa">actual time=0.002..13.124 rows=200000 loops=1</span>)
+        -&gt;  <span class="nd">Hash</span>  (cost=84.00..84.00 rows=5000 width=7) (<span class="pa">actual time=0.868..0.869 rows=5000 loops=1</span>)
+              Buckets: 8192  Batches: 1  Memory Usage: 260kB
+              -&gt;  <span class="bad">Seq Scan</span> on artistes a  (cost=0.00..84.00 rows=5000 width=7) (<span class="pa">actual time=0.003..0.366 rows=5000 loops=1</span>)
+Planning Time: 0.418 ms
+<span class="pt">Execution Time: 64.563 ms</span></pre><div class="res-note">Hash Join : les 5 000 artistes sont chargés en mémoire (Hash), puis les 200 000 morceaux sont parcourus une seule fois.</div></div><p>D'où viennent les estimations ? Des statistiques que <code class='inl'>ANALYZE</code> calcule sur un échantillon de chaque table :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> attname, n_distinct, most_common_vals, most_common_freqs
+<span class="k">FROM</span> pg_stats
+<span class="k">WHERE</span> tablename = <span class="s">'ecoutes'</span> <span class="k">AND</span> attname <span class="k">IN</span> (<span class="s">'plateforme'</span>, <span class="s">'terminee'</span>);</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>2 lignes</span></div><div class="tbl"><table><thead><tr><th>attname</th><th>n_distinct</th><th>most_common_vals</th><th>most_common_freqs</th></tr></thead><tbody><tr><td class="">plateforme</td><td class="">4</td><td class="">{mobile,web,enceinte,tv}</td><td class="">{0.60033333,0.2001,0.1002,0.099366665}</td></tr><tr><td class="">terminee</td><td class="">2</td><td class="">{t,f}</td><td class="">{0.9497,0.0503}</td></tr></tbody></table></div><div class="res-note">PostgreSQL sait que « mobile » représente environ 60 % des lignes : c'est pour cela qu'il a estimé près de 600 000 lignes en N19 et choisi un Seq Scan. Les fréquences varient légèrement d'une installation à l'autre, car l'échantillon est tiré au hasard.</div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Charger ou modifier massivement une table, puis l'interroger aussitôt. Tant que les statistiques ne sont pas recalculées, le planificateur raisonne sur l'ancienne table et peut choisir un plan catastrophique. Le processus <em>autovacuum</em> finit par les mettre à jour, mais après un gros import, lancez <code class='inl'>ANALYZE</code> vous-même. Signal d'alerte dans un plan : un <code class='inl'>rows=</code> estimé très éloigné du <code class='inl'>rows=</code> réel.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="result-panel"><h4>🚦 Point d'étape</h4>
+<p>Vous savez lire un plan, reconnaître un Seq Scan qui trahit un index manquant, et comprendre pourquoi PostgreSQL choisit une stratégie. Place aux index eux-mêmes : lequel créer, sur quelles colonnes, dans quel ordre.</p></div></section><section class="panel" id="p2"><div class="card" id="n21">
+<div class="section-title"><span class="icon-bg ib-blue">🌲</span><span><span class="num">N21</span>&nbsp; L'index B-tree, simple et composite</span></div>
+<span class="ftag f3">Index</span>
+<h3>🎯 À quoi ça sert</h3><p>Le <strong>B-tree</strong> est l'index par défaut. Il range les valeurs triées dans un arbre, ce qui permet de trouver une valeur, une plage de valeurs ou de fournir des lignes <strong>déjà triées</strong>. Un index <strong>composite</strong> porte sur plusieurs colonnes : l'ordre de ces colonnes est décisif.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — un annuaire téléphonique trié par nom puis par prénom. Trouver tous les « Martin », puis « Martin Hugo », est immédiat. Trouver tous les « Hugo », quel que soit le nom, oblige à lire tout l'annuaire.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> nom <span class="k">ON</span> table (col);                       <span class="c">-- simple</span>
+<span class="k">CREATE</span> <span class="k">INDEX</span> nom <span class="k">ON</span> table (col_a, col_b <span class="k">DESC</span>);           <span class="c">-- composite, avec sens du tri</span>
+<span class="k">CREATE</span> <span class="k">UNIQUE</span> <span class="k">INDEX</span> nom <span class="k">ON</span> table (col);                  <span class="c">-- garantit l'unicité</span>
+
+<span class="c">-- Un index (a, b) sert pour : WHERE a = …   |   WHERE a = … AND b …   |   WHERE a = … ORDER BY b</span>
+<span class="c">-- Il ne sert PAS pour :       WHERE b = …   (b n'est pas la première colonne)</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p>Les 5 dernières écoutes d'un utilisateur, un besoin typique d'une page « Récemment écoutés ». Avec l'index simple sur <code class='inl'>utilisateur_id</code>, PostgreSQL doit trier :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> morceau_id, ecoute_le
+<span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>
+<span class="k">ORDER</span> <span class="k">BY</span> ecoute_le <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">5</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Limit</span>  (cost=82.21..82.22 rows=5 width=12) (<span class="pa">actual time=0.130..0.131 rows=5 loops=1</span>)
+  <span class="pb">Buffers: shared hit=26</span>
+  -&gt;  <span class="bad">Sort</span>  (cost=82.21..82.26 rows=20 width=12) (<span class="pa">actual time=0.129..0.129 rows=5 loops=1</span>)
+        Sort Key: ecoute_le DESC
+        Sort Method: top-N heapsort  Memory: 25kB
+        <span class="pb">Buffers: shared hit=26</span>
+        -&gt;  <span class="good">Bitmap Heap Scan</span> on ecoutes  (cost=4.58..81.88 rows=20 width=12) (<span class="pa">actual time=0.022..0.106 rows=20 loops=1</span>)
+              Recheck Cond: (utilisateur_id = 4242)
+              Heap Blocks: exact=20
+              <span class="pb">Buffers: shared hit=23</span>
+              -&gt;  <span class="good">Bitmap Index Scan</span> on idx_ecoutes_utilisateur  (cost=0.00..4.58 rows=20 width=0) (<span class="pa">actual time=0.013..0.013 rows=20 loops=1</span>)
+                    Index Cond: (utilisateur_id = 4242)
+                    <span class="pb">Buffers: shared hit=3</span>
+Planning:
+  <span class="pb">Buffers: shared hit=134</span>
+Planning Time: 0.283 ms
+<span class="pt">Execution Time: 0.154 ms</span></pre><div class="res-note">Toutes les écoutes de l'utilisateur sont lues puis triées (Sort), pour n'en garder que 5.</div></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_user_date <span class="k">ON</span> ecoutes (utilisateur_id, ecoute_le <span class="k">DESC</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> morceau_id, ecoute_le
+<span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>
+<span class="k">ORDER</span> <span class="k">BY</span> ecoute_le <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">5</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Limit</span>  (cost=0.42..21.51 rows=5 width=12) (<span class="pa">actual time=0.026..0.046 rows=5 loops=1</span>)
+  <span class="pb">Buffers: shared hit=5 read=3</span>
+  -&gt;  <span class="good">Index Scan</span> using idx_ecoutes_user_date on ecoutes  (cost=0.42..84.77 rows=20 width=12) (<span class="pa">actual time=0.026..0.045 rows=5 loops=1</span>)
+        Index Cond: (utilisateur_id = 4242)
+        <span class="pb">Buffers: shared hit=5 read=3</span>
+Planning:
+  <span class="pb">Buffers: shared hit=153 read=1</span>
+Planning Time: 0.347 ms
+<span class="pt">Execution Time: 0.063 ms</span></pre><div class="res-note">Plus de Sort : l'index fournit les lignes déjà dans le bon ordre, et la lecture s'arrête après 5 lignes.</div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Un index composite ne sert que si la requête filtre sur sa <strong>première colonne</strong>. L'index <code class='inl'>(utilisateur_id, ecoute_le)</code> est inutile pour une recherche par date seule :<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*)
+<span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> ecoute_le &gt;= <span class="s">'2025-03-14'</span> <span class="k">AND</span> ecoute_le &lt; <span class="s">'2025-03-15'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=23272.10..23272.11 rows=1 width=8) (<span class="pa">actual time=52.392..52.393 rows=1 loops=1</span>)
+  -&gt;  <span class="bad">Seq Scan</span> on ecoutes  (cost=0.00..23265.00 rows=2840 width=0) (<span class="pa">actual time=0.029..52.191 rows=2739 loops=1</span>)
+        Filter: ((ecoute_le &gt;= '2025-03-14 00:00:00'::timestamp without time zone) AND (ecoute_le &lt; '2025-03-15 00:00:00'::timestamp without time zone))
+        <span class="pw">Rows Removed by Filter: 997261</span>
+Planning Time: 0.280 ms
+<span class="pt">Execution Time: 52.437 ms</span></pre><div class="res-note">Seq Scan : ecoute_le n'est que la deuxième colonne de l'index. Règle pratique : en tête, la colonne testée par égalité ; ensuite, celle qui sert à trier ou à filtrer par plage.</div></div></div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n22">
+<div class="section-title"><span class="icon-bg ib-green">🎯</span><span><span class="num">N22</span>&nbsp; Index partiel, sur expression et couvrant</span></div>
+<span class="ftag f3">Index</span>
+<h3>🎯 À quoi ça sert</h3><p>Trois variantes du B-tree qui répondent à des besoins précis :</p><ul class='clean'><li><strong>Partiel</strong> : n'indexe que les lignes qui vérifient une condition. Plus petit, plus rapide à maintenir.</li><li><strong>Sur expression</strong> : indexe le résultat d'un calcul, pour les requêtes qui filtrent sur ce calcul.</li><li><strong>Couvrant</strong> (<code class='inl'>INCLUDE</code>) : embarque des colonnes supplémentaires pour répondre sans lire la table.</li></ul>
+<div class="analogie">💡 <strong>Analogie</strong> — un index partiel, c'est le carnet où un disquaire ne note que les disques en rupture de stock : il est mince et répond vite à la seule question qu'on lui pose.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> nom <span class="k">ON</span> table (col) <span class="k">WHERE</span> condition;          <span class="c">-- partiel</span>
+<span class="k">CREATE</span> <span class="k">INDEX</span> nom <span class="k">ON</span> table (LOWER(col));                   <span class="c">-- sur expression</span>
+<span class="k">CREATE</span> <span class="k">INDEX</span> nom <span class="k">ON</span> table (col) <span class="k">INCLUDE</span> (col2, col3);     <span class="c">-- couvrant</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p><strong>Partiel.</strong> Les écoutes abandonnées avant la fin ne représentent que 5 % de la table, mais l'équipe produit les analyse souvent :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> morceau_id = <span class="n">150</span> <span class="k">AND</span> <span class="k">NOT</span> terminee;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=20765.00..20765.01 rows=1 width=8) (<span class="pa">actual time=49.951..49.952 rows=1 loops=1</span>)
+  <span class="pb">Buffers: shared hit=8265</span>
+  -&gt;  <span class="bad">Seq Scan</span> on ecoutes  (cost=0.00..20765.00 rows=1 width=0) (<span class="pa">actual time=11.241..49.941 rows=8 loops=1</span>)
+        Filter: ((NOT terminee) AND (morceau_id = 150))
+        <span class="pw">Rows Removed by Filter: 999992</span>
+        <span class="pb">Buffers: shared hit=8265</span>
+Planning:
+  <span class="pb">Buffers: shared hit=123</span>
+Planning Time: 0.274 ms
+<span class="pt">Execution Time: 49.997 ms</span></pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_abandons <span class="k">ON</span> ecoutes (morceau_id) <span class="k">WHERE</span> <span class="k">NOT</span> terminee;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> morceau_id = <span class="n">150</span> <span class="k">AND</span> <span class="k">NOT</span> terminee;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=4.31..4.32 rows=1 width=8) (<span class="pa">actual time=0.028..0.028 rows=1 loops=1</span>)
+  <span class="pb">Buffers: shared hit=1 read=2</span>
+  -&gt;  <span class="good">Index Only Scan</span> using idx_ecoutes_abandons on ecoutes  (cost=0.29..4.31 rows=1 width=0) (<span class="pa">actual time=0.022..0.023 rows=8 loops=1</span>)
+        Index Cond: (morceau_id = 150)
+        <span class="pa">Heap Fetches: 0</span>
+        <span class="pb">Buffers: shared hit=1 read=2</span>
+Planning:
+  <span class="pb">Buffers: shared hit=138 read=1</span>
+Planning Time: 0.376 ms
+<span class="pt">Execution Time: 0.067 ms</span></pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pg_size_pretty(pg_relation_size(<span class="s">'idx_ecoutes_abandons'</span>))    <span class="k">AS</span> index_partiel,
+       pg_size_pretty(pg_relation_size(<span class="s">'idx_ecoutes_utilisateur'</span>)) <span class="k">AS</span> index_complet;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>index_partiel</th><th>index_complet</th></tr></thead><tbody><tr><td class="">976 kB</td><td class="">7600 kB</td></tr></tbody></table></div><div class="res-note">L'index partiel ne contient que 50 000 entrées : il est près de 8 fois plus petit qu'un index sur toute la table.</div></div><p><strong>Sur expression.</strong> Une recherche de pseudo insensible à la casse :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> utilisateurs_app <span class="k">WHERE</span> LOWER(pseudo) = <span class="s">'user_4242'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="bad">Seq Scan</span> on utilisateurs_app  (cost=0.00..1069.00 rows=250 width=21) (<span class="pa">actual time=0.789..9.221 rows=1 loops=1</span>)
+  Filter: (lower((pseudo)::text) = 'user_4242'::text)
+  <span class="pw">Rows Removed by Filter: 49999</span>
+Planning Time: 0.174 ms
+<span class="pt">Execution Time: 9.249 ms</span></pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_users_pseudo_lower <span class="k">ON</span> utilisateurs_app (LOWER(pseudo));
+<span class="k">ANALYZE</span> utilisateurs_app;          <span class="c">-- calcule aussi les statistiques de l'expression</span></pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> utilisateurs_app <span class="k">WHERE</span> LOWER(pseudo) = <span class="s">'user_4242'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="good">Index Scan</span> using idx_users_pseudo_lower on utilisateurs_app  (cost=0.29..8.31 rows=1 width=21) (<span class="pa">actual time=0.016..0.016 rows=1 loops=1</span>)
+  Index Cond: (lower((pseudo)::text) = 'user_4242'::text)
+Planning Time: 0.289 ms
+<span class="pt">Execution Time: 0.047 ms</span></pre></div><p><strong>Couvrant.</strong> L'historique d'un utilisateur, avec la date et la durée d'écoute :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_user_cover <span class="k">ON</span> ecoutes (utilisateur_id) <span class="k">INCLUDE</span> (ecoute_le, duree_s);
+<span class="k">VACUUM</span> ecoutes;                   <span class="c">-- met à jour la carte de visibilité</span></pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> ecoute_le, duree_s <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="good">Index Only Scan</span> using idx_ecoutes_user_cover on ecoutes  (cost=0.42..4.78 rows=20 width=12) (<span class="pa">actual time=0.022..0.024 rows=20 loops=1</span>)
+  Index Cond: (utilisateur_id = 4242)
+  <span class="pa">Heap Fetches: 0</span>
+  <span class="pb">Buffers: shared hit=1 read=3</span>
+Planning:
+  <span class="pb">Buffers: shared hit=154</span>
+Planning Time: 0.334 ms
+<span class="pt">Execution Time: 0.060 ms</span></pre><div class="res-note">Index Only Scan : les deux colonnes demandées sont dans l'index, la table n'est pas lue.</div></div>
+<div class='instruction-box'>📌 Un Index Only Scan a besoin de savoir que les lignes sont visibles sans consulter la table : c'est le rôle de la <strong>carte de visibilité</strong>, tenue à jour par <code class='inl'>VACUUM</code>. Sur une table très modifiée et rarement nettoyée, le plan affiche de nombreux <code class='inl'>Heap Fetches</code>.</div>
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">L'index sur expression n'est utilisé que si la requête contient <strong>exactement la même expression</strong>. <code class='inl'>WHERE UPPER(pseudo) = 'USER_4242'</code> ou <code class='inl'>WHERE pseudo ILIKE 'user_4242'</code> ne profitent pas de l'index sur <code class='inl'>LOWER(pseudo)</code>. De même, un index partiel ne sert que si la condition de la requête implique celle de l'index.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n23">
+<div class="section-title"><span class="icon-bg ib-purple">🧬</span><span><span class="num">N23</span>&nbsp; Index GIN : JSONB et recherche dans le texte</span></div>
+<span class="ftag f3">Index</span>
+<h3>🎯 À quoi ça sert</h3><p>Le B-tree indexe une valeur par ligne. Pour chercher <strong>à l'intérieur</strong> d'une valeur (un élément dans un tableau JSONB, un mot au milieu d'un titre), il faut un index <strong>GIN</strong> (<em>Generalized Inverted Index</em>). Il fonctionne comme l'index d'un livre : pour chaque élément, la liste des lignes qui le contiennent. C'est le prolongement direct de N13 (JSONB).</p>
+<div class="analogie">💡 <strong>Analogie</strong> — l'index à la fin d'un livre de cuisine : pour « chocolat », il donne toutes les pages où le mot apparaît, même au milieu d'une recette.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> nom <span class="k">ON</span> table <span class="k">USING</span> <span class="k">GIN</span> (colonne_jsonb);            <span class="c">-- @&gt;, ?, ?| …</span>
+
+<span class="k">CREATE</span> <span class="k">EXTENSION</span> <span class="k">IF</span> <span class="k">NOT</span> <span class="k">EXISTS</span> pg_trgm;                          <span class="c">-- une fois par base</span>
+<span class="k">CREATE</span> <span class="k">INDEX</span> nom <span class="k">ON</span> table <span class="k">USING</span> <span class="k">GIN</span> (colonne_texte gin_trgm_ops); <span class="c">-- LIKE / ILIKE '%…%', similarité</span></pre></div>
+<h3>🔬 Exemple commenté</h3><p><strong>JSONB.</strong> Les morceaux tagués « acoustique » :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> id, titre <span class="k">FROM</span> morceaux <span class="k">WHERE</span> infos @&gt; <span class="s">'{"tags": ["acoustique"]}'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="bad">Seq Scan</span> on morceaux  (cost=0.00..5684.00 rows=2005 width=17) (<span class="pa">actual time=0.028..47.511 rows=2000 loops=1</span>)
+  Filter: (infos @&gt; '{"tags": ["acoustique"]}'::jsonb)
+  <span class="pw">Rows Removed by Filter: 198000</span>
+  <span class="pb">Buffers: shared hit=3184</span>
+Planning:
+  <span class="pb">Buffers: shared hit=57</span>
+Planning Time: 0.202 ms
+<span class="pt">Execution Time: 47.657 ms</span></pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_morceaux_infos <span class="k">ON</span> morceaux <span class="k">USING</span> <span class="k">GIN</span> (infos);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> id, titre <span class="k">FROM</span> morceaux <span class="k">WHERE</span> infos @&gt; <span class="s">'{"tags": ["acoustique"]}'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="good">Bitmap Heap Scan</span> on morceaux  (cost=39.99..2998.84 rows=2005 width=17) (<span class="pa">actual time=1.385..4.397 rows=2000 loops=1</span>)
+  Recheck Cond: (infos @&gt; '{"tags": ["acoustique"]}'::jsonb)
+  Heap Blocks: exact=2000
+  <span class="pb">Buffers: shared hit=2058</span>
+  -&gt;  <span class="good">Bitmap Index Scan</span> on idx_morceaux_infos  (cost=0.00..39.49 rows=2005 width=0) (<span class="pa">actual time=1.141..1.141 rows=2000 loops=1</span>)
+        Index Cond: (infos @&gt; '{"tags": ["acoustique"]}'::jsonb)
+        <span class="pb">Buffers: shared hit=58</span>
+Planning:
+  <span class="pb">Buffers: shared hit=82</span>
+Planning Time: 0.345 ms
+<span class="pt">Execution Time: 4.558 ms</span></pre><div class="res-note">Bitmap Index Scan sur l'index GIN : seuls les blocs contenant des morceaux acoustiques sont lus.</div></div><p><strong>Texte.</strong> Une recherche « contient » sur les titres, impossible avec un B-tree à cause du <code class='inl'>%</code> initial :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> morceaux <span class="k">WHERE</span> titre <span class="k">ILIKE</span> <span class="s">'%velvet storm%'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=5684.05..5684.06 rows=1 width=8) (<span class="pa">actual time=76.227..76.228 rows=1 loops=1</span>)
+  <span class="pb">Buffers: shared hit=3184</span>
+  -&gt;  <span class="bad">Seq Scan</span> on morceaux  (cost=0.00..5684.00 rows=20 width=0) (<span class="pa">actual time=0.131..76.156 rows=500 loops=1</span>)
+        Filter: ((titre)::text ~~* '%velvet storm%'::text)
+        <span class="pw">Rows Removed by Filter: 199500</span>
+        <span class="pb">Buffers: shared hit=3184</span>
+Planning:
+  <span class="pb">Buffers: shared hit=71</span>
+Planning Time: 0.259 ms
+<span class="pt">Execution Time: 76.288 ms</span></pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">EXTENSION</span> <span class="k">IF</span> <span class="k">NOT</span> <span class="k">EXISTS</span> pg_trgm;
+<span class="k">CREATE</span> <span class="k">INDEX</span> idx_morceaux_titre_trgm <span class="k">ON</span> morceaux <span class="k">USING</span> <span class="k">GIN</span> (titre gin_trgm_ops);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> morceaux <span class="k">WHERE</span> titre <span class="k">ILIKE</span> <span class="s">'%velvet storm%'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=260.07..260.08 rows=1 width=8) (<span class="pa">actual time=3.687..3.688 rows=1 loops=1</span>)
+  <span class="pb">Buffers: shared hit=572</span>
+  -&gt;  <span class="good">Bitmap Heap Scan</span> on morceaux  (cost=184.53..260.02 rows=20 width=0) (<span class="pa">actual time=2.340..3.644 rows=500 loops=1</span>)
+        Recheck Cond: ((titre)::text ~~* '%velvet storm%'::text)
+        Heap Blocks: exact=500
+        <span class="pb">Buffers: shared hit=572</span>
+        -&gt;  <span class="good">Bitmap Index Scan</span> on idx_morceaux_titre_trgm  (cost=0.00..184.52 rows=20 width=0) (<span class="pa">actual time=2.280..2.280 rows=500 loops=1</span>)
+              Index Cond: ((titre)::text ~~* '%velvet storm%'::text)
+              <span class="pb">Buffers: shared hit=72</span>
+Planning:
+  <span class="pb">Buffers: shared hit=99 read=1 written=1</span>
+Planning Time: 0.704 ms
+<span class="pt">Execution Time: 3.803 ms</span></pre></div><p>Le même index permet une recherche <strong>tolérante aux fautes de frappe</strong> : l'utilisateur tape « velvet strom ».</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">DISTINCT</span> titre,
+       <span class="k">ROUND</span>(word_similarity(<span class="s">'velvet strom'</span>, titre)::<span class="k">NUMERIC</span>, <span class="n">2</span>) <span class="k">AS</span> score
+<span class="k">FROM</span> morceaux
+<span class="k">WHERE</span> <span class="s">'velvet strom'</span> &lt;% titre          <span class="c">-- similarité suffisante (seuil par défaut : 0,6)</span>
+<span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>, titre
+<span class="k">LIMIT</span> <span class="n">3</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>3 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>score</th></tr></thead><tbody><tr><td class="">Velvet Storm</td><td class="">0.69</td></tr><tr><td class="">Velvet Story</td><td class="">0.69</td></tr><tr><td class="">Velvet Skies</td><td class="">0.62</td></tr></tbody></table></div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">L'index GIN sur JSONB sert les opérateurs de contenance (<code class='inl'>@&gt;</code>, <code class='inl'>?</code>), mais <strong>pas</strong> l'extraction <code class='inl'>-&gt;&gt;</code>. Même question, deux écritures, deux plans :<div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> morceaux <span class="k">WHERE</span> infos -&gt;&gt; <span class="s">'explicite'</span> = <span class="s">'true'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=6186.50..6186.51 rows=1 width=8) (<span class="pa">actual time=27.186..27.187 rows=1 loops=1</span>)
+  -&gt;  <span class="bad">Seq Scan</span> on morceaux  (cost=0.00..6184.00 rows=1000 width=0) (<span class="pa">actual time=0.008..26.307 rows=20000 loops=1</span>)
+        Filter: ((infos -&gt;&gt; 'explicite'::text) = 'true'::text)
+        <span class="pw">Rows Removed by Filter: 180000</span>
+Planning Time: 0.235 ms
+<span class="pt">Execution Time: 27.227 ms</span></pre><div class="res-note">Seq Scan : l'index GIN est ignoré.</div></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> morceaux <span class="k">WHERE</span> infos @&gt; <span class="s">'{"explicite": true}'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=3680.14..3680.15 rows=1 width=8) (<span class="pa">actual time=14.150..14.152 rows=1 loops=1</span>)
+  -&gt;  <span class="good">Bitmap Heap Scan</span> on morceaux  (cost=162.67..3624.56 rows=22231 width=0) (<span class="pa">actual time=2.924..13.142 rows=20000 loops=1</span>)
+        Recheck Cond: (infos @&gt; '{"explicite": true}'::jsonb)
+        Heap Blocks: exact=3184
+        -&gt;  <span class="good">Bitmap Index Scan</span> on idx_morceaux_infos  (cost=0.00..157.12 rows=22231 width=0) (<span class="pa">actual time=2.539..2.540 rows=20000 loops=1</span>)
+              Index Cond: (infos @&gt; '{"explicite": true}'::jsonb)
+Planning Time: 0.310 ms
+<span class="pt">Execution Time: 14.228 ms</span></pre><div class="res-note">Bitmap Index Scan : l'index GIN est utilisé. Pour filtrer souvent avec ->>, créez plutôt un index B-tree sur l'expression (N22).</div></div></div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="result-panel"><h4>🚦 Point d'étape</h4>
+<p>Vous disposez de toute la palette : B-tree simple ou composite, partiel, sur expression, couvrant, GIN. Reste à savoir <strong>quand ne pas créer d'index</strong>, comment réécrire une requête lente, et comment vérifier que chaque index rapporte plus qu'il ne coûte.</p></div></section><section class="panel" id="p3"><div class="card" id="n24">
+<div class="section-title"><span class="icon-bg ib-amber">✍️</span><span><span class="num">N24</span>&nbsp; Réécrire les requêtes lentes</span></div>
+<span class="ftag f4">Optimisation</span>
+<h3>🎯 À quoi ça sert</h3><p>Souvent, la requête lente n'a pas besoin d'un nouvel index, mais d'être <strong>écrite autrement</strong>. Trois réécritures reviennent sans cesse : ne pas transformer une colonne indexée, paginer par clé plutôt que par <code class='inl'>OFFSET</code>, et ne demander que les colonnes utiles.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — demander « tous les clients dont le nom, écrit à l'envers, commence par N » oblige à retourner chaque fiche. Demander « les clients dont le nom finit par N » avec le bon classement évite de tout manipuler.</div>
+<h3>🧩 Syntaxe</h3><table class="grid-table"><tr><th>À éviter</th><th>À préférer</th><th>Pourquoi</th></tr>
+<tr><td class="mono">WHERE date_col::DATE = '2025-03-14'</td><td class="mono">WHERE date_col &gt;= '2025-03-14'<br>AND date_col &lt; '2025-03-15'</td><td>Une colonne transformée ne peut plus utiliser son index</td></tr>
+<tr><td class="mono">ORDER BY id LIMIT 20 OFFSET 900000</td><td class="mono">WHERE id &gt; 900000<br>ORDER BY id LIMIT 20</td><td>OFFSET lit puis jette toutes les lignes sautées</td></tr>
+<tr><td class="mono">SELECT *</td><td class="mono">SELECT col1, col2</td><td>Permet l'Index Only Scan, réduit le volume transféré</td></tr></table>
+<h3>🔬 Exemple commenté</h3><p><strong>1. Ne pas transformer la colonne.</strong> Les écoutes du 14 mars 2025, avec un index sur la date :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_date <span class="k">ON</span> ecoutes (ecoute_le);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> ecoute_le::<span class="k">DATE</span> = <span class="s">'2025-03-14'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=23277.50..23277.51 rows=1 width=8) (<span class="pa">actual time=60.072..60.073 rows=1 loops=1</span>)
+  <span class="pb">Buffers: shared hit=8265</span>
+  -&gt;  <span class="bad">Seq Scan</span> on ecoutes  (cost=0.00..23265.00 rows=5000 width=0) (<span class="pa">actual time=0.033..59.834 rows=2739 loops=1</span>)
+        Filter: ((ecoute_le)::date = '2025-03-14'::date)
+        <span class="pw">Rows Removed by Filter: 997261</span>
+        <span class="pb">Buffers: shared hit=8265</span>
+Planning:
+  <span class="pb">Buffers: shared hit=165 read=2</span>
+Planning Time: 0.366 ms
+<span class="pt">Execution Time: 60.123 ms</span></pre><div class="res-note">Seq Scan : la conversion en DATE est appliquée à chaque ligne, l'index sur ecoute_le ne peut pas servir.</div></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> ecoute_le &gt;= <span class="s">'2025-03-14'</span> <span class="k">AND</span> ecoute_le &lt; <span class="s">'2025-03-15'</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=96.33..96.34 rows=1 width=8) (<span class="pa">actual time=0.411..0.411 rows=1 loops=1</span>)
+  <span class="pb">Buffers: shared hit=1 read=10</span>
+  -&gt;  <span class="good">Index Only Scan</span> using idx_ecoutes_date on ecoutes  (cost=0.42..89.23 rows=2840 width=0) (<span class="pa">actual time=0.033..0.249 rows=2739 loops=1</span>)
+        Index Cond: ((ecoute_le &gt;= '2025-03-14 00:00:00'::timestamp without time zone) AND (ecoute_le &lt; '2025-03-15 00:00:00'::timestamp without time zone))
+        <span class="pa">Heap Fetches: 0</span>
+        <span class="pb">Buffers: shared hit=1 read=10</span>
+Planning:
+  <span class="pb">Buffers: shared hit=168</span>
+Planning Time: 0.361 ms
+<span class="pt">Execution Time: 0.447 ms</span></pre><div class="res-note">Même résultat, écrit comme une plage : l'index est utilisé.</div></div><p><strong>2. Paginer par clé.</strong> Afficher la page qui commence après la 900 000e écoute :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> id, morceau_id <span class="k">FROM</span> ecoutes
+<span class="k">ORDER</span> <span class="k">BY</span> id
+<span class="k">LIMIT</span> <span class="n">20</span> <span class="k">OFFSET</span> <span class="n">900000</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Limit</span>  (cost=30823.62..30824.31 rows=20 width=12) (<span class="pa">actual time=129.262..129.266 rows=20 loops=1</span>)
+  <span class="pb">Buffers: shared hit=9901</span>
+  -&gt;  <span class="good">Index Scan</span> using ecoutes_pkey on ecoutes  (cost=0.42..34248.43 rows=1000000 width=12) (<span class="pa">actual time=0.019..98.054 rows=900020 loops=1</span>)
+        <span class="pb">Buffers: shared hit=9901</span>
+Planning:
+  <span class="pb">Buffers: shared hit=192</span>
+Planning Time: 0.317 ms
+<span class="pt">Execution Time: 129.304 ms</span></pre><div class="res-note">900 020 lignes lues pour en afficher 20.</div></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> id, morceau_id <span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> id &gt; <span class="n">900000</span>              <span class="c">-- dernier id de la page précédente</span>
+<span class="k">ORDER</span> <span class="k">BY</span> id
+<span class="k">LIMIT</span> <span class="n">20</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="nd">Limit</span>  (cost=0.42..1.16 rows=20 width=12) (<span class="pa">actual time=0.041..0.045 rows=20 loops=1</span>)
+  <span class="pb">Buffers: shared hit=7</span>
+  -&gt;  <span class="good">Index Scan</span> using ecoutes_pkey on ecoutes  (cost=0.42..3643.40 rows=99027 width=12) (<span class="pa">actual time=0.040..0.043 rows=20 loops=1</span>)
+        Index Cond: (id &gt; 900000)
+        <span class="pb">Buffers: shared hit=7</span>
+Planning:
+  <span class="pb">Buffers: shared hit=195</span>
+Planning Time: 0.374 ms
+<span class="pt">Execution Time: 0.063 ms</span></pre><div class="res-note">20 lignes lues. Le temps ne dépend plus du numéro de la page.</div></div><p><strong>3. Ne demander que l'utile.</strong></p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> * <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="good">Bitmap Heap Scan</span> on ecoutes  (cost=4.58..81.88 rows=20 width=35) (<span class="pa">actual time=0.036..0.118 rows=20 loops=1</span>)
+  Recheck Cond: (utilisateur_id = 4242)
+  Heap Blocks: exact=20
+  <span class="pb">Buffers: shared hit=20 read=3</span>
+  -&gt;  <span class="good">Bitmap Index Scan</span> on idx_ecoutes_user_cover  (cost=0.00..4.58 rows=20 width=0) (<span class="pa">actual time=0.028..0.028 rows=20 loops=1</span>)
+        Index Cond: (utilisateur_id = 4242)
+        <span class="pb">Buffers: shared read=3</span>
+Planning:
+  <span class="pb">Buffers: shared hit=178</span>
+Planning Time: 0.332 ms
+<span class="pt">Execution Time: 0.160 ms</span></pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> ecoute_le, duree_s <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>;</pre></div><div class="res plan"><div class="res-bar">▶ Plan d'exécution</div><pre class="plantxt"><span class="good">Index Only Scan</span> using idx_ecoutes_user_cover on ecoutes  (cost=0.42..4.78 rows=20 width=12) (<span class="pa">actual time=0.017..0.019 rows=20 loops=1</span>)
+  Index Cond: (utilisateur_id = 4242)
+  <span class="pa">Heap Fetches: 0</span>
+  <span class="pb">Buffers: shared hit=4</span>
+Planning:
+  <span class="pb">Buffers: shared hit=166</span>
+Planning Time: 0.386 ms
+<span class="pt">Execution Time: 0.049 ms</span></pre><div class="res-note">Avec les seules colonnes utiles, l'index couvrant de N22 répond seul : moins de blocs lus.</div></div>
+
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Optimiser au jugé. Une réécriture « évidemment plus rapide » peut ne rien changer, voire dégrader le plan. Mesurez <strong>avant et après</strong> avec <code class='inl'>EXPLAIN (ANALYZE, BUFFERS)</code>, et vérifiez que la nouvelle version renvoie <strong>exactement le même résultat</strong>. C'est d'autant plus vrai quand la réécriture vient d'une IA.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div><div class="card" id="n25">
+<div class="section-title"><span class="icon-bg ib-purple">♻️</span><span><span class="num">N25</span>&nbsp; Mesurer, entretenir, rester sobre</span></div>
+<span class="ftag f5">Maintenance</span>
+<h3>🎯 À quoi ça sert</h3><p>Un index accélère les lectures mais <strong>coûte</strong> : de l'espace disque, et du travail à chaque <code class='inl'>INSERT</code>, <code class='inl'>UPDATE</code> ou <code class='inl'>DELETE</code>. Le rôle du tech lead est de garder les index qui rapportent, de supprimer les autres, de repérer les requêtes qui pèsent vraiment sur le serveur, et de s'assurer que la base est entretenue.</p>
+<div class="analogie">💡 <strong>Analogie</strong> — un classeur avec des intercalaires : quelques-uns font gagner un temps fou ; cinquante rendent chaque rangement interminable, pour des onglets que personne n'ouvre.</div>
+<h3>🧩 Syntaxe</h3><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="c">-- Taille d'une table et de ses index</span>
+<span class="k">SELECT</span> pg_size_pretty(pg_relation_size(<span class="s">'table'</span>)), pg_size_pretty(pg_indexes_size(<span class="s">'table'</span>));
+
+<span class="c">-- Utilisation de chaque index depuis la dernière remise à zéro des statistiques</span>
+<span class="k">SELECT</span> indexrelname, idx_scan <span class="k">FROM</span> pg_stat_user_indexes <span class="k">WHERE</span> relname = <span class="s">'table'</span>;
+
+<span class="c">-- Entretien</span>
+<span class="k">VACUUM</span> table;            <span class="c">-- récupère l'espace des lignes supprimées, tient la carte de visibilité</span>
+<span class="k">ANALYZE</span> table;           <span class="c">-- recalcule les statistiques du planificateur</span>
+<span class="k">VACUUM</span> <span class="k">ANALYZE</span> table;    <span class="c">-- les deux</span>
+
+<span class="c">-- Les requêtes les plus coûteuses du serveur (extension pg_stat_statements)</span>
+<span class="k">SELECT</span> query, calls, total_exec_time, mean_exec_time
+<span class="k">FROM</span> pg_stat_statements <span class="k">ORDER</span> <span class="k">BY</span> total_exec_time <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="n">5</span>;</pre></div>
+<h3>🔬 Exemple commenté</h3><p><strong>Le poids des index.</strong> Après cette séance, la table <code class='inl'>ecoutes</code> porte 7 index :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pg_size_pretty(pg_relation_size(<span class="s">'ecoutes'</span>)) <span class="k">AS</span> table_seule,
+       pg_size_pretty(pg_indexes_size(<span class="s">'ecoutes'</span>))  <span class="k">AS</span> tous_les_index;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>table_seule</th><th>tous_les_index</th></tr></thead><tbody><tr><td class="">65 MB</td><td class="">125 MB</td></tr></tbody></table></div><div class="res-note">Les index pèsent davantage que les données elles-mêmes.</div></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> indexrelname <span class="k">AS</span> index,
+       pg_size_pretty(pg_relation_size(indexrelid)) <span class="k">AS</span> taille,
+       idx_scan <span class="k">AS</span> utilisations
+<span class="k">FROM</span> pg_stat_user_indexes
+<span class="k">WHERE</span> relname = <span class="s">'ecoutes'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> pg_relation_size(indexrelid) <span class="k">DESC</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>7 lignes</span></div><div class="tbl"><table><thead><tr><th>index</th><th>taille</th><th>utilisations</th></tr></thead><tbody><tr><td class="">idx_ecoutes_user_cover</td><td class="">39 MB</td><td class="">4</td></tr><tr><td class="">idx_ecoutes_user_date</td><td class="">30 MB</td><td class="">1</td></tr><tr><td class="">ecoutes_pkey</td><td class="">21 MB</td><td class="">6</td></tr><tr><td class="">idx_ecoutes_date</td><td class="">19 MB</td><td class="">2</td></tr><tr><td class="">idx_ecoutes_utilisateur</td><td class="">7600 kB</td><td class="">4</td></tr><tr><td class="">idx_ecoutes_plateforme</td><td class="">6808 kB</td><td class="">0</td></tr><tr><td class="">idx_ecoutes_abandons</td><td class="">976 kB</td><td class="">1</td></tr></tbody></table></div><div class="res-note">Le nombre d'utilisations dépend des requêtes que vous avez lancées. Un index à 0 sur une base en production depuis des semaines est un candidat à la suppression.</div></div><p>Deux index sont superflus : <code class='inl'>idx_ecoutes_plateforme</code>, jamais choisi par le planificateur (condition peu sélective, N19), et <code class='inl'>idx_ecoutes_utilisateur</code>, <strong>redondant</strong> avec <code class='inl'>idx_ecoutes_user_date</code>, qui commence par la même colonne (N21).</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">DROP</span> <span class="k">INDEX</span> idx_ecoutes_plateforme;
+<span class="k">DROP</span> <span class="k">INDEX</span> idx_ecoutes_utilisateur;</pre></div><p><strong>Le coût en écriture.</strong> Insertion de 300 000 lignes dans deux copies de la table, l'une sans index, l'autre avec 5 index :</p><div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\timing</span> on
+<span class="k">INSERT</span> <span class="k">INTO</span> copie_sans_index <span class="k">SELECT</span> * <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> id &lt;= <span class="n">300000</span>;
+<span class="k">INSERT</span> <span class="k">INTO</span> copie_avec_index <span class="k">SELECT</span> * <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> id &lt;= <span class="n">300000</span>;</pre></div><div class="res"><div class="res-bar">▶ Mesure sur la machine de test</div><div class="tbl"><table><thead><tr><th>table</th><th>index</th><th>durée</th></tr></thead><tbody>
+<tr><td>copie_sans_index</td><td>0</td><td>0.16 s</td></tr><tr><td>copie_avec_index</td><td>5</td><td>2.30 s</td></tr></tbody></table></div>
+<div class="res-note">Environ 14 fois plus lent avec 5 index : chaque ligne insérée met aussi à jour 5 arbres.</div></div><p><strong>Trouver les requêtes qui pèsent.</strong> L'extension <code class='inl'>pg_stat_statements</code> cumule, pour chaque requête, le nombre d'appels et le temps total. Elle se charge au démarrage du serveur :</p><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="c">-- 1. Trouver le fichier de configuration</span>
+<span class="k">SHOW</span> config_file;
+
+<span class="c">-- 2. Dans ce fichier, ajouter (ou compléter) la ligne :</span>
+<span class="c">--    shared_preload_libraries = 'pg_stat_statements'</span>
+<span class="c">-- 3. Redémarrer le serveur PostgreSQL (Docker : ajouter</span>
+<span class="c">--    -c shared_preload_libraries=pg_stat_statements à la commande docker run)</span>
+
+<span class="c">-- 4. Puis, dans la base :</span>
+<span class="k">CREATE</span> <span class="k">EXTENSION</span> <span class="k">IF</span> <span class="k">NOT</span> <span class="k">EXISTS</span> pg_stat_statements;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">LEFT</span>(query, <span class="n">70</span>)               <span class="k">AS</span> requete,
+       calls                          <span class="k">AS</span> appels,
+       <span class="k">ROUND</span>(total_exec_time::<span class="k">NUMERIC</span>, <span class="n">1</span>) <span class="k">AS</span> total_ms,
+       <span class="k">ROUND</span>(mean_exec_time::<span class="k">NUMERIC</span>, <span class="n">2</span>)  <span class="k">AS</span> moyenne_ms
+<span class="k">FROM</span> pg_stat_statements
+<span class="k">WHERE</span> query <span class="k">ILIKE</span> <span class="s">'SELECT%FROM ecoutes%'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> total_exec_time <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">5</span>;</pre></div><div class="res"><div class="res-bar">▶ Résultat <span>4 lignes</span></div><div class="tbl"><table><thead><tr><th>requete</th><th>appels</th><th>total_ms</th><th>moyenne_ms</th></tr></thead><tbody><tr><td class="">SELECT COUNT(*) FROM ecoutes WHERE ecoute_le::DATE = $1</td><td class="">2</td><td class="">127.5</td><td class="">63.75</td></tr><tr><td class="">SELECT id, morceau_id FROM ecoutes ORDER BY id LIMIT $1 OFFSET $2</td><td class="">1</td><td class="">94.2</td><td class="">94.17</td></tr><tr><td class="">SELECT COUNT(*) FROM ecoutes WHERE ecoute_le &gt;= $1 AND ecoute_le &lt; $2</td><td class="">1</td><td class="">0.2</td><td class="">0.20</td></tr><tr><td class="">SELECT * FROM ecoutes WHERE utilisateur_id = $1</td><td class="">1</td><td class="">0.1</td><td class="">0.08</td></tr></tbody></table></div><div class="res-note">Les deux requêtes par date avec <code>::DATE</code> sont regroupées en une seule ligne (appels = 2) : pg_stat_statements remplace les valeurs par $1. Les temps dépendent de la machine.</div></div>
+<h3>🧭 La méthode d'optimisation en 5 étapes</h3>
+<table class="grid-table"><tr><th>Étape</th><th>Action</th><th>Outil</th></tr>
+<tr><td>1. Repérer</td><td>Trouver les requêtes qui coûtent le plus au total (fréquence × durée)</td><td class="mono">pg_stat_statements</td></tr>
+<tr><td>2. Mesurer</td><td>Relever le plan, le temps et les blocs lus</td><td class="mono">EXPLAIN (ANALYZE, BUFFERS)</td></tr>
+<tr><td>3. Diagnostiquer</td><td>Seq Scan sur une grosse table ? Estimation fausse ? Sort coûteux ? Beaucoup de Rows Removed ?</td><td>Lecture du plan, <em>aide possible de l'IA</em></td></tr>
+<tr><td>4. Agir</td><td>Réécrire la requête, créer ou ajuster un index, lancer ANALYZE</td><td class="mono">CREATE INDEX, ANALYZE</td></tr>
+<tr><td>5. Prouver</td><td>Remesurer, vérifier que le résultat est identique, chiffrer le gain</td><td class="mono">EXPLAIN (ANALYZE, BUFFERS)</td></tr></table>
+<div class="analogie">🤖 <strong>Utiliser l'IA à l'étape 3</strong> — Donnez-lui la requête, le plan complet obtenu avec <code class="inl">EXPLAIN (ANALYZE, BUFFERS)</code> et la définition des tables (<code class="inl">\d table</code>). Demandez-lui d'identifier le nœud le plus coûteux et de proposer des hypothèses. Puis traitez chaque proposition comme une hypothèse à <strong>vérifier par la mesure</strong> (étape 5) : l'IA ne voit ni vos données, ni votre charge réelle, et propose volontiers des index superflus.</div>
+<div class="ok-box">🌱 <strong>Traduire un gain en sobriété</strong> — Une requête qui passe de 8 265 à 4 blocs lus, appelée 10 000 fois par jour, évite de lire environ 650 Go par jour. Moins de lectures, c'est moins de processeur, moins d'entrées/sorties disque, un serveur plus petit : c'est ainsi que l'optimisation rejoint la démarche RSE.</div>
+<h3>⚠️ Piège fréquent</h3><div class="warn-box">Créer un index pour chaque requête lente, sans jamais faire le ménage. Chaque index ralentit toutes les écritures, alourdit les sauvegardes et consomme de la mémoire. Règle du module : <strong>un index sans gain mesuré est supprimé</strong>. C'est aussi une démarche de sobriété : moins d'index inutiles, c'est moins de stockage, moins d'écritures disque, donc moins d'énergie consommée.</div>
+<label class="understood"><input type="checkbox"><span>✔ J'ai compris cette notion</span></label>
+</div></section><section class="panel" id="memo"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">📌</span>Fiche mémo — Séance 3</div><div class="tbl" style="border:1px solid var(--border);border-radius:10px"><table class="grid-table" style="margin:0"><tr><th>#</th><th>Notion</th><th>Syntaxe clé</th><th>À retenir</th></tr><tr><td class="mono">N18</td><td>Lire un plan</td><td class="mono" style="font-size:12.5px;font-weight:500">EXPLAIN (ANALYZE, BUFFERS) … · SET max_parallel_workers_per_gather = 0</td><td>ANALYZE exécute vraiment</td></tr><tr><td class="mono">N19</td><td>Modes de lecture</td><td class="mono" style="font-size:12.5px;font-weight:500">Seq Scan · Index Scan · Bitmap Heap Scan · Index Only Scan</td><td>Index ignoré si peu sélectif</td></tr><tr><td class="mono">N20</td><td>Jointures & stats</td><td class="mono" style="font-size:12.5px;font-weight:500">Nested Loop · Hash Join · Merge Join · ANALYZE t · pg_stats</td><td>rows estimé ≠ réel = alerte</td></tr><tr><td class="mono">N21</td><td>B-tree</td><td class="mono" style="font-size:12.5px;font-weight:500">CREATE INDEX i ON t (a, b DESC)</td><td>Première colonne obligatoire</td></tr><tr><td class="mono">N22</td><td>Variantes</td><td class="mono" style="font-size:12.5px;font-weight:500">… WHERE cond · (LOWER(col)) · (a) INCLUDE (b, c)</td><td>Même expression exacte</td></tr><tr><td class="mono">N23</td><td>GIN</td><td class="mono" style="font-size:12.5px;font-weight:500">USING GIN (jsonb) · USING GIN (texte gin_trgm_ops) · &lt;% · word_similarity()</td><td>@> oui, ->> non</td></tr><tr><td class="mono">N24</td><td>Réécrire</td><td class="mono" style="font-size:12.5px;font-weight:500">plage de dates · WHERE id &gt; dernier LIMIT n · colonnes utiles</td><td>Même résultat, gain prouvé</td></tr><tr><td class="mono">N25</td><td>Entretenir</td><td class="mono" style="font-size:12.5px;font-weight:500">pg_stat_user_indexes · VACUUM ANALYZE · pg_stat_statements</td><td>Index sans gain = supprimé</td></tr></table></div>
+<h3>🧭 Quel index pour quel besoin ?</h3>
+<table class="grid-table"><tr><th>La requête…</th><th>Index</th></tr>
+<tr><td>filtre par égalité ou par plage sur une colonne</td><td class="mono">B-tree (col)</td></tr>
+<tr><td>filtre sur a et trie ou filtre par plage sur b</td><td class="mono">B-tree (a, b)</td></tr>
+<tr><td>vise toujours un petit sous-ensemble de lignes</td><td class="mono">B-tree … WHERE condition</td></tr>
+<tr><td>filtre sur un calcul (LOWER, conversion…)</td><td class="mono">B-tree (expression)</td></tr>
+<tr><td>lit toujours les mêmes colonnes en plus du filtre</td><td class="mono">B-tree (col) INCLUDE (…)</td></tr>
+<tr><td>cherche dans un JSONB avec @&gt; ou ?</td><td class="mono">GIN (jsonb)</td></tr>
+<tr><td>cherche un morceau de texte (ILIKE '%…%') ou tolère les fautes</td><td class="mono">GIN (texte gin_trgm_ops)</td></tr></table>
+<h3>🚨 Les signaux d'alerte dans un plan</h3>
+<table class="grid-table"><tr><th>Signal</th><th>Piste</th></tr>
+<tr><td>Seq Scan sur une grosse table avec beaucoup de <span class="mono">Rows Removed by Filter</span></td><td>Index manquant, ou requête qui empêche son usage (N24)</td></tr>
+<tr><td><span class="mono">rows=</span> estimé très différent du réel</td><td>Statistiques périmées : ANALYZE (N20)</td></tr>
+<tr><td>Sort juste avant un Limit</td><td>Index composite fournissant l'ordre (N21)</td></tr>
+<tr><td>Beaucoup de <span class="mono">Heap Fetches</span> dans un Index Only Scan</td><td>VACUUM (N22, N25)</td></tr>
+<tr><td>Nested Loop avec un très grand <span class="mono">loops=</span></td><td>Index manquant côté intérieur, ou estimation fausse</td></tr></table></div></section><section class="panel" id="glossaire"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">📖</span>Glossaire — Séance 3</div><div><span class="ftag f1">Plans</span><span class="ftag f2">Accès & jointures</span><span class="ftag f3">Index</span><span class="ftag f4">Optimisation</span><span class="ftag f5">Maintenance</span></div><br><input class="gl-search" type="search" placeholder="Rechercher un terme…" aria-label="Rechercher un terme"><div class="gl-item"><b>ANALYZE</b> <span class="ftag f5">Maintenance</span><p>Commande qui recalcule les statistiques d&#x27;une table.</p></div><div class="gl-item"><b>Autovacuum</b> <span class="ftag f5">Maintenance</span><p>Processus de fond qui lance automatiquement VACUUM et ANALYZE.</p></div><div class="gl-item"><b>B-tree</b> <span class="ftag f3">Index</span><p>Index par défaut, en arbre trié : égalité, plages et tri.</p></div><div class="gl-item"><b>Bitmap Heap Scan</b> <span class="ftag f2">Accès & jointures</span><p>Repérage des lignes dans l&#x27;index, puis lecture groupée des blocs de la table.</p></div><div class="gl-item"><b>Buffers</b> <span class="ftag f1">Plans</span><p>Blocs de 8 Ko lus en mémoire (hit) ou sur disque (read) : mesure stable du travail.</p></div><div class="gl-item"><b>Carte de visibilité</b> <span class="ftag f5">Maintenance</span><p>Carte des blocs dont toutes les lignes sont visibles, nécessaire aux Index Only Scans.</p></div><div class="gl-item"><b>Coût</b> <span class="ftag f1">Plans</span><p>Estimation abstraite du travail d&#x27;un nœud, utilisée pour comparer les plans.</p></div><div class="gl-item"><b>EXPLAIN</b> <span class="ftag f1">Plans</span><p>Affiche le plan estimé d&#x27;une requête sans l&#x27;exécuter.</p></div><div class="gl-item"><b>EXPLAIN ANALYZE</b> <span class="ftag f1">Plans</span><p>Exécute la requête et affiche le plan avec les temps et lignes réels.</p></div><div class="gl-item"><b>GIN</b> <span class="ftag f3">Index</span><p>Index inversé qui recense, pour chaque élément, les lignes qui le contiennent.</p></div><div class="gl-item"><b>Hash Join</b> <span class="ftag f2">Accès & jointures</span><p>Jointure qui charge une table en mémoire sous forme de table de hachage.</p></div><div class="gl-item"><b>Index composite</b> <span class="ftag f3">Index</span><p>Index sur plusieurs colonnes, utilisable si la requête filtre sur la première.</p></div><div class="gl-item"><b>Index couvrant (INCLUDE)</b> <span class="ftag f3">Index</span><p>Index qui embarque des colonnes supplémentaires pour éviter de lire la table.</p></div><div class="gl-item"><b>Index Only Scan</b> <span class="ftag f2">Accès & jointures</span><p>Réponse fournie par l&#x27;index seul, sans lire la table.</p></div><div class="gl-item"><b>Index partiel</b> <span class="ftag f3">Index</span><p>Index limité aux lignes vérifiant une condition.</p></div><div class="gl-item"><b>Index redondant</b> <span class="ftag f5">Maintenance</span><p>Index rendu inutile par un autre qui commence par les mêmes colonnes.</p></div><div class="gl-item"><b>Index Scan</b> <span class="ftag f2">Accès & jointures</span><p>Parcours d&#x27;un index suivi de la lecture de chaque ligne dans la table.</p></div><div class="gl-item"><b>Index sur expression</b> <span class="ftag f3">Index</span><p>Index sur le résultat d&#x27;un calcul, utilisé si la requête contient la même expression.</p></div><div class="gl-item"><b>Merge Join</b> <span class="ftag f2">Accès & jointures</span><p>Jointure qui parcourt en parallèle deux entrées déjà triées.</p></div><div class="gl-item"><b>Nested Loop</b> <span class="ftag f2">Accès & jointures</span><p>Jointure qui cherche, pour chaque ligne de gauche, ses correspondances à droite.</p></div><div class="gl-item"><b>Pagination par clé (keyset)</b> <span class="ftag f4">Optimisation</span><p>Pagination qui repart du dernier identifiant affiché au lieu d&#x27;utiliser OFFSET.</p></div><div class="gl-item"><b>Parallélisme (Gather)</b> <span class="ftag f1">Plans</span><p>Répartition d&#x27;une lecture entre plusieurs processus, rassemblés par le nœud Gather.</p></div><div class="gl-item"><b>pg_stat_statements</b> <span class="ftag f5">Maintenance</span><p>Extension qui cumule les appels et le temps d&#x27;exécution de chaque requête.</p></div><div class="gl-item"><b>pg_trgm</b> <span class="ftag f3">Index</span><p>Extension qui découpe le texte en trigrammes : recherche « contient » et tolérance aux fautes.</p></div><div class="gl-item"><b>Plan d&#x27;exécution</b> <span class="ftag f1">Plans</span><p>Suite d&#x27;opérations choisie par PostgreSQL pour exécuter une requête.</p></div><div class="gl-item"><b>Planificateur</b> <span class="ftag f1">Plans</span><p>Composant qui évalue les stratégies possibles et choisit la moins coûteuse.</p></div><div class="gl-item"><b>Seq Scan</b> <span class="ftag f2">Accès & jointures</span><p>Lecture complète d&#x27;une table, bloc après bloc.</p></div><div class="gl-item"><b>Statistiques (pg_stats)</b> <span class="ftag f2">Accès & jointures</span><p>Informations sur la distribution des valeurs, utilisées pour estimer les lignes.</p></div><div class="gl-item"><b>Sélectivité</b> <span class="ftag f2">Accès & jointures</span><p>Proportion de lignes retenues par une condition ; plus elle est faible, plus l&#x27;index est utile.</p></div><div class="gl-item"><b>VACUUM</b> <span class="ftag f5">Maintenance</span><p>Opération qui récupère l&#x27;espace des lignes mortes et met à jour la carte de visibilité.</p></div></div></section></main>
+<footer>SQL avancé avec PostgreSQL · M1 Tech Lead</footer>
+<script>
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+function show(id){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});}
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.go);
+if(a.dataset.anchor){setTimeout(()=>document.getElementById(a.dataset.anchor).scrollIntoView({behavior:'smooth'}),60);}}));
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{
+ const txt=b.closest('.code').querySelector('pre').innerText;
+ const done=()=>{b.textContent='Copié ✓';b.classList.add('done');setTimeout(()=>{b.textContent='Copier';b.classList.remove('done')},1500)};
+ if(navigator.clipboard){navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(txt,done))}else fallback(txt,done);}));
+function fallback(t,done){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');done()}catch(e){}a.remove();}
+function refresh(){const all=document.querySelectorAll('.understood input');const d=[...all].filter(i=>i.checked).length;
+ const f=document.getElementById('gprog-fill');if(!f)return;f.style.width=(all.length?d/all.length*100:0)+'%';
+ document.getElementById('gprog-txt').textContent=d+' / '+all.length;}
+document.querySelectorAll('.understood input').forEach(i=>i.addEventListener('change',()=>{i.closest('.understood').classList.toggle('done',i.checked);refresh();}));
+refresh();
+document.querySelectorAll('.os-tabs').forEach(g=>g.querySelectorAll('.os').forEach(b=>b.addEventListener('click',()=>{
+ const box=g.parentElement;g.querySelectorAll('.os').forEach(x=>x.classList.toggle('active',x===b));
+ box.querySelectorAll(':scope > .os-panel').forEach(p=>p.classList.toggle('active',p.dataset.os===b.dataset.os));})));
+const s=document.querySelector('.gl-search');if(s){s.addEventListener('input',()=>{const q=s.value.toLowerCase();
+ document.querySelectorAll('.gl-item').forEach(i=>i.style.display=i.innerText.toLowerCase().includes(q)?'':'none');});}
+const DEMO3_SQL="-- =====================================================================\n--  Compl\u00e9ment s\u00e9ance 3 \u2014 SQL avanc\u00e9 avec PostgreSQL\n--  \u00c0 ex\u00e9cuter sur la base cours_sql (ind\u00e9pendant des autres tables).\n--  G\u00e9n\u00e8re une plateforme de streaming musical volumineuse :\n--  5 000 artistes, 50 000 utilisateurs, 200 000 morceaux, 1 000 000 d'\u00e9coutes.\n--  Donn\u00e9es fictives et d\u00e9terministes : tout le monde obtient les m\u00eames lignes.\n--  Dur\u00e9e : 10 \u00e0 60 secondes selon la machine.\n--  Script r\u00e9-ex\u00e9cutable : il supprime puis recr\u00e9e ses tables (et leurs index).\n-- =====================================================================\n\nDROP TABLE IF EXISTS ecoutes, morceaux, utilisateurs_app, artistes CASCADE;\n\nCREATE TABLE artistes (\n    id     INTEGER PRIMARY KEY,\n    nom    VARCHAR(60) NOT NULL,\n    pays   VARCHAR(2)  NOT NULL\n);\n\nCREATE TABLE utilisateurs_app (\n    id          INTEGER PRIMARY KEY,\n    pseudo      VARCHAR(30) NOT NULL,\n    pays        VARCHAR(2)  NOT NULL,\n    inscrit_le  DATE        NOT NULL\n);\n\nCREATE TABLE morceaux (\n    id          INTEGER PRIMARY KEY,\n    artiste_id  INTEGER NOT NULL REFERENCES artistes(id),\n    titre       VARCHAR(80) NOT NULL,\n    infos       JSONB NOT NULL                 -- tags, bpm, explicite\n);\n\nCREATE TABLE ecoutes (\n    id              BIGINT PRIMARY KEY,\n    utilisateur_id  INTEGER   NOT NULL REFERENCES utilisateurs_app(id),\n    morceau_id      INTEGER   NOT NULL REFERENCES morceaux(id),\n    ecoute_le       TIMESTAMP NOT NULL,\n    duree_s         INTEGER   NOT NULL,        -- secondes \u00e9cout\u00e9es\n    plateforme      VARCHAR(10) NOT NULL,      -- mobile, web, tv, enceinte\n    terminee        BOOLEAN   NOT NULL         -- morceau \u00e9cout\u00e9 jusqu'au bout ?\n);\n\n-- ---------- Artistes ----------\nINSERT INTO artistes (id, nom, pays)\nSELECT i,\n       (ARRAY['Nova','Kairo','Lune','Atlas','Echo','Vega','Orion','Sia','Milo','Zephyr'])[1 + i % 10]\n         || ' ' || (ARRAY['Collective','Project','Band','Crew','Sound','Club','Trio','Duo'])[1 + (i / 10) % 8]\n         || ' ' || i,\n       (ARRAY['FR','FR','FR','US','US','GB','DE','BE','CA','JP'])[1 + (i * 7) % 10]\nFROM generate_series(1, 5000) AS i;\n\n-- ---------- Utilisateurs ----------\nINSERT INTO utilisateurs_app (id, pseudo, pays, inscrit_le)\nSELECT i,\n       'user_' || i,\n       (ARRAY['FR','FR','FR','FR','BE','CH','CA','MA','SN','CI'])[1 + (i * 3) % 10],\n       DATE '2020-01-01' + (i * 37) % 1800\nFROM generate_series(1, 50000) AS i;\n\n-- ---------- Morceaux ----------\nINSERT INTO morceaux (id, artiste_id, titre, infos)\nSELECT i,\n       1 + (i * 7919) % 5000,\n       (ARRAY['Midnight','Golden','Electric','Silent','Crazy','Broken','Endless','Neon','Wild','Lost',\n              'Blue','Summer','Frozen','Burning','Hidden','Velvet','Paper','Crystal','Shadow','Sweet'])[1 + i % 20]\n         || ' ' ||\n       (ARRAY['Dreams','City','Heart','Rain','Lullaby','Fire','Road','Night','Waves','Lights',\n              'Story','Garden','Echoes','Skies','River','Mirror','Storm','Party','Memories','Horizon'])[1 + (i / 20) % 20],\n       jsonb_build_object(\n           'tags', CASE WHEN i % 100 = 0 THEN jsonb_build_array('acoustique', 'live')\n                        ELSE jsonb_build_array(\n                             (ARRAY['pop','rock','rap','electro','chill','jazz','rnb','indie','dance','folk'])[1 + i % 10],\n                             (ARRAY['energique','calme','triste','festif','romantique'])[1 + (i / 10) % 5])\n                   END,\n           'bpm', 60 + (i * 13) % 121,\n           'explicite', (i % 10 = 3))\nFROM generate_series(1, 200000) AS i;\n\n-- ---------- \u00c9coutes ----------\n-- Les petits identifiants de morceaux sont plus \u00e9cout\u00e9s (distribution r\u00e9aliste des tubes)\nINSERT INTO ecoutes (id, utilisateur_id, morceau_id, ecoute_le, duree_s, plateforme, terminee)\nSELECT i,\n       1 + (i * 7919) % 50000,\n       1 + FLOOR(200000 * POWER(((i * 104729) % 1000003) / 1000003.0, 3))::INTEGER,\n       TIMESTAMP '2025-01-01 00:00' + ((i * 7907) % 525600) * INTERVAL '1 minute',\n       30 + (i * 31) % 240,\n       (ARRAY['mobile','mobile','mobile','mobile','mobile','mobile','web','web','enceinte','tv'])[1 + (i * 11) % 10],\n       (i * 17) % 20 <> 0                       -- 95 % des \u00e9coutes vont jusqu'au bout\nFROM generate_series(1::BIGINT, 1000000) AS i;\n\n-- Statistiques \u00e0 jour pour le planificateur + carte de visibilit\u00e9 (index-only scans)\nVACUUM ANALYZE artistes, utilisateurs_app, morceaux, ecoutes;\n\n-- ---------- Contr\u00f4le ----------\nSELECT 'artistes' AS table_name, COUNT(*) AS lignes FROM artistes\nUNION ALL SELECT 'utilisateurs_app', COUNT(*) FROM utilisateurs_app\nUNION ALL SELECT 'morceaux', COUNT(*) FROM morceaux\nUNION ALL SELECT 'ecoutes', COUNT(*) FROM ecoutes;\n";
+document.getElementById('dl-demo3').addEventListener('click',()=>{const b=new Blob([DEMO3_SQL],{type:'text/plain'});
+const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='demo-s3.sql';document.body.appendChild(a);a.click();a.remove();});</script></body></html>

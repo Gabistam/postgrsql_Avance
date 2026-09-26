@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance 3 — Cas pratiques · SQL avancé avec PostgreSQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;
+--dark:#0f172a;--dark-2:#1e293b;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f1f5f9;--card:#fff;--radius:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15.5px}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:44px 20px 34px}
+.wrap{max-width:1000px;margin:0 auto}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+header h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.2;margin-bottom:10px}
+header p.lead{color:#cbd5e1;max-width:700px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:6px 13px;border-radius:999px;font-size:13px;font-weight:500}
+.gprog{margin-top:22px;max-width:480px}
+.gprog-label{display:flex;justify-content:space-between;font-size:12.5px;color:#cbd5e1;margin-bottom:6px}
+.gprog-bar{height:8px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}
+.gprog-fill{height:100%;width:0;background:#34d399;transition:width .4s}
+.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(15,23,42,.05)}
+.tabs .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 10px}
+.tab{background:none;border:none;border-bottom:3px solid transparent;padding:15px 15px;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--primary)} .tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+main{padding:28px 14px 60px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
+.section-title{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;margin-bottom:14px;line-height:1.3}
+.icon-bg{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.ib-blue{background:var(--primary-light)}.ib-green{background:var(--secondary-light)}.ib-amber{background:var(--accent-light)}.ib-red{background:var(--danger-light)}.ib-purple{background:var(--purple-light)}
+.num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--primary);background:var(--primary-light);padding:3px 9px;border-radius:7px}
+h3{font-size:15px;font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+p+p{margin-top:8px}
+ul.clean{list-style:none;margin:6px 0}
+ul.clean li{padding:4px 0 4px 22px;position:relative}
+ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--primary);font-weight:700}
+ol.steps{margin:6px 0 6px 22px} ol.steps li{margin:4px 0}
+.objectif-box{background:var(--primary-light);border-left:4px solid var(--primary);border-radius:10px;padding:14px 18px;margin-bottom:14px;color:var(--primary-dark)}
+.instruction-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;margin:14px 0;color:#78350f}
+.warn-box{background:var(--danger-light);border-left:4px solid var(--danger);border-radius:10px;padding:14px 18px;margin:14px 0;color:#7f1d1d}
+.ok-box{background:var(--secondary-light);border-left:4px solid var(--secondary);border-radius:10px;padding:14px 18px;margin:14px 0;color:#064e3b}
+.analogie{background:var(--purple-light);border-left:4px solid var(--purple);border-radius:10px;padding:14px 18px;margin:14px 0;color:#4c1d95}
+.ftag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0}
+.f1{background:#dbeafe;color:#1e40af}.f2{background:#d1fae5;color:#065f46}.f3{background:#fef3c7;color:#92400e}.f4{background:#fee2e2;color:#991b1b}.f5{background:#ede9fe;color:#5b21b6}
+code.inl{background:#e2e8f0;padding:1px 6px;border-radius:5px;font-size:13px}
+.code{margin:10px 0;border-radius:10px;overflow:hidden;background:var(--dark)}
+.code-bar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#1e293b;color:#94a3b8;font-size:12px;font-family:'JetBrains Mono',monospace}
+.copy{background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:4px 10px;font-family:inherit;font-size:12px;cursor:pointer}
+.copy:hover{background:#475569}.copy.done{background:var(--secondary)}
+.code pre{color:#e2e8f0;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.6;margin:0}
+pre .c{color:#64748b;font-style:italic} pre .k{color:#93c5fd;font-weight:500} pre .s{color:#86efac} pre .n{color:#fcd34d} pre .m{color:#f9a8d4}
+pre.sh{color:#a7f3d0}
+.res{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:4px 0 12px}
+.res-bar{display:flex;justify-content:space-between;background:#f8fafc;border-bottom:1px solid var(--border);padding:6px 12px;font-size:12px;font-weight:700;color:var(--secondary)}
+.res-bar span{color:var(--muted);font-weight:500}
+.tbl{overflow-x:auto}
+.tbl table,.grid-table{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#f1f5f9;text-align:left;padding:7px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--slate,#334155);border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 12px;border-bottom:1px solid #f1f5f9;font-family:'JetBrains Mono',monospace;font-size:12.5px;white-space:nowrap}
+.tbl td.null{color:#94a3b8;font-style:italic}
+.res-note{padding:9px 12px;font-size:13px;color:var(--muted);background:#f8fafc;border-top:1px solid var(--border)}
+.grid-table th{background:var(--dark-2);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:13px}
+.grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.grid-table tr:nth-child(even) td{background:#f8fafc}
+.grid-table td:first-child{font-weight:600}
+.understood{display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+.understood input{accent-color:var(--secondary);width:18px;height:18px}
+.understood.done{border-color:var(--secondary);color:var(--secondary);background:var(--secondary-light)}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.toc a{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.toc a:hover{border-color:var(--primary)}
+.result-panel{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;border-radius:var(--radius);padding:22px 24px;margin:6px 0 22px}
+.result-panel h4{color:#fff;font-size:16px;margin-bottom:8px}
+.result-panel .score{color:#34d399;font-weight:800;font-family:'JetBrains Mono',monospace}
+.result-panel ul{margin-left:18px}.result-panel li{margin:3px 0}
+.os-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.os{font-family:inherit;font-size:13px;font-weight:600;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--muted)}
+.os.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.os-panel{display:none}.os-panel.active{display:block}
+.gl-search{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:14px}
+.gl-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.gl-item b{font-family:'JetBrains Mono',monospace;font-size:14px}
+.gl-item p{font-size:14px;color:#334155;margin-top:2px}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--primary);background:var(--primary);color:#fff}
+.btn:hover{filter:brightness(.95)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 40px}
+@media (max-width:700px){.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.actions-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn.ghost{background:#fff;color:var(--primary)}
+.term-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:760px){.term-grid{grid-template-columns:1fr}}
+.term-item{display:flex;align-items:center;gap:10px;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:13.5px;border:2px solid transparent}
+.term-item span{flex:1}
+.term-item select{font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:7px;padding:5px 6px;border:none;background:#1e293b;color:#fff}
+.term-item.ok{border-color:#34d399}.term-item.ko{border-color:#f87171}
+.def-item{display:flex;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;font-size:14px;background:#fff}
+.def-item b{font-family:'JetBrains Mono',monospace;color:var(--primary)}
+.group{border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.group h4{font-size:15px;margin-bottom:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sit{display:block;width:100%;text-align:left;font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:#fff;margin-bottom:7px;cursor:pointer;color:var(--text)}
+.sit:hover{border-color:var(--primary)}
+.sit.sel{border-color:var(--accent);background:var(--accent-light)}
+.sit.good{border-color:var(--secondary);background:var(--secondary-light)}
+.sit.bad{border-color:var(--danger);background:var(--danger-light)}
+.expl{font-size:13.5px;margin-top:8px;padding:10px 12px;border-radius:9px;background:#f8fafc;color:#334155}
+.vf{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:9px}
+.vf-row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.vf-row p{flex:1;min-width:220px;font-size:14.5px}
+.vf-btns{display:flex;gap:6px}
+.vf-btns button{font-family:inherit;font-weight:600;font-size:13px;border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 14px;cursor:pointer}
+.vf-btns button.sel{background:var(--primary);border-color:var(--primary);color:#fff}
+.vf.good{border-color:var(--secondary)}.vf.bad{border-color:var(--danger)}
+.exo{border-top:1px solid var(--border);padding-top:16px;margin-top:16px}
+.exo-head{display:flex;gap:10px;align-items:center;font-size:15px}
+.enonce{margin:8px 0}
+details.hint summary,details.corrige summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--accent);margin:6px 0}
+details.corrige summary{color:var(--secondary)}
+details.hint p{font-size:14px;background:var(--accent-light);padding:10px 12px;border-radius:9px;color:#78350f}
+pre.errmsg{padding:10px 12px;font-size:12.5px;color:#7f1d1d;background:#fff;white-space:pre-wrap;margin:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--border);text-decoration:none;color:var(--primary);background:#fff}
+.chip:hover{border-color:var(--primary)}
+.chip-m{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600;font-size:14px;background:#fff}
+.chip-m:hover{border-color:var(--primary)}
+.acc{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.acc>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;font-weight:700;font-size:16px}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary:hover{background:#f8fafc}
+.acc>summary:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.acc-title{flex:1}
+.acc-count{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);background:#f1f5f9;padding:3px 10px;border-radius:999px}
+.acc-count.full{background:var(--secondary-light);color:#065f46}
+.chev{color:var(--muted);transition:transform .25s}
+.acc[open] .chev{transform:rotate(180deg)}
+.acc[open]>summary{border-bottom:1px solid var(--border)}
+.acc-body{padding:0 20px 20px}
+.acc-body .exo:first-child{border-top:none;margin-top:4px}
+@media (max-width:600px){.acc>summary{flex-wrap:wrap}.acc-title{flex-basis:60%}}
+.prog{margin:10px 0 14px}.prog-label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.prog-bar{height:8px;background:var(--border);border-radius:999px;overflow:hidden}.prog-fill{height:100%;width:0;background:var(--secondary);transition:width .35s}
+.lock-pills{display:flex;gap:8px;flex-wrap:wrap}
+.lock-pill{font-weight:600;font-size:13px;padding:6px 14px;border-radius:999px;background:#f1f5f9;color:var(--muted)}
+.lock-pill.done{background:var(--secondary-light);color:#065f46}
+.tab.locked::after{content:" 🔒"}
+body:not(.formateur) .formateur-only{display:none!important}
+.mode-flag{display:none}body.formateur .mode-flag{display:inline-block;background:#fbbf24;color:#0f172a}
+.acc{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.acc>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;font-weight:700;font-size:16px}
+.acc>summary::-webkit-details-marker{display:none}.acc>summary:hover{background:#f8fafc}
+.acc-title{flex:1}.acc-count{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--muted);background:#f1f5f9;padding:3px 10px;border-radius:999px}
+.acc-count.full{background:var(--secondary-light);color:#065f46}
+.chev{color:var(--muted);transition:transform .25s}.acc[open] .chev{transform:rotate(180deg)}
+.acc[open]>summary{border-bottom:1px solid var(--border)}.acc-body{padding:0 20px 20px}.acc-body .exo:first-child{border-top:none;margin-top:4px}
+.corr-title{font-size:14px;color:var(--secondary);margin:12px 0 4px}
+
+pre.plantxt{margin:0;padding:12px 14px;background:#0f172a;color:#cbd5e1;font-size:12px;line-height:1.55;overflow-x:auto;white-space:pre}
+.plantxt .bad{color:#fca5a5;font-weight:700}.plantxt .good{color:#6ee7b7;font-weight:700}.plantxt .nd{color:#93c5fd;font-weight:700}
+.plantxt .pt{color:#fcd34d;font-weight:700}.plantxt .pb{color:#c4b5fd}.plantxt .pw{color:#fdba74}
+pre.notices{margin:0;padding:10px 12px;font-size:12.5px;color:#1e3a8a;background:#fff;white-space:pre-wrap;font-family:'JetBrains Mono',monospace}
+.corr-step{font-size:12px;font-weight:700;color:var(--muted);margin-top:8px}
+
+.tl-wrap{overflow-x:auto;margin:10px 0 14px;border:1px solid var(--border);border-radius:10px}
+table.tl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
+table.tl th{background:var(--dark-2);color:#fff;text-align:left;padding:9px 10px;font-weight:600;font-size:12.5px}
+table.tl td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+table.tl2 td:nth-child(2){background:#f8fafc;width:34%}table.tl2 td:nth-child(3){background:#fdf4ff;width:34%}
+table.tl1 td:nth-child(2){width:62%}
+td.tl-n{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--primary);width:28px}
+td.tl-note{font-size:13px;color:#334155}
+pre.tl-sql{margin:0;background:#0f172a;color:#e2e8f0;border-radius:7px;padding:7px 9px;font-size:12px;white-space:pre-wrap}
+pre.tl-sql .k{color:#93c5fd}pre.tl-sql .s{color:#86efac}pre.tl-sql .n{color:#fcd34d}pre.tl-sql .c{color:#64748b}pre.tl-sql .m{color:#f9a8d4}
+pre.tl-err{margin:6px 0 0;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:7px;padding:6px 8px;font-size:11.5px;white-space:pre-wrap;font-family:'JetBrains Mono',monospace}
+.tl-ok{margin-top:5px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#065f46}
+.tl-wait{margin-top:6px;font-size:12px;font-weight:700;color:#b45309;background:#fef3c7;border-radius:6px;padding:4px 8px;display:inline-block}
+.tl-go{font-size:12px;font-weight:700;color:#065f46;background:#d1fae5;border-radius:6px;padding:4px 8px;display:inline-block;margin-bottom:4px}
+.tl-notice{margin-top:5px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#1e40af}
+table.tl-res{border-collapse:collapse;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:11.5px;background:#fff}
+table.tl-res th{background:#e2e8f0;color:#0f172a;padding:3px 8px;font-weight:600}
+table.tl-res td{padding:3px 8px;border:1px solid #e2e8f0}
+</style></head><body>
+<header><div class="wrap"><span class="badge">🐘 SQL avancé avec PostgreSQL · Séance 3 · Cas pratiques</span>
+<h1>Index & optimisation en pratique</h1><p class="lead">Trois cas pour vérifier les notions, 16 mini-exos pour lire des plans et choisir des index, puis le défi d'optimisation FilmBox.</p>
+<div class="meta"><span class="pill">🧩 30 termes</span><span class="pill">🔀 Ordre aléatoire</span><span class="pill">🛠 16 mini-exos</span><span class="pill">🎬 2 missions</span><span class="pill">🔒 Glossaire verrouillé</span><span class="pill mode-flag">👩‍🏫 Mode formateur</span></div></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" role="tablist"><button class="tab active" data-tab="intro" role="tab">🎯 Vue d'ensemble</button><button class="tab" data-tab="cas1" role="tab">🧩 Cas 1</button><button class="tab" data-tab="cas2" role="tab">🔍 Cas 2</button><button class="tab" data-tab="cas3" role="tab">✅ Cas 3</button><button class="tab" data-tab="exos" role="tab">🛠 Mini-exos</button><button class="tab" data-tab="filmbox" role="tab">🎬 FilmBox</button><button class="tab locked" data-tab="glossaire" role="tab">📖 Glossaire</button></div></nav>
+<main class="wrap"><section class="panel active" id="intro"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🎯</span>Cas pratiques de la séance 3</div>
+<div class="objectif-box">Vérifier la compréhension des notions N18 à N25, s'entraîner sur des exercices courts, puis poursuivre le projet FilmBox.</div>
+<table class="grid-table"><tr><th>Étape</th><th>Contenu</th><th>Base</th></tr>
+<tr><td>🧩 Cas 1</td><td>30 termes à associer à leur définition</td><td>—</td></tr>
+<tr><td>🔍 Cas 2</td><td>5 groupes de situations, 1 intruse par groupe</td><td>—</td></tr>
+<tr><td>✅ Cas 3</td><td>16 affirmations vrai / faux</td><td>—</td></tr>
+<tr><td>🛠 Mini-exos</td><td>16 exercices SQL, 2 par notion</td><td class="mono">cours_sql + demo-s3.sql</td></tr>
+<tr><td>🎬 FilmBox</td><td>2 missions (M11 à M12), 7 tâches</td><td class="mono">filmbox + filmbox-s3.sql</td></tr>
+<tr><td>📖 Glossaire</td><td>Débloqué après les 3 cas</td><td>—</td></tr></table>
+<div class="instruction-box">📌 Tous les résultats attendus ont été obtenus en exécutant les corrigés sur PostgreSQL, dans l'ordre des exercices. Si votre résultat diffère, c'est votre requête qu'il faut réinterroger.</div></div></section><section class="panel" id="cas1"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🧩</span>Cas 1 — Correspondance termes / définitions</div><div class="objectif-box">🎯 Associer chaque terme clé de la séance à sa définition.</div><div class="instruction-box">📌 Pour chaque terme, choisissez la lettre de la bonne définition, puis cliquez sur Vérifier. 30 termes répartis en 3 rounds, dans un ordre différent à chaque session.</div>
+<div class="prog"><div class="prog-label"><span id="c1-round-lbl">Round 1</span><span id="c1-ptxt">0 / 30</span></div><div class="prog-bar"><div class="prog-fill" id="c1-fill"></div></div></div>
+<div id="c1-zone"></div><div class="actions-row"><button class="btn" id="c1-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c1-reveal" type="button">Révéler</button><button class="btn ghost" id="c1-next" type="button" hidden>Round suivant</button><button class="btn ghost" id="c1-reset" type="button">Recommencer</button></div><div id="c1-result"></div></div></section><section class="panel" id="cas2"><div class="card"><div class="section-title"><span class="icon-bg ib-green">🔍</span>Cas 2 — Identification de situations</div><div class="objectif-box">🎯 Reconnaître l'outil adapté à un besoin concret.</div><div class="instruction-box">📌 Dans chaque groupe, 4 situations relèvent de l'outil indiqué et 1 est une intruse. Cliquez sur l'intruse de chaque groupe, puis vérifiez.</div>
+<div class="prog"><div class="prog-label"><span>Groupes complétés</span><span id="c2-ptxt">0 / 5</span></div><div class="prog-bar"><div class="prog-fill" id="c2-fill"></div></div></div>
+<div id="c2-zone"></div><div class="actions-row"><button class="btn" id="c2-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c2-reveal" type="button">Révéler</button><button class="btn ghost" id="c2-reset" type="button">Recommencer</button></div><div id="c2-result"></div></div></section><section class="panel" id="cas3"><div class="card"><div class="section-title"><span class="icon-bg ib-amber">✅</span>Cas 3 — Vrai ou faux ?</div><div class="objectif-box">🎯 Repérer les idées reçues et les pièges de la séance.</div><div class="instruction-box">📌 Répondez aux 16 affirmations, puis vérifiez : chaque réponse est accompagnée de son explication.</div>
+<div class="prog"><div class="prog-label"><span>Réponses données</span><span id="c3-ptxt">0 / 16</span></div><div class="prog-bar"><div class="prog-fill" id="c3-fill"></div></div></div>
+<div id="c3-zone"></div><div class="actions-row"><button class="btn" id="c3-check" type="button">Vérifier</button><button class="btn ghost formateur-only" id="c3-reveal" type="button">Révéler</button><button class="btn ghost" id="c3-reset" type="button">Recommencer</button></div><div id="c3-result"></div></div></section><section class="panel" id="exos"><div class="card"><div class="section-title"><span class="icon-bg ib-blue">🛠</span>Mini-exos · cours_sql + demo-s3.sql</div><div class="objectif-box">2 exercices par notion pour s'entraîner à lire des plans et à choisir les bons index, avant le défi FilmBox.</div>
+<div class="instruction-box">📌 Travaillez sur la base <code class="inl">cours_sql</code>, avec <code class="inl">demo-s3.sql</code> fraîchement chargé (aucun index secondaire). Faites les exercices <strong>dans l'ordre</strong> : chaque plan dépend des index créés avant. Avant chaque session, lancez <code class="inl">SET max_parallel_workers_per_gather = 0;</code> pour obtenir des plans comparables à ceux affichés.</div>
+<div class="warn-box">⏱ Les temps affichés proviennent de la machine de test ; comparez surtout la forme des plans, les lignes et les blocs lus.</div><div class="prog"><div class="prog-label"><span>Exercices réussis</span><span class="ptxt" id="ptxt-exos">0</span></div><div class="prog-bar"><div class="prog-fill" id="pfill-exos"></div></div></div><div class="chips"><a href="#" class="chip" data-acc="exn-N18">N18</a><a href="#" class="chip" data-acc="exn-N19">N19</a><a href="#" class="chip" data-acc="exn-N20">N20</a><a href="#" class="chip" data-acc="exn-N21">N21</a><a href="#" class="chip" data-acc="exn-N22">N22</a><a href="#" class="chip" data-acc="exn-N23">N23</a><a href="#" class="chip" data-acc="exn-N24">N24</a><a href="#" class="chip" data-acc="exn-N25">N25</a></div><div class="actions-row"><button class="btn ghost acc-open" type="button">Tout déplier</button><button class="btn ghost acc-close" type="button">Tout replier</button></div></div><div class="exos-card"><details class="acc" id="exn-N18"><summary><span class="num">N18</span><span class="acc-title">Lire un plan : EXPLAIN</span><span class="ftag f1">Plans</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">18.1</span><strong>Estimé ou réel ?</strong></div>
+<p class="enonce">Affichez le plan <strong>estimé</strong>, puis le plan <strong>mesuré</strong> de la requête qui liste les morceaux de l'artiste 42. Relevez le nombre de lignes estimé, le nombre réel, et le nombre de lignes lues pour rien.</p><details class="hint"><summary>💡 Indice</summary><p>Cherchez <code>rows=</code> dans la partie <code>cost</code> (estimation) et dans la partie <code>actual</code> (réel), puis la ligne <code>Rows Removed by Filter</code>.</p></details><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Un Seq Scan : environ 40 lignes estimées, 40 réelles, et 199 960 lignes écartées par le filtre.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="bad">Seq Scan</span> on morceaux  (cost=0.00..5684.00 rows=40 width=97)
+  Filter: (artiste_id = 42)</pre></div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="bad">Seq Scan</span> on morceaux  (cost=0.00..5684.00 rows=40 width=97) (actual time=0.272..10.676 rows=40 loops=1)
+  Filter: (artiste_id = 42)
+  <span class="pw">Rows Removed by Filter: 199960</span>
+  <span class="pb">Buffers: shared hit=3184</span>
+Planning:
+  <span class="pb">Buffers: shared hit=69</span>
+Planning Time: 0.235 ms
+<span class="pt">Execution Time: 10.709 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> morceaux <span class="k">WHERE</span> artiste_id = <span class="n">42</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> * <span class="k">FROM</span> morceaux <span class="k">WHERE</span> artiste_id = <span class="n">42</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">18.2</span><strong>Mesurer sans rien casser</strong></div>
+<p class="enonce">Mesurez avec <code class='inl'>EXPLAIN ANALYZE</code> la suppression des écoutes de l'utilisateur 4242, <strong>sans</strong> que les données soient réellement supprimées. Vérifiez ensuite qu'elles sont toujours là.</p><details class="hint"><summary>💡 Indice</summary><p>EXPLAIN ANALYZE exécute vraiment la requête : encadrez-la d'un <code>BEGIN</code> et d'un <code>ROLLBACK</code>.</p></details><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt">Delete on ecoutes  (cost=0.00..20765.00 rows=0 width=0) (actual time=45.080..45.080 rows=0 loops=1)
+  -&gt;  <span class="bad">Seq Scan</span> on ecoutes  (cost=0.00..20765.00 rows=20 width=6) (actual time=1.169..44.953 rows=20 loops=1)
+        Filter: (utilisateur_id = 4242)
+        <span class="pw">Rows Removed by Filter: 999980</span>
+Planning Time: 0.189 ms
+<span class="pt">Execution Time: 45.138 ms</span></pre></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>ecoutes_4242</th></tr></thead><tbody><tr><td class="">20</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre>BEGIN;
+<span class="k">EXPLAIN</span> <span class="k">ANALYZE</span> <span class="k">DELETE</span> <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>;
+ROLLBACK;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">AS</span> ecoutes_4242 <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> utilisateur_id = <span class="n">4242</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N19"><summary><span class="num">N19</span><span class="acc-title">Les modes de lecture</span><span class="ftag f2">Accès & jointures</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">19.1</span><strong>Un index pour les morceaux</strong></div>
+<p class="enonce">Créez un index sur <code class='inl'>ecoutes(morceau_id)</code>, puis affichez le plan de la requête qui liste les écoutes du morceau 150 000. Quel mode de lecture PostgreSQL choisit-il ?</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Un accès par l'index (Bitmap Heap Scan ou Index Scan) : quelques blocs lus au lieu de 8 265.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="good">Bitmap Heap Scan</span> on ecoutes  (cost=4.53..58.98 rows=14 width=35) (actual time=0.028..0.035 rows=2 loops=1)
+  Recheck Cond: (morceau_id = 150000)
+  Heap Blocks: exact=2
+  <span class="pb">Buffers: shared hit=2 read=3</span>
+  -&gt;  <span class="good">Bitmap Index Scan</span> on idx_ecoutes_morceau  (cost=0.00..4.53 rows=14 width=0) (actual time=0.018..0.018 rows=2 loops=1)
+        Index Cond: (morceau_id = 150000)
+        <span class="pb">Buffers: shared read=3</span>
+Planning:
+  <span class="pb">Buffers: shared hit=97 read=2</span>
+Planning Time: 0.315 ms
+<span class="pt">Execution Time: 0.074 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_morceau <span class="k">ON</span> ecoutes (morceau_id);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> * <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> morceau_id = <span class="n">150000</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">19.2</span><strong>Compter sans lire la table</strong></div>
+<p class="enonce">Lancez d'abord <code class='inl'>VACUUM ecoutes;</code> : l'exercice 18.2 a modifié puis annulé des lignes, ce qui a invalidé une partie de la carte de visibilité. Comptez ensuite les écoutes du morceau n°1, le plus écouté de la plateforme. Quel mode de lecture apparaît, et combien de lignes sont lues dans la table ?</p><details class="hint"><summary>💡 Indice</summary><p>Sans le VACUUM préalable, le plan afficherait des <code>Heap Fetches</code> : PostgreSQL devrait vérifier certaines lignes dans la table.</p></details><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Un Index Only Scan avec <code>Heap Fetches: 0</code> : le comptage se fait dans l'index seul, sans lire la table.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=466.43..466.44 rows=1 width=8) (actual time=2.018..2.018 rows=1 loops=1)
+  <span class="pb">Buffers: shared hit=2 read=16</span>
+  -&gt;  <span class="good">Index Only Scan</span> using idx_ecoutes_morceau on ecoutes  (cost=0.42..421.68 rows=17900 width=0) (actual time=0.030..1.131 rows=17099 loops=1)
+        Index Cond: (morceau_id = 1)
+        Heap Fetches: 0
+        <span class="pb">Buffers: shared hit=2 read=16</span>
+Planning:
+  <span class="pb">Buffers: shared hit=84</span>
+Planning Time: 0.247 ms
+<span class="pt">Execution Time: 2.056 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">VACUUM</span> ecoutes;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> morceau_id = <span class="n">1</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N20"><summary><span class="num">N20</span><span class="acc-title">Jointures et statistiques</span><span class="ftag f2">Accès & jointures</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">20.1</span><strong>Trois tables, quel algorithme ?</strong></div>
+<p class="enonce">Affichez le plan de la requête qui liste, pour l'utilisateur 4242, le titre de chaque morceau écouté et le nom de son artiste. Créez d'abord l'index utile sur <code class='inl'>ecoutes(utilisateur_id)</code>. Quels algorithmes de jointure apparaissent, et combien de fois la recherche dans <code class='inl'>morceaux</code> est-elle répétée ?</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Des Nested Loop : 20 écoutes à gauche, puis une recherche par clé primaire dans <code>morceaux</code> et dans <code>artistes</code> pour chacune (<code>loops=20</code>).</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Nested Loop</span>  (cost=5.28..256.65 rows=20 width=37) (actual time=0.051..0.298 rows=20 loops=1)
+  -&gt;  <span class="nd">Nested Loop</span>  (cost=5.00..250.63 rows=20 width=25) (actual time=0.045..0.242 rows=20 loops=1)
+        -&gt;  <span class="good">Bitmap Heap Scan</span> on ecoutes e  (cost=4.58..81.88 rows=20 width=12) (actual time=0.030..0.121 rows=20 loops=1)
+              Recheck Cond: (utilisateur_id = 4242)
+              Heap Blocks: exact=20
+              -&gt;  <span class="good">Bitmap Index Scan</span> on idx_ecoutes_utilisateur  (cost=0.00..4.58 rows=20 width=0) (actual time=0.021..0.021 rows=20 loops=1)
+                    Index Cond: (utilisateur_id = 4242)
+        -&gt;  <span class="good">Index Scan</span> using morceaux_pkey on morceaux m  (cost=0.42..8.44 rows=1 width=21) (actual time=0.006..0.006 rows=1 loops=20)
+              Index Cond: (id = e.morceau_id)
+  -&gt;  <span class="good">Index Scan</span> using artistes_pkey on artistes a  (cost=0.28..0.30 rows=1 width=20) (actual time=0.002..0.002 rows=1 loops=20)
+        Index Cond: (id = m.artiste_id)
+Planning Time: 0.667 ms
+<span class="pt">Execution Time: 0.358 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_utilisateur <span class="k">ON</span> ecoutes (utilisateur_id);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> m.titre, a.nom, e.ecoute_le
+<span class="k">FROM</span> ecoutes e
+<span class="k">JOIN</span> morceaux m <span class="k">ON</span> m.id = e.morceau_id
+<span class="k">JOIN</span> artistes a <span class="k">ON</span> a.id = m.artiste_id
+<span class="k">WHERE</span> e.utilisateur_id = <span class="n">4242</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">20.2</span><strong>D'où vient l'estimation ?</strong></div>
+<p class="enonce">Consultez dans <code class='inl'>pg_stats</code> les valeurs les plus fréquentes de <code class='inl'>utilisateurs_app.pays</code>, puis comparez l'estimation et la réalité pour les utilisateurs français.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Les statistiques donnent « FR » à 40 % environ : sur 50 000 utilisateurs, l'estimation (vers 20 000) est très proche du réel (20 000).</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>most_common_vals</th><th>most_common_freqs</th></tr></thead><tbody><tr><td class="">{FR,CA,CH,SN,CI,MA,BE}</td><td class="">{0.4014,0.100833334,0.1001,0.1,0.09943333,0.0993,0.09893333}</td></tr></tbody></table></div></div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=994.17..994.18 rows=1 width=8) (actual time=4.365..4.365 rows=1 loops=1)
+  -&gt;  <span class="bad">Seq Scan</span> on utilisateurs_app  (cost=0.00..944.00 rows=20070 width=0) (actual time=0.004..3.492 rows=20000 loops=1)
+        Filter: ((pays)::text = 'FR'::text)
+        <span class="pw">Rows Removed by Filter: 30000</span>
+Planning Time: 0.176 ms
+<span class="pt">Execution Time: 4.398 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> most_common_vals, most_common_freqs
+<span class="k">FROM</span> pg_stats
+<span class="k">WHERE</span> tablename = <span class="s">'utilisateurs_app'</span> <span class="k">AND</span> attname = <span class="s">'pays'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> utilisateurs_app <span class="k">WHERE</span> pays = <span class="s">'FR'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N21"><summary><span class="num">N21</span><span class="acc-title">B-tree simple et composite</span><span class="ftag f3">Index</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">21.1</span><strong>Les dernières écoutes d'un morceau</strong></div>
+<p class="enonce">La page d'un morceau affiche ses 10 écoutes les plus récentes. Affichez le plan avec l'index de 19.1, puis créez l'index composite qui supprime le tri, et comparez.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Avant : un Sort. Après : un Index Scan sur l'index composite, sans tri, qui s'arrête après 10 lignes.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Limit</span>  (cost=59.25..59.27 rows=10 width=12) (actual time=0.759..0.761 rows=10 loops=1)
+  <span class="pb">Buffers: shared hit=208 read=1</span>
+  -&gt;  <span class="bad">Sort</span>  (cost=59.25..59.28 rows=14 width=12) (actual time=0.758..0.759 rows=10 loops=1)
+        Sort Key: ecoute_le DESC
+        Sort Method: top-N heapsort  Memory: 25kB
+        <span class="pb">Buffers: shared hit=208 read=1</span>
+        -&gt;  <span class="good">Bitmap Heap Scan</span> on ecoutes  (cost=4.53..58.98 rows=14 width=12) (actual time=0.048..0.711 rows=203 loops=1)
+              Recheck Cond: (morceau_id = 150)
+              Heap Blocks: exact=203
+              <span class="pb">Buffers: shared hit=205 read=1</span>
+              -&gt;  <span class="good">Bitmap Index Scan</span> on idx_ecoutes_morceau  (cost=0.00..4.53 rows=14 width=0) (actual time=0.023..0.023 rows=203 loops=1)
+                    Index Cond: (morceau_id = 150)
+                    <span class="pb">Buffers: shared hit=2 read=1</span>
+Planning:
+  <span class="pb">Buffers: shared hit=118</span>
+Planning Time: 0.262 ms
+<span class="pt">Execution Time: 0.785 ms</span></pre></div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Limit</span>  (cost=0.42..43.46 rows=10 width=12) (actual time=0.029..0.073 rows=10 loops=1)
+  <span class="pb">Buffers: shared hit=10 read=3</span>
+  -&gt;  <span class="good">Index Scan</span> using idx_ecoutes_morceau_date on ecoutes  (cost=0.42..60.67 rows=14 width=12) (actual time=0.028..0.071 rows=10 loops=1)
+        Index Cond: (morceau_id = 150)
+        <span class="pb">Buffers: shared hit=10 read=3</span>
+Planning:
+  <span class="pb">Buffers: shared hit=137 read=1</span>
+Planning Time: 0.312 ms
+<span class="pt">Execution Time: 0.090 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> utilisateur_id, ecoute_le <span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> morceau_id = <span class="n">150</span> <span class="k">ORDER</span> <span class="k">BY</span> ecoute_le <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="n">10</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_morceau_date <span class="k">ON</span> ecoutes (morceau_id, ecoute_le <span class="k">DESC</span>);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> utilisateur_id, ecoute_le <span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> morceau_id = <span class="n">150</span> <span class="k">ORDER</span> <span class="k">BY</span> ecoute_le <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="n">10</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">21.2</span><strong>Égalité puis plage</strong></div>
+<p class="enonce">Les statistiques de la TV veulent les écoutes sur « tv » du 1er au 7 mars 2025. Créez l'index composite adapté (quelle colonne en premier ?) et vérifiez qu'il est utilisé.</p><details class="hint"><summary>💡 Indice</summary><p>Règle pratique : d'abord les colonnes comparées avec <code>=</code>, puis celle qui sert de plage ou de tri.</p></details><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> L'index (plateforme, ecoute_le) est utilisé : la colonne testée par égalité en tête, la plage ensuite.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=76.98..76.99 rows=1 width=8) (actual time=0.349..0.349 rows=1 loops=1)
+  <span class="pb">Buffers: shared hit=1 read=9</span>
+  -&gt;  <span class="good">Index Only Scan</span> using idx_ecoutes_plateforme_date on ecoutes  (cost=0.42..72.12 rows=1942 width=0) (actual time=0.038..0.242 rows=1917 loops=1)
+        Index Cond: ((plateforme = 'tv'::text) AND (ecoute_le &gt;= '2025-03-01 00:00:00'::timestamp without time zone) AND (ecoute_le &lt; '2025-03-08 00:00:00'::timestamp without time zone))
+        Heap Fetches: 0
+        <span class="pb">Buffers: shared hit=1 read=9</span>
+Planning:
+  <span class="pb">Buffers: shared hit=151 read=1</span>
+Planning Time: 0.392 ms
+<span class="pt">Execution Time: 0.389 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_plateforme_date <span class="k">ON</span> ecoutes (plateforme, ecoute_le);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> plateforme = <span class="s">'tv'</span>
+  <span class="k">AND</span> ecoute_le &gt;= <span class="s">'2025-03-01'</span> <span class="k">AND</span> ecoute_le &lt; <span class="s">'2025-03-08'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N22"><summary><span class="num">N22</span><span class="acc-title">Index partiel, sur expression, couvrant</span><span class="ftag f3">Index</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">22.1</span><strong>Recherche d'artiste sans casse</strong></div>
+<p class="enonce">Un moteur de recherche compare les noms d'artistes en minuscules. Créez l'index adapté à <code class='inl'>WHERE LOWER(nom) = 'nova collective 1000'</code>, mettez à jour les statistiques et vérifiez le plan.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Un Index Scan sur <code>idx_artistes_nom_lower</code>, avec une estimation d'une ligne grâce à ANALYZE.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="good">Index Scan</span> using idx_artistes_nom_lower on artistes  (cost=0.28..8.30 rows=1 width=23) (actual time=0.016..0.016 rows=0 loops=1)
+  Index Cond: (lower((nom)::text) = 'nova collective 1000'::text)
+Planning Time: 0.297 ms
+<span class="pt">Execution Time: 0.043 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_artistes_nom_lower <span class="k">ON</span> artistes (LOWER(nom));
+<span class="k">ANALYZE</span> artistes;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> artistes <span class="k">WHERE</span> LOWER(nom) = <span class="s">'nova collective 1000'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">22.2</span><strong>Répondre avec l'index seul</strong></div>
+<p class="enonce">Le tableau de bord d'un artiste lit, pour un morceau, l'utilisateur et la durée de chaque écoute. Créez un index couvrant sur <code class='inl'>morceau_id</code> qui permet un Index Only Scan pour le morceau 150 000.</p><details class="hint"><summary>💡 Indice</summary><p>Sans VACUUM, la carte de visibilité n'est pas à jour et PostgreSQL doit vérifier les lignes dans la table.</p></details><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Un Index Only Scan avec <code>Heap Fetches: 0</code>.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="good">Index Only Scan</span> using idx_ecoutes_morceau_cover on ecoutes  (cost=0.42..4.67 rows=14 width=8) (actual time=0.026..0.027 rows=2 loops=1)
+  Index Cond: (morceau_id = 150000)
+  Heap Fetches: 0
+  <span class="pb">Buffers: shared hit=1 read=3</span>
+Planning:
+  <span class="pb">Buffers: shared hit=157</span>
+Planning Time: 0.323 ms
+<span class="pt">Execution Time: 0.051 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_morceau_cover <span class="k">ON</span> ecoutes (morceau_id) <span class="k">INCLUDE</span> (utilisateur_id, duree_s);
+<span class="k">VACUUM</span> ecoutes;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> utilisateur_id, duree_s <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> morceau_id = <span class="n">150000</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N23"><summary><span class="num">N23</span><span class="acc-title">Index GIN</span><span class="ftag f3">Index</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">23.1</span><strong>Les morceaux live</strong></div>
+<p class="enonce">Trouvez les morceaux tagués « live ». Créez un index GIN en utilisant la classe d'opérateurs <code class='inl'>jsonb_path_ops</code>, plus compacte, et vérifiez qu'il sert.</p><details class="hint"><summary>💡 Indice</summary><p><code>jsonb_path_ops</code> ne gère que <code>@&gt;</code>, mais produit un index plus petit que la classe par défaut.</p></details><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Un Bitmap Index Scan sur <code>idx_morceaux_infos_path</code> : 2 000 morceaux trouvés.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=3447.78..3447.79 rows=1 width=8) (actual time=4.301..4.303 rows=1 loops=1)
+  <span class="pb">Buffers: shared hit=2003</span>
+  -&gt;  <span class="good">Bitmap Heap Scan</span> on morceaux  (cost=33.83..3437.70 rows=4032 width=0) (actual time=0.654..4.162 rows=2000 loops=1)
+        Recheck Cond: (infos @&gt; '{"tags": ["live"]}'::jsonb)
+        Heap Blocks: exact=2000
+        <span class="pb">Buffers: shared hit=2003</span>
+        -&gt;  <span class="good">Bitmap Index Scan</span> on idx_morceaux_infos_path  (cost=0.00..32.83 rows=4032 width=0) (actual time=0.393..0.393 rows=2000 loops=1)
+              Index Cond: (infos @&gt; '{"tags": ["live"]}'::jsonb)
+              <span class="pb">Buffers: shared hit=3</span>
+Planning:
+  <span class="pb">Buffers: shared hit=80</span>
+Planning Time: 0.359 ms
+<span class="pt">Execution Time: 4.383 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_morceaux_infos_path <span class="k">ON</span> morceaux <span class="k">USING</span> <span class="k">GIN</span> (infos jsonb_path_ops);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> morceaux <span class="k">WHERE</span> infos @&gt; <span class="s">'{"tags": ["live"]}'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">23.2</span><strong>Une recherche qui pardonne</strong></div>
+<p class="enonce">Rendez rapide la recherche <code class='inl'>titre ILIKE '%crystal mirror%'</code>, puis retrouvez les titres proches de la saisie avec faute « crystal miror ».</p><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=3169.07..3169.08 rows=1 width=8) (actual time=3.862..3.863 rows=1 loops=1)
+  <span class="pb">Buffers: shared hit=568</span>
+  -&gt;  <span class="good">Bitmap Heap Scan</span> on morceaux  (cost=228.31..3164.17 rows=1962 width=0) (actual time=2.463..3.814 rows=500 loops=1)
+        Recheck Cond: ((titre)::text ~~* '%crystal mirror%'::text)
+        Heap Blocks: exact=500
+        <span class="pb">Buffers: shared hit=568</span>
+        -&gt;  <span class="good">Bitmap Index Scan</span> on idx_morceaux_titre_trgm  (cost=0.00..227.82 rows=1962 width=0) (actual time=2.386..2.386 rows=500 loops=1)
+              Index Cond: ((titre)::text ~~* '%crystal mirror%'::text)
+              <span class="pb">Buffers: shared hit=68</span>
+Planning:
+  <span class="pb">Buffers: shared hit=101</span>
+Planning Time: 0.644 ms
+<span class="pt">Execution Time: 3.955 ms</span></pre></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>2 lignes</span></div><div class="tbl"><table><thead><tr><th>titre</th><th>score</th></tr></thead><tbody><tr><td class="">Crystal Mirror</td><td class="">0.81</td></tr><tr><td class="">Crystal Memories</td><td class="">0.64</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">EXTENSION</span> <span class="k">IF</span> <span class="k">NOT</span> <span class="k">EXISTS</span> pg_trgm;
+<span class="k">CREATE</span> <span class="k">INDEX</span> idx_morceaux_titre_trgm <span class="k">ON</span> morceaux <span class="k">USING</span> <span class="k">GIN</span> (titre gin_trgm_ops);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> morceaux <span class="k">WHERE</span> titre <span class="k">ILIKE</span> <span class="s">'%crystal mirror%'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> <span class="k">DISTINCT</span> titre, <span class="k">ROUND</span>(word_similarity(<span class="s">'crystal miror'</span>, titre)::<span class="k">NUMERIC</span>, <span class="n">2</span>) <span class="k">AS</span> score
+<span class="k">FROM</span> morceaux
+<span class="k">WHERE</span> <span class="s">'crystal miror'</span> &lt;% titre
+<span class="k">ORDER</span> <span class="k">BY</span> score <span class="k">DESC</span>, titre
+<span class="k">LIMIT</span> <span class="n">3</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N24"><summary><span class="num">N24</span><span class="acc-title">Réécrire les requêtes lentes</span><span class="ftag f4">Optimisation</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">24.1</span><strong>Les écoutes de mars</strong></div>
+<p class="enonce">Cette requête compte les écoutes de mars 2025 : <code class='inl'>WHERE EXTRACT(MONTH FROM ecoute_le) = 3</code>. Créez un index sur <code class='inl'>ecoute_le</code>, constatez qu'il ne sert pas, puis réécrivez la condition pour qu'il serve.</p><details class="hint"><summary>💡 Indice</summary><p>Vérifiez que les deux écritures renvoient le même nombre : ici, toutes les écoutes datent de 2025.</p></details><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Avant : Seq Scan, la fonction appliquée à la colonne empêche l'index. Après : accès par l'index sur la plage de dates, même résultat (les écoutes couvrent la seule année 2025).</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=23277.50..23277.51 rows=1 width=8) (actual time=129.357..129.359 rows=1 loops=1)
+  -&gt;  <span class="bad">Seq Scan</span> on ecoutes  (cost=0.00..23265.00 rows=5000 width=0) (actual time=0.016..125.391 rows=84932 loops=1)
+        Filter: (EXTRACT(month FROM ecoute_le) = '3'::numeric)
+        <span class="pw">Rows Removed by Filter: 915068</span>
+Planning Time: 0.368 ms
+<span class="pt">Execution Time: 129.397 ms</span></pre></div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=2737.13..2737.14 rows=1 width=8) (actual time=12.030..12.031 rows=1 loops=1)
+  -&gt;  <span class="good">Index Only Scan</span> using idx_ecoutes_date on ecoutes  (cost=0.42..2526.39 rows=84298 width=0) (actual time=0.037..7.789 rows=84932 loops=1)
+        Index Cond: ((ecoute_le &gt;= '2025-03-01 00:00:00'::timestamp without time zone) AND (ecoute_le &lt; '2025-04-01 00:00:00'::timestamp without time zone))
+        Heap Fetches: 0
+Planning Time: 0.400 ms
+<span class="pt">Execution Time: 12.080 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_ecoutes_date <span class="k">ON</span> ecoutes (ecoute_le);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes <span class="k">WHERE</span> EXTRACT(MONTH <span class="k">FROM</span> ecoute_le) = <span class="n">3</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> ecoutes
+<span class="k">WHERE</span> ecoute_le &gt;= <span class="s">'2025-03-01'</span> <span class="k">AND</span> ecoute_le &lt; <span class="s">'2025-04-01'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">24.2</span><strong>Paginer le catalogue</strong></div>
+<p class="enonce">Le catalogue affiche les morceaux par pages de 10, triés par identifiant. Comparez l'affichage de la page qui commence après le morceau 150 000 avec <code class='inl'>OFFSET</code>, puis par clé.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Avec OFFSET, 150 010 lignes parcourues ; par clé, 10 lignes seulement.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Limit</span>  (cost=6293.67..6294.09 rows=10 width=17) (actual time=25.868..25.870 rows=10 loops=1)
+  <span class="pb">Buffers: shared hit=2800</span>
+  -&gt;  <span class="good">Index Scan</span> using morceaux_pkey on morceaux  (cost=0.42..8391.42 rows=200000 width=17) (actual time=0.015..19.999 rows=150010 loops=1)
+        <span class="pb">Buffers: shared hit=2800</span>
+Planning:
+  <span class="pb">Buffers: shared hit=98</span>
+Planning Time: 0.550 ms
+<span class="pt">Execution Time: 25.894 ms</span></pre></div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Limit</span>  (cost=0.42..0.87 rows=10 width=17) (actual time=0.019..0.022 rows=10 loops=1)
+  <span class="pb">Buffers: shared hit=4</span>
+  -&gt;  <span class="good">Index Scan</span> using morceaux_pkey on morceaux  (cost=0.42..2207.07 rows=49523 width=17) (actual time=0.019..0.020 rows=10 loops=1)
+        Index Cond: (id &gt; 150000)
+        <span class="pb">Buffers: shared hit=4</span>
+Planning:
+  <span class="pb">Buffers: shared hit=103</span>
+Planning Time: 0.297 ms
+<span class="pt">Execution Time: 0.042 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> id, titre <span class="k">FROM</span> morceaux <span class="k">ORDER</span> <span class="k">BY</span> id <span class="k">LIMIT</span> <span class="n">10</span> <span class="k">OFFSET</span> <span class="n">150000</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> id, titre <span class="k">FROM</span> morceaux <span class="k">WHERE</span> id &gt; <span class="n">150000</span> <span class="k">ORDER</span> <span class="k">BY</span> id <span class="k">LIMIT</span> <span class="n">10</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details><details class="acc" id="exn-N25"><summary><span class="num">N25</span><span class="acc-title">Mesurer, entretenir, rester sobre</span><span class="ftag f5">Maintenance</span><span class="acc-count">0 / 2</span><span class="chev">▾</span></summary><div class="acc-body"><div class="exo"><div class="exo-head"><span class="num">25.1</span><strong>Le ménage des index</strong></div>
+<p class="enonce">Listez les index de la table <code class='inl'>ecoutes</code> avec leur taille. L'un d'eux est redondant avec un index composite qui commence par la même colonne : identifiez-le et supprimez-le.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> <code>idx_ecoutes_morceau</code> (sur morceau_id seul) est redondant : deux autres index commencent par morceau_id.</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>7 lignes</span></div><div class="tbl"><table><thead><tr><th>index</th><th>taille</th></tr></thead><tbody><tr><td class="">ecoutes_pkey</td><td class="">21 MB</td></tr><tr><td class="">idx_ecoutes_date</td><td class="">19 MB</td></tr><tr><td class="">idx_ecoutes_morceau</td><td class="">11 MB</td></tr><tr><td class="">idx_ecoutes_morceau_cover</td><td class="">30 MB</td></tr><tr><td class="">idx_ecoutes_morceau_date</td><td class="">30 MB</td></tr><tr><td class="">idx_ecoutes_plateforme_date</td><td class="">24 MB</td></tr></tbody></table></div><div class="res-note">… 7 lignes au total</div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> indexrelname <span class="k">AS</span> index, pg_size_pretty(pg_relation_size(indexrelid)) <span class="k">AS</span> taille
+<span class="k">FROM</span> pg_stat_user_indexes
+<span class="k">WHERE</span> relname = <span class="s">'ecoutes'</span>
+<span class="k">ORDER</span> <span class="k">BY</span> indexrelname;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">DROP</span> <span class="k">INDEX</span> idx_ecoutes_morceau;     <span class="c">-- couvert par idx_ecoutes_morceau_date et idx_ecoutes_morceau_cover</span></pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">25.2</span><strong>Le bilan de sobriété</strong></div>
+<p class="enonce">Après ce ménage, comparez la taille de la table <code class='inl'>ecoutes</code> à celle de l'ensemble de ses index, et calculez le rapport.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Les index pèsent plus lourd que les données : chacun doit justifier sa place par un gain mesuré.</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>table_seule</th><th>index</th><th>rapport</th></tr></thead><tbody><tr><td class="">65 MB</td><td class="">133 MB</td><td class="">2.1</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> pg_size_pretty(pg_relation_size(<span class="s">'ecoutes'</span>))  <span class="k">AS</span> table_seule,
+       pg_size_pretty(pg_indexes_size(<span class="s">'ecoutes'</span>))   <span class="k">AS</span> index,
+       <span class="k">ROUND</span>(pg_indexes_size(<span class="s">'ecoutes'</span>)::<span class="k">NUMERIC</span> / pg_relation_size(<span class="s">'ecoutes'</span>), <span class="n">1</span>) <span class="k">AS</span> rapport;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div></details></div></section><section class="panel" id="filmbox"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">🎬</span>Projet fil rouge · FilmBox, épisode 3</div>
+<div class="objectif-box">FilmBox a trouvé son public : 100 000 films, 20 000 membres, un million de notes et un million de visionnages. Les pages ralentissent. Votre mission : diagnostiquer, optimiser, et prouver chaque gain. C'est le cœur du défi IA prévu au programme.</div>
+<h3>📥 Installation</h3>
+<p><button class="btn" type="button" id="dl-filmbox">⬇️ Télécharger filmbox-s3.sql</button></p>
+<div class="code"><div class="code-bar"><span>psql</span><button class="copy" type="button">Copier</button></div><pre><span class="m">\c</span> filmbox
+<span class="m">\i</span> C:/chemin/vers/filmbox-s3.sql</pre></div>
+<div class="instruction-box">📌 <code class="inl">filmbox-s3.sql</code> s'exécute après <code class="inl">filmbox.sql</code> et <code class="inl">filmbox-s2.sql</code>. Il génère 2 millions de lignes (20 secondes à 2 minutes) et ne crée aucun index : c'est à vous de le faire. Pour repartir de zéro, relancez les trois scripts dans l'ordre.</div>
+<div class="analogie">🤖 <strong>Le défi IA (M12)</strong> — Pour chaque requête lente, soumettez à une IA la requête, son plan <code class="inl">EXPLAIN (ANALYZE, BUFFERS)</code> et la structure des tables (<code class="inl">\d journal</code>). Notez ses propositions, testez-les, et ne gardez que celles dont le gain est mesuré. Votre rapport doit dire ce que l'IA a proposé, ce qui a marché et ce qui n'a rien apporté.</div>
+<div class="warn-box">⏱ Vos temps d'exécution seront différents des plans affichés. Comparez la forme du plan, les lignes et les blocs lus.</div><div class="prog"><div class="prog-label"><span>Tâches réussies</span><span class="ptxt" id="ptxt-fb">0</span></div><div class="prog-bar"><div class="prog-fill" id="pfill-fb"></div></div></div><div class="toc"><a href="#" class="chip-m" data-anchor="mis-M11"><span class="num">M11</span>🩺 Le diagnostic <span class="ftag f5" style="margin-left:auto">N18 · N19 · N20</span></a><a href="#" class="chip-m" data-anchor="mis-M12"><span class="num">M12</span>🤖 Le défi des 3 requêtes lentes <span class="ftag f5" style="margin-left:auto">N21 → N25 · IA</span></a></div></div><div class="card fb-card" id="mis-M11"><div class="section-title"><span class="icon-bg ib-purple">🩺</span><span><span class="num">M11</span>&nbsp; Le diagnostic</span></div><span class="ftag f4">Notions N18 · N19 · N20</span><p style="margin-top:8px">FilmBox compte désormais 100 000 films, 20 000 membres et 2 millions de lignes d'activité. L'équipe se plaint de lenteurs : commencez par mesurer.</p><div class="exo"><div class="exo-head"><span class="num">M11.1</span><strong>La page profil</strong></div>
+<p class="enonce">Chargez <code class='inl'>filmbox-s3.sql</code>. La page profil affiche les 20 derniers visionnages d'un membre. Mesurez la requête pour <code class='inl'>membre_4242</code> et relevez le mode de lecture de <code class='inl'>journal</code> et le nombre de lignes écartées.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Un Seq Scan sur <code>journal</code> : un million de lignes lues pour en garder 50, puis un tri.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Limit</span>  (cost=18318.74..18318.79 rows=20 width=28) (actual time=38.820..38.824 rows=20 loops=1)
+  <span class="pb">Buffers: shared hit=5563</span>
+  InitPlan 1 (returns $0)
+    -&gt;  <span class="good">Index Scan</span> using utilisateurs_pseudo_key on utilisateurs  (cost=0.29..8.30 rows=1 width=4) (actual time=0.037..0.037 rows=1 loops=1)
+          Index Cond: ((pseudo)::text = 'membre_4242'::text)
+          <span class="pb">Buffers: shared hit=3</span>
+  -&gt;  <span class="bad">Sort</span>  (cost=18310.43..18310.56 rows=50 width=28) (actual time=38.819..38.820 rows=20 loops=1)
+        Sort Key: j.date_visionnage DESC
+        Sort Method: top-N heapsort  Memory: 27kB
+        <span class="pb">Buffers: shared hit=5563</span>
+        -&gt;  <span class="nd">Nested Loop</span>  (cost=0.29..18309.10 rows=50 width=28) (actual time=0.870..38.779 rows=50 loops=1)
+              <span class="pb">Buffers: shared hit=5560</span>
+              -&gt;  <span class="bad">Seq Scan</span> on journal j  (cost=0.00..17909.60 rows=50 width=8) (actual time=0.856..38.470 rows=50 loops=1)
+                    Filter: (utilisateur_id = $0)
+                    <span class="pw">Rows Removed by Filter: 1000158</span>
+                    <span class="pb">Buffers: shared hit=5410</span>
+              -&gt;  <span class="good">Index Scan</span> using films_pkey on films f  (cost=0.29..7.99 rows=1 width=28) (actual time=0.005..0.005 rows=1 loops=50)
+                    Index Cond: (id = j.film_id)
+                    <span class="pb">Buffers: shared hit=150</span>
+Planning:
+  <span class="pb">Buffers: shared hit=244 read=1</span>
+Planning Time: 0.520 ms
+<span class="pt">Execution Time: 38.849 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> j.date_visionnage, f.titre
+<span class="k">FROM</span> journal j
+<span class="k">JOIN</span> films f <span class="k">ON</span> f.id = j.film_id
+<span class="k">WHERE</span> j.utilisateur_id = (<span class="k">SELECT</span> id <span class="k">FROM</span> utilisateurs <span class="k">WHERE</span> pseudo = <span class="s">'membre_4242'</span>)
+<span class="k">ORDER</span> <span class="k">BY</span> j.date_visionnage <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">20</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">M11.2</span><strong>Les tendances du mois</strong></div>
+<p class="enonce">La page « Tendances » affiche les 5 films les plus vus en août 2026. La requête actuelle filtre avec <code class='inl'>TO_CHAR(date_visionnage, 'YYYY-MM') = '2026-08'</code>. Mesurez-la.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Un Seq Scan sur tout le journal : la fonction TO_CHAR est calculée pour chaque ligne.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Limit</span>  (cost=23065.79..23065.81 rows=5 width=12) (actual time=287.172..287.175 rows=5 loops=1)
+  <span class="pb">Buffers: shared hit=5410</span>
+  -&gt;  <span class="bad">Sort</span>  (cost=23065.79..23078.02 rows=4891 width=12) (actual time=287.171..287.172 rows=5 loops=1)
+        Sort Key: (count(*)) DESC
+        Sort Method: top-N heapsort  Memory: 25kB
+        <span class="pb">Buffers: shared hit=5410</span>
+        -&gt;  <span class="nd">HashAggregate</span>  (cost=22935.65..22984.56 rows=4891 width=12) (actual time=279.013..283.817 rows=40023 loops=1)
+              Group Key: film_id
+              Batches: 1  Memory Usage: 4113kB
+              <span class="pb">Buffers: shared hit=5407</span>
+              -&gt;  <span class="bad">Seq Scan</span> on journal j  (cost=0.00..22910.64 rows=5001 width=4) (actual time=0.055..267.269 rows=44470 loops=1)
+                    Filter: (to_char((date_visionnage)::timestamp with time zone, 'YYYY-MM'::text) = '2026-08'::text)
+                    <span class="pw">Rows Removed by Filter: 955738</span>
+                    <span class="pb">Buffers: shared hit=5407</span>
+Planning:
+  <span class="pb">Buffers: shared hit=82</span>
+Planning Time: 0.242 ms
+<span class="pt">Execution Time: 287.410 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> j.film_id, <span class="k">COUNT</span>(*) <span class="k">AS</span> vues
+<span class="k">FROM</span> journal j
+<span class="k">WHERE</span> <span class="k">TO_CHAR</span>(j.date_visionnage, <span class="s">'YYYY-MM'</span>) = <span class="s">'2026-08'</span>
+<span class="k">GROUP</span> <span class="k">BY</span> j.film_id
+<span class="k">ORDER</span> <span class="k">BY</span> vues <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">5</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">M11.3</span><strong>L'estimation du planificateur</strong></div>
+<p class="enonce">Combien de films de science-fiction le planificateur pense-t-il trouver, et combien y en a-t-il ? Consultez aussi la fréquence de ce genre dans <code class='inl'>pg_stats</code>.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Une estimation proche de 10 000 lignes, conforme à la fréquence d'environ 10 % relevée dans pg_stats.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=2922.38..2922.39 rows=1 width=8) (actual time=6.931..6.932 rows=1 loops=1)
+  -&gt;  <span class="bad">Seq Scan</span> on films  (cost=0.00..2897.38 rows=10003 width=0) (actual time=0.006..6.473 rows=10007 loops=1)
+        Filter: ((genre)::text = 'Science-fiction'::text)
+        <span class="pw">Rows Removed by Filter: 90023</span>
+Planning Time: 0.193 ms
+<span class="pt">Execution Time: 6.970 ms</span></pre></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>most_common_vals</th><th>most_common_freqs</th></tr></thead><tbody><tr><td class="">{Romance,Action,Drame,Horreur,Comédie,Policier,Science-fiction,Aventure,Animation,Thriller}</td><td class="">{0.1017,0.10143334,0.101166666,0.10073333,0.10056667,0.1002,0.1,0.099866666,0.098466665,0.09583333}</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> <span class="k">ANALYZE</span>
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> films <span class="k">WHERE</span> genre = <span class="s">'Science-fiction'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> most_common_vals, most_common_freqs
+<span class="k">FROM</span> pg_stats
+<span class="k">WHERE</span> tablename = <span class="s">'films'</span> <span class="k">AND</span> attname = <span class="s">'genre'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="card fb-card" id="mis-M12"><div class="section-title"><span class="icon-bg ib-purple">🤖</span><span><span class="num">M12</span>&nbsp; Le défi des 3 requêtes lentes</span></div><span class="ftag f4">Notions N21 → N25 · IA</span><p style="margin-top:8px">Optimisez les trois requêtes lentes de FilmBox. Pour chacune : soumettez le plan à une IA, confrontez ses propositions à la mesure, et ne gardez que ce qui est prouvé.</p><div class="exo"><div class="exo-head"><span class="num">M12.1</span><strong>Accélérer la page profil</strong></div>
+<p class="enonce">Créez l'index qui permet de lire directement les 20 derniers visionnages d'un membre, déjà triés, sans trier ni lire tout le journal. Remesurez la requête de M11.1.</p><details class="hint"><summary>💡 Indice</summary><p>L'égalité (utilisateur_id) en tête, l'ordre (date_visionnage DESC) ensuite ; INCLUDE (film_id) évite de lire la table pour la jointure.</p></details><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Plus de Seq Scan ni de Sort sur le journal : un parcours d'index qui s'arrête à 20 lignes. Le temps passe de dizaines de millisecondes à moins d'une milliseconde.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Limit</span>  (cost=9.02..170.66 rows=20 width=28) (actual time=0.067..0.183 rows=20 loops=1)
+  <span class="pb">Buffers: shared hit=64 read=3</span>
+  InitPlan 1 (returns $0)
+    -&gt;  <span class="good">Index Scan</span> using utilisateurs_pseudo_key on utilisateurs  (cost=0.29..8.30 rows=1 width=4) (actual time=0.019..0.019 rows=1 loops=1)
+          Index Cond: ((pseudo)::text = 'membre_4242'::text)
+          <span class="pb">Buffers: shared hit=3</span>
+  -&gt;  <span class="nd">Nested Loop</span>  (cost=0.72..404.80 rows=50 width=28) (actual time=0.066..0.179 rows=20 loops=1)
+        <span class="pb">Buffers: shared hit=64 read=3</span>
+        -&gt;  <span class="good">Index Only Scan</span> using idx_journal_profil on journal j  (cost=0.42..5.30 rows=50 width=8) (actual time=0.053..0.055 rows=20 loops=1)
+              Index Cond: (utilisateur_id = $0)
+              Heap Fetches: 0
+              <span class="pb">Buffers: shared hit=4 read=3</span>
+        -&gt;  <span class="good">Index Scan</span> using films_pkey on films f  (cost=0.29..7.99 rows=1 width=28) (actual time=0.006..0.006 rows=1 loops=20)
+              Index Cond: (id = j.film_id)
+              <span class="pb">Buffers: shared hit=60</span>
+Planning:
+  <span class="pb">Buffers: shared hit=265 read=1</span>
+Planning Time: 0.666 ms
+<span class="pt">Execution Time: 0.215 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_journal_profil <span class="k">ON</span> journal (utilisateur_id, date_visionnage <span class="k">DESC</span>) <span class="k">INCLUDE</span> (film_id);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> j.date_visionnage, f.titre
+<span class="k">FROM</span> journal j
+<span class="k">JOIN</span> films f <span class="k">ON</span> f.id = j.film_id
+<span class="k">WHERE</span> j.utilisateur_id = (<span class="k">SELECT</span> id <span class="k">FROM</span> utilisateurs <span class="k">WHERE</span> pseudo = <span class="s">'membre_4242'</span>)
+<span class="k">ORDER</span> <span class="k">BY</span> j.date_visionnage <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">20</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">M12.2</span><strong>Accélérer les tendances</strong></div>
+<p class="enonce">Réécrivez la condition de M11.2 sous forme de plage de dates et créez l'index adapté. Vérifiez que le résultat est identique à la version d'origine.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Un accès par l'index sur la seule période d'août, et deux comptages identiques.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Limit</span>  (cost=2522.35..2522.36 rows=5 width=12) (actual time=23.831..23.833 rows=5 loops=1)
+  <span class="pb">Buffers: shared hit=5 read=123</span>
+  -&gt;  <span class="bad">Sort</span>  (cost=2522.35..2612.13 rows=35910 width=12) (actual time=23.829..23.831 rows=5 loops=1)
+        Sort Key: (count(*)) DESC
+        Sort Method: top-N heapsort  Memory: 25kB
+        <span class="pb">Buffers: shared hit=5 read=123</span>
+        -&gt;  <span class="nd">HashAggregate</span>  (cost=1566.80..1925.90 rows=35910 width=12) (actual time=14.532..19.800 rows=40023 loops=1)
+              Group Key: film_id
+              Batches: 1  Memory Usage: 4113kB
+              <span class="pb">Buffers: shared hit=2 read=123</span>
+              -&gt;  <span class="good">Index Only Scan</span> using idx_journal_date on journal j  (cost=0.42..1349.52 rows=43455 width=4) (actual time=0.035..5.173 rows=44470 loops=1)
+                    Index Cond: ((date_visionnage &gt;= '2026-08-01'::date) AND (date_visionnage &lt; '2026-09-01'::date))
+                    Heap Fetches: 0
+                    <span class="pb">Buffers: shared hit=2 read=123</span>
+Planning:
+  <span class="pb">Buffers: shared hit=142 read=4</span>
+Planning Time: 0.582 ms
+<span class="pt">Execution Time: 24.780 ms</span></pre></div><div class="res"><div class="res-bar">▶ Résultat attendu <span>1 ligne</span></div><div class="tbl"><table><thead><tr><th>version_origine</th><th>version_optimisee</th></tr></thead><tbody><tr><td class="">44470</td><td class="">44470</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">INDEX</span> idx_journal_date <span class="k">ON</span> journal (date_visionnage) <span class="k">INCLUDE</span> (film_id);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> j.film_id, <span class="k">COUNT</span>(*) <span class="k">AS</span> vues
+<span class="k">FROM</span> journal j
+<span class="k">WHERE</span> j.date_visionnage &gt;= <span class="s">'2026-08-01'</span> <span class="k">AND</span> j.date_visionnage &lt; <span class="s">'2026-09-01'</span>
+<span class="k">GROUP</span> <span class="k">BY</span> j.film_id
+<span class="k">ORDER</span> <span class="k">BY</span> vues <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="n">5</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> (<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> journal <span class="k">WHERE</span> <span class="k">TO_CHAR</span>(date_visionnage, <span class="s">'YYYY-MM'</span>) = <span class="s">'2026-08'</span>) <span class="k">AS</span> version_origine,
+       (<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> journal <span class="k">WHERE</span> date_visionnage &gt;= <span class="s">'2026-08-01'</span> <span class="k">AND</span> date_visionnage &lt; <span class="s">'2026-09-01'</span>) <span class="k">AS</span> version_optimisee;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">M12.3</span><strong>Accélérer la recherche de titre</strong></div>
+<p class="enonce">La barre de recherche lance <code class='inl'>WHERE titre ILIKE '%labyrinthe%'</code>. Mesurez, créez l'index adapté, remesurez.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Avant : Seq Scan sur 100 030 films. Après : Bitmap Index Scan sur l'index trigramme.</div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=2899.90..2899.91 rows=1 width=8) (actual time=48.255..48.255 rows=1 loops=1)
+  <span class="pb">Buffers: shared hit=1647</span>
+  -&gt;  <span class="bad">Seq Scan</span> on films  (cost=0.00..2897.38 rows=1010 width=0) (actual time=0.044..47.967 rows=5000 loops=1)
+        Filter: ((titre)::text ~~* '%labyrinthe%'::text)
+        <span class="pw">Rows Removed by Filter: 95030</span>
+        <span class="pb">Buffers: shared hit=1647</span>
+Planning:
+  <span class="pb">Buffers: shared hit=54</span>
+Planning Time: 0.241 ms
+<span class="pt">Execution Time: 48.298 ms</span></pre></div><div class="res plan"><div class="res-bar">▶ Plan obtenu <span>temps variables selon la machine</span></div><pre class="plantxt"><span class="nd">Aggregate</span>  (cost=1609.71..1609.72 rows=1 width=8) (actual time=6.021..6.022 rows=1 loops=1)
+  <span class="pb">Buffers: shared hit=606</span>
+  -&gt;  <span class="good">Bitmap Heap Scan</span> on films  (cost=91.26..1607.18 rows=1010 width=0) (actual time=1.336..5.696 rows=5000 loops=1)
+        Recheck Cond: ((titre)::text ~~* '%labyrinthe%'::text)
+        Heap Blocks: exact=581
+        <span class="pb">Buffers: shared hit=606</span>
+        -&gt;  <span class="good">Bitmap Index Scan</span> on idx_films_titre_trgm  (cost=0.00..91.01 rows=1010 width=0) (actual time=1.262..1.262 rows=5000 loops=1)
+              Index Cond: ((titre)::text ~~* '%labyrinthe%'::text)
+              <span class="pb">Buffers: shared hit=25</span>
+Planning:
+  <span class="pb">Buffers: shared hit=85</span>
+Planning Time: 0.628 ms
+<span class="pt">Execution Time: 6.101 ms</span></pre></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> films <span class="k">WHERE</span> titre <span class="k">ILIKE</span> <span class="s">'%labyrinthe%'</span>;</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">CREATE</span> <span class="k">EXTENSION</span> <span class="k">IF</span> <span class="k">NOT</span> <span class="k">EXISTS</span> pg_trgm;
+<span class="k">CREATE</span> <span class="k">INDEX</span> idx_films_titre_trgm <span class="k">ON</span> films <span class="k">USING</span> <span class="k">GIN</span> (titre gin_trgm_ops);</pre></div><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">EXPLAIN</span> (<span class="k">ANALYZE</span>, <span class="k">BUFFERS</span>)
+<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> films <span class="k">WHERE</span> titre <span class="k">ILIKE</span> <span class="s">'%labyrinthe%'</span>;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div><div class="exo"><div class="exo-head"><span class="num">M12.4</span><strong>Le rapport pour l'équipe</strong></div>
+<p class="enonce">Pour le rapport d'optimisation, listez les index du journal et des films avec leur taille, et la taille des deux tables.</p><div class="ok-box" style="margin:8px 0">🎯 <strong>Attendu :</strong> Trois nouveaux index, à mettre en regard des gains mesurés en M12.1 à M12.3 : c'est la matière de votre rapport, avec la part d'aide de l'IA.</div><div class="res"><div class="res-bar">▶ Résultat attendu <span>5 lignes</span></div><div class="tbl"><table><thead><tr><th>table_cible</th><th>index</th><th>taille_index</th><th>taille_table</th></tr></thead><tbody><tr><td class="">films</td><td class="">films_pkey</td><td class="">2208 kB</td><td class="">13 MB</td></tr><tr><td class="">films</td><td class="">idx_films_titre_trgm</td><td class="">4192 kB</td><td class="">13 MB</td></tr><tr><td class="">journal</td><td class="">idx_journal_date</td><td class="">21 MB</td><td class="">42 MB</td></tr><tr><td class="">journal</td><td class="">idx_journal_profil</td><td class="">30 MB</td><td class="">42 MB</td></tr><tr><td class="">journal</td><td class="">journal_pkey</td><td class="">21 MB</td><td class="">42 MB</td></tr></tbody></table></div></div>
+<details class="corrige formateur-only"><summary>✅ Corrigé</summary><div class="code"><div class="code-bar"><span>SQL</span><button class="copy" type="button">Copier</button></div><pre><span class="k">SELECT</span> relname <span class="k">AS</span> table_cible, indexrelname <span class="k">AS</span> index,
+       pg_size_pretty(pg_relation_size(indexrelid)) <span class="k">AS</span> taille_index,
+       pg_size_pretty(pg_relation_size(relid))      <span class="k">AS</span> taille_table
+<span class="k">FROM</span> pg_stat_user_indexes
+<span class="k">WHERE</span> relname <span class="k">IN</span> (<span class="s">'journal'</span>, <span class="s">'films'</span>)
+<span class="k">ORDER</span> <span class="k">BY</span> relname, indexrelname;</pre></div></details>
+<label class="understood"><input type="checkbox"><span>✔ Exercice réussi</span></label></div></div><div class="result-panel"><h4>🎬 Et après ?</h4><p>En séance 4, FilmBox automatise sa logique métier : une procédure pour publier une note, et des triggers qui maintiennent les statistiques des films et journalisent chaque modification.</p></div></section><section class="panel" id="glossaire"><div class="card"><div class="section-title"><span class="icon-bg ib-purple">📖</span>Glossaire de la séance</div><div id="gl-locked"><div class="instruction-box">🔒 Le glossaire se débloque une fois les 3 cas terminés.</div><div class="lock-pills"><span class="lock-pill" id="lp1">⏳ Cas 1</span><span class="lock-pill" id="lp2">⏳ Cas 2</span><span class="lock-pill" id="lp3">⏳ Cas 3</span></div></div><div id="gl-open" hidden><div><span class="ftag f1">Plans</span><span class="ftag f2">Accès & jointures</span><span class="ftag f3">Index</span><span class="ftag f4">Optimisation</span><span class="ftag f5">Maintenance</span></div><br><input class="gl-search" type="search" placeholder="Rechercher un terme…" aria-label="Rechercher un terme"><div class="gl-item"><b>ANALYZE</b> <span class="ftag f5">Maintenance</span><p>Commande qui recalcule les statistiques d&#x27;une table.</p></div><div class="gl-item"><b>Autovacuum</b> <span class="ftag f5">Maintenance</span><p>Processus de fond qui lance automatiquement VACUUM et ANALYZE.</p></div><div class="gl-item"><b>B-tree</b> <span class="ftag f3">Index</span><p>Index par défaut, en arbre trié : égalité, plages et tri.</p></div><div class="gl-item"><b>Bitmap Heap Scan</b> <span class="ftag f2">Accès & jointures</span><p>Repérage des lignes dans l&#x27;index, puis lecture groupée des blocs de la table.</p></div><div class="gl-item"><b>Buffers</b> <span class="ftag f1">Plans</span><p>Blocs de 8 Ko lus en mémoire (hit) ou sur disque (read) : mesure stable du travail.</p></div><div class="gl-item"><b>Carte de visibilité</b> <span class="ftag f5">Maintenance</span><p>Carte des blocs dont toutes les lignes sont visibles, nécessaire aux Index Only Scans.</p></div><div class="gl-item"><b>Coût</b> <span class="ftag f1">Plans</span><p>Estimation abstraite du travail d&#x27;un nœud, utilisée pour comparer les plans.</p></div><div class="gl-item"><b>EXPLAIN</b> <span class="ftag f1">Plans</span><p>Affiche le plan estimé d&#x27;une requête sans l&#x27;exécuter.</p></div><div class="gl-item"><b>EXPLAIN ANALYZE</b> <span class="ftag f1">Plans</span><p>Exécute la requête et affiche le plan avec les temps et lignes réels.</p></div><div class="gl-item"><b>GIN</b> <span class="ftag f3">Index</span><p>Index inversé qui recense, pour chaque élément, les lignes qui le contiennent.</p></div><div class="gl-item"><b>Hash Join</b> <span class="ftag f2">Accès & jointures</span><p>Jointure qui charge une table en mémoire sous forme de table de hachage.</p></div><div class="gl-item"><b>Index composite</b> <span class="ftag f3">Index</span><p>Index sur plusieurs colonnes, utilisable si la requête filtre sur la première.</p></div><div class="gl-item"><b>Index couvrant (INCLUDE)</b> <span class="ftag f3">Index</span><p>Index qui embarque des colonnes supplémentaires pour éviter de lire la table.</p></div><div class="gl-item"><b>Index Only Scan</b> <span class="ftag f2">Accès & jointures</span><p>Réponse fournie par l&#x27;index seul, sans lire la table.</p></div><div class="gl-item"><b>Index partiel</b> <span class="ftag f3">Index</span><p>Index limité aux lignes vérifiant une condition.</p></div><div class="gl-item"><b>Index redondant</b> <span class="ftag f5">Maintenance</span><p>Index rendu inutile par un autre qui commence par les mêmes colonnes.</p></div><div class="gl-item"><b>Index Scan</b> <span class="ftag f2">Accès & jointures</span><p>Parcours d&#x27;un index suivi de la lecture de chaque ligne dans la table.</p></div><div class="gl-item"><b>Index sur expression</b> <span class="ftag f3">Index</span><p>Index sur le résultat d&#x27;un calcul, utilisé si la requête contient la même expression.</p></div><div class="gl-item"><b>Merge Join</b> <span class="ftag f2">Accès & jointures</span><p>Jointure qui parcourt en parallèle deux entrées déjà triées.</p></div><div class="gl-item"><b>Nested Loop</b> <span class="ftag f2">Accès & jointures</span><p>Jointure qui cherche, pour chaque ligne de gauche, ses correspondances à droite.</p></div><div class="gl-item"><b>Pagination par clé (keyset)</b> <span class="ftag f4">Optimisation</span><p>Pagination qui repart du dernier identifiant affiché au lieu d&#x27;utiliser OFFSET.</p></div><div class="gl-item"><b>Parallélisme (Gather)</b> <span class="ftag f1">Plans</span><p>Répartition d&#x27;une lecture entre plusieurs processus, rassemblés par le nœud Gather.</p></div><div class="gl-item"><b>pg_stat_statements</b> <span class="ftag f5">Maintenance</span><p>Extension qui cumule les appels et le temps d&#x27;exécution de chaque requête.</p></div><div class="gl-item"><b>pg_trgm</b> <span class="ftag f3">Index</span><p>Extension qui découpe le texte en trigrammes : recherche « contient » et tolérance aux fautes.</p></div><div class="gl-item"><b>Plan d&#x27;exécution</b> <span class="ftag f1">Plans</span><p>Suite d&#x27;opérations choisie par PostgreSQL pour exécuter une requête.</p></div><div class="gl-item"><b>Planificateur</b> <span class="ftag f1">Plans</span><p>Composant qui évalue les stratégies possibles et choisit la moins coûteuse.</p></div><div class="gl-item"><b>Seq Scan</b> <span class="ftag f2">Accès & jointures</span><p>Lecture complète d&#x27;une table, bloc après bloc.</p></div><div class="gl-item"><b>Statistiques (pg_stats)</b> <span class="ftag f2">Accès & jointures</span><p>Informations sur la distribution des valeurs, utilisées pour estimer les lignes.</p></div><div class="gl-item"><b>Sélectivité</b> <span class="ftag f2">Accès & jointures</span><p>Proportion de lignes retenues par une condition ; plus elle est faible, plus l&#x27;index est utile.</p></div><div class="gl-item"><b>VACUUM</b> <span class="ftag f5">Maintenance</span><p>Opération qui récupère l&#x27;espace des lignes mortes et met à jour la carte de visibilité.</p></div></div></div></section></main>
+<footer>SQL avancé avec PostgreSQL · M1 Tech Lead</footer>
+<script>const TERMS=[["Plan d'exécution", "f1", "Suite d'opérations choisie par PostgreSQL pour exécuter une requête."], ["Planificateur", "f1", "Composant qui évalue les stratégies possibles et choisit la moins coûteuse."], ["EXPLAIN", "f1", "Affiche le plan estimé d'une requête sans l'exécuter."], ["EXPLAIN ANALYZE", "f1", "Exécute la requête et affiche le plan avec les temps et lignes réels."], ["Coût", "f1", "Estimation abstraite du travail d'un nœud, utilisée pour comparer les plans."], ["Buffers", "f1", "Blocs de 8 Ko lus en mémoire (hit) ou sur disque (read) : mesure stable du travail."], ["Parallélisme (Gather)", "f1", "Répartition d'une lecture entre plusieurs processus, rassemblés par le nœud Gather."], ["Seq Scan", "f2", "Lecture complète d'une table, bloc après bloc."], ["Index Scan", "f2", "Parcours d'un index suivi de la lecture de chaque ligne dans la table."], ["Bitmap Heap Scan", "f2", "Repérage des lignes dans l'index, puis lecture groupée des blocs de la table."], ["Index Only Scan", "f2", "Réponse fournie par l'index seul, sans lire la table."], ["Nested Loop", "f2", "Jointure qui cherche, pour chaque ligne de gauche, ses correspondances à droite."], ["Hash Join", "f2", "Jointure qui charge une table en mémoire sous forme de table de hachage."], ["Merge Join", "f2", "Jointure qui parcourt en parallèle deux entrées déjà triées."], ["Statistiques (pg_stats)", "f2", "Informations sur la distribution des valeurs, utilisées pour estimer les lignes."], ["Sélectivité", "f2", "Proportion de lignes retenues par une condition ; plus elle est faible, plus l'index est utile."], ["B-tree", "f3", "Index par défaut, en arbre trié : égalité, plages et tri."], ["Index composite", "f3", "Index sur plusieurs colonnes, utilisable si la requête filtre sur la première."], ["Index partiel", "f3", "Index limité aux lignes vérifiant une condition."], ["Index sur expression", "f3", "Index sur le résultat d'un calcul, utilisé si la requête contient la même expression."], ["Index couvrant (INCLUDE)", "f3", "Index qui embarque des colonnes supplémentaires pour éviter de lire la table."], ["GIN", "f3", "Index inversé qui recense, pour chaque élément, les lignes qui le contiennent."], ["pg_trgm", "f3", "Extension qui découpe le texte en trigrammes : recherche « contient » et tolérance aux fautes."], ["Pagination par clé (keyset)", "f4", "Pagination qui repart du dernier identifiant affiché au lieu d'utiliser OFFSET."], ["Carte de visibilité", "f5", "Carte des blocs dont toutes les lignes sont visibles, nécessaire aux Index Only Scans."], ["VACUUM", "f5", "Opération qui récupère l'espace des lignes mortes et met à jour la carte de visibilité."], ["ANALYZE", "f5", "Commande qui recalcule les statistiques d'une table."], ["Autovacuum", "f5", "Processus de fond qui lance automatiquement VACUUM et ANALYZE."], ["pg_stat_statements", "f5", "Extension qui cumule les appels et le temps d'exécution de chaque requête."], ["Index redondant", "f5", "Index rendu inutile par un autre qui commence par les mêmes colonnes."]];const GROUPS=[["Index B-tree composite", "f3", [["Afficher les 10 dernières commandes d'un client, de la plus récente à la plus ancienne.", false], ["Filtrer les matchs d'une équipe sur une saison donnée.", false], ["Lister les messages d'une conversation dans l'ordre chronologique.", false], ["Compter les ventes d'un magasin sur une plage de dates.", false], ["Rechercher les articles dont le titre contient « vélo » n'importe où.", true]], "Un « contient » (ILIKE '%vélo%') commence par un joker : aucun B-tree ne peut servir. Il faut un index GIN avec pg_trgm."], ["Index GIN", "f3", [["Trouver les produits dont les tags JSONB contiennent « promo ».", false], ["Rechercher un joueur par un morceau de son pseudo, avec ILIKE '%…%'.", false], ["Tolérer les fautes de frappe dans une barre de recherche.", false], ["Filtrer des annonces sur une caractéristique stockée dans un JSONB (@>).", false], ["Trouver les réservations comprises entre deux dates.", true]], "Une plage de dates est le cas d'école du B-tree : les valeurs sont triées, la plage est lue d'un seul tenant."], ["Index partiel", "f3", [["Retrouver vite les commandes « non livrées », 2 % de la table.", false], ["Lister les tickets de support encore ouverts.", false], ["Afficher les notifications non lues d'un utilisateur.", false], ["Surveiller les paiements en échec, rares mais consultés souvent.", false], ["Filtrer les utilisateurs actifs, qui représentent 85 % de la table.", true]], "Une condition vraie pour 85 % des lignes n'est pas sélective : un index partiel serait presque aussi gros qu'un index complet, et PostgreSQL préférerait sans doute tout lire."], ["Réécrire la requête plutôt que créer un index", "f4", [["WHERE date_creation::DATE = '2025-03-14' alors qu'un index existe sur date_creation.", false], ["Une pagination avec OFFSET 500000.", false], ["WHERE EXTRACT(YEAR FROM date_commande) = 2025.", false], ["Un SELECT * qui empêche un Index Only Scan possible.", false], ["Un filtre très sélectif sur une colonne qui n'a aucun index.", true]], "Ici, la requête est bien écrite : il manque simplement un index sur la colonne filtrée."], ["Maintenance : ANALYZE ou VACUUM", "f5", [["Après un import d'un million de lignes, le planificateur estime 10 lignes au lieu de 50 000.", false], ["Un Index Only Scan affiche des milliers de Heap Fetches.", false], ["Une table a beaucoup grossi après de nombreuses suppressions.", false], ["Les estimations d'un plan sont très éloignées des lignes réelles.", false], ["Un Sort coûteux apparaît juste avant un LIMIT 10.", true]], "Un tri avant un LIMIT se supprime avec un index composite qui fournit déjà l'ordre, pas avec de la maintenance."]];const VF=[["EXPLAIN exécute la requête pour en mesurer le temps.", false, "C'est EXPLAIN ANALYZE qui exécute. EXPLAIN seul n'affiche que le plan estimé."], ["EXPLAIN ANALYZE sur un DELETE supprime réellement les lignes.", true, "La requête est exécutée : encadrez-la d'un BEGIN et d'un ROLLBACK."], ["Un plan se lit de l'intérieur vers l'extérieur.", true, "Les nœuds les plus indentés s'exécutent d'abord et alimentent leur parent."], ["Si un index existe sur la colonne filtrée, PostgreSQL l'utilise toujours.", false, "Il l'ignore si la condition ramène une grande part de la table : tout lire est alors moins coûteux."], ["Les Buffers sont une mesure plus stable que le temps d'exécution.", true, "Le nombre de blocs lus dépend peu de la machine et de sa charge, contrairement au temps."], ["Un Index Only Scan ne lit jamais la table.", false, "Il la consulte (Heap Fetches) pour les blocs dont la visibilité n'est pas garantie par la carte de visibilité."], ["Un index composite (a, b) sert pour un filtre sur b seul.", false, "Il faut filtrer sur la première colonne ; b seul oblige à parcourir tout l'index, voire toute la table."], ["Un index sur LOWER(email) sert pour WHERE LOWER(email) = '…'.", true, "C'est exactement l'expression indexée."], ["Un index sur LOWER(email) sert pour WHERE email ILIKE '…'.", false, "L'expression est différente : l'index n'est pas utilisable."], ["L'index GIN sur un JSONB accélère les filtres avec ->>.", false, "Il sert les opérateurs de contenance (@>, ?). Pour ->>, il faut un index B-tree sur l'expression."], ["ILIKE '%mot%' peut utiliser un index.", true, "Oui, un index GIN avec la classe gin_trgm_ops de l'extension pg_trgm."], ["La pagination par OFFSET devient plus lente à mesure que le numéro de page augmente.", true, "PostgreSQL lit puis jette toutes les lignes sautées."], ["Chaque index ajouté ralentit les insertions.", true, "Chaque ligne insérée met à jour tous les index de la table."], ["ANALYZE récupère l'espace des lignes supprimées.", false, "C'est le rôle de VACUUM. ANALYZE recalcule les statistiques."], ["pg_stat_statements regroupe les requêtes identiques qui ne diffèrent que par leurs valeurs.", true, "Les valeurs sont remplacées par $1, $2… : on voit le coût cumulé d'un même type de requête."], ["Une optimisation proposée par une IA peut être appliquée sans mesure si elle semble logique.", false, "Chaque proposition est une hypothèse : on mesure avant et après, et on vérifie que le résultat est identique."]];const FILMBOX_SQL="-- =====================================================================\n--  FilmBox — complément séance 3 : passage à l'échelle\n--  À exécuter sur la base filmbox, APRÈS filmbox.sql et filmbox-s2.sql.\n--  Ajoute 100 000 films, 20 000 membres, 1 million de notes et 1 million de visionnages\n--  (données générées, déterministes). Durée : 20 secondes à 2 minutes selon la machine.\n--  Ne crée AUCUN index secondaire : c'est l'objet des missions M11 et M12.\n-- =====================================================================\n\n-- Supprime les index créés lors d'une exécution précédente des missions\nDROP INDEX IF EXISTS idx_journal_profil, idx_journal_date, idx_films_titre_trgm, idx_notes_film;\n\n-- ---------- 100 000 films générés (id 31 et suivants) ----------\nINSERT INTO films (titre, annee, genre, details)\nSELECT (ARRAY['Le Dernier','La Nuit du','Les Enfants du','Le Secret du','La Chute du','Le Retour du',\n              'L''Ombre du','La Légende du','Le Cri du','Les Gardiens du'])[1 + i % 10]\n         || ' ' ||\n       (ARRAY['Phare','Désert','Volcan','Marais','Glacier','Labyrinthe','Temple','Faubourg','Nord','Loup',\n              'Cyclone','Pendule','Miroir','Canyon','Silence','Carrousel','Sablier','Brouillard','Récif','Métronome'])[1 + (i / 10) % 20]\n         || ' ' || (1 + i / 200),\n       1950 + (i * 7) % 76,\n       (ARRAY['Drame','Comédie','Thriller','Science-fiction','Action','Policier','Romance','Aventure','Horreur','Animation'])[1 + (i * 3) % 10],\n       jsonb_build_object('duree', 80 + (i * 13) % 100,\n                          'tags', jsonb_build_array((ARRAY['culte','indé','festival','blockbuster','classique'])[1 + i % 5]))\nFROM generate_series(1, 100000) AS i;\n\n-- ---------- 20 000 membres générés (id 9 et suivants) ----------\nINSERT INTO utilisateurs (pseudo, ville, inscrit_le)\nSELECT 'membre_' || i,\n       (ARRAY['Paris','Lyon','Marseille','Lille','Nantes','Bordeaux','Toulouse','Rennes'])[1 + i % 8],\n       DATE '2023-01-01' + (i * 37) % 1000\nFROM generate_series(1, 20000) AS i;\n\n-- ---------- 1 million de notes ----------\nINSERT INTO notes (utilisateur_id, film_id, note, note_le)\nSELECT 8 + 1 + (i % 20000),\n       1 + (i * 7919) % 100030,\n       (1 + (i * 31) % 10) / 2.0,\n       DATE '2025-01-01' + ((i * 13) % 630)::INTEGER\nFROM generate_series(1::BIGINT, 1000000) AS i\nON CONFLICT DO NOTHING;\n\n-- ---------- 1 million de visionnages ----------\nINSERT INTO journal (utilisateur_id, film_id, date_visionnage)\nSELECT 8 + 1 + (i * 17) % 20000,\n       1 + (i * 104729) % 100030,\n       DATE '2025-01-01' + ((i * 7) % 630)::INTEGER\nFROM generate_series(1::BIGINT, 1000000) AS i;\n\nVACUUM ANALYZE films, utilisateurs, notes, journal;\n\n-- ---------- Contrôle ----------\nSELECT 'films' AS table_name, COUNT(*) AS lignes FROM films\nUNION ALL SELECT 'utilisateurs', COUNT(*) FROM utilisateurs\nUNION ALL SELECT 'notes', COUNT(*) FROM notes\nUNION ALL SELECT 'journal', COUNT(*) FROM journal;\n";
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+function show(id){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));
+document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));
+window.scrollTo({top:document.querySelector('.tabs').offsetTop,behavior:'smooth'});}
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{const txt=b.closest('.code').querySelector('pre').innerText;
+ const ok=()=>{b.textContent='Copié ✓';b.classList.add('done');setTimeout(()=>{b.textContent='Copier';b.classList.remove('done')},1500)};
+ if(navigator.clipboard){navigator.clipboard.writeText(txt).then(ok).catch(()=>fb(txt,ok))}else fb(txt,ok);}));
+function fb(t,ok){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){}a.remove();}
+const s=document.querySelector('.gl-search');if(s){s.addEventListener('input',()=>{const q=s.value.toLowerCase();
+ document.querySelectorAll('#gl-open .gl-item').forEach(i=>i.style.display=i.innerText.toLowerCase().includes(q)?'':'none');});}
+
+const FORMATEUR = /[?&#]formateur\b/.test(location.search + location.hash);
+if (FORMATEUR) document.body.classList.add('formateur');
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FAM = {f1:'Plans',f2:'Accès & jointures',f3:'Index',f4:'Optimisation',f5:'Maintenance'};
+const done = {c1:false,c2:false,c3:false};
+function setProg(fill, txt, a, b){ document.getElementById(fill).style.width = (b ? a/b*100 : 0) + '%'; document.getElementById(txt).textContent = a + ' / ' + b; }
+function finish(k){ done[k] = true; document.getElementById('lp' + k[1]).classList.add('done'); document.getElementById('lp' + k[1]).textContent = '✅ Cas ' + k[1];
+  if (done.c1 && done.c2 && done.c3){ document.getElementById('gl-locked').hidden = true; document.getElementById('gl-open').hidden = false; document.querySelector('[data-tab="glossaire"]').classList.remove('locked'); } }
+function panel(id, html){ document.getElementById(id).innerHTML = html; }
+
+/* ---------- CAS 1 ---------- */
+let c1 = {};
+function c1Init(){ const all = shuffle(TERMS); c1 = {rounds: [], idx: 0, score: 0, checked: 0};
+  for (let i = 0; i < all.length; i += 10) c1.rounds.push(all.slice(i, i + 10));
+  panel('c1-result',''); c1Render(); }
+function c1Render(){ const r = c1.rounds[c1.idx]; const defs = shuffle(r); const L = 'ABCDEFGHIJ';
+  c1.map = {}; defs.forEach((d, i) => c1.map[d[0]] = L[i]);
+  const opts = '<option value="">—</option>' + defs.map((d, i) => `<option>${L[i]}</option>`).join('');
+  panel('c1-zone', `<div class="term-grid"><div>${r.map(t => `<div class="term-item" data-t="${esc(t[0])}"><span>${esc(t[0])}</span><select aria-label="Définition de ${esc(t[0])}">${opts}</select></div>`).join('')}</div>
+   <div>${defs.map((d, i) => `<div class="def-item"><b>${L[i]}</b><span>${esc(d[2])}</span></div>`).join('')}</div></div>`);
+  document.getElementById('c1-round-lbl').textContent = `Round ${c1.idx + 1} / ${c1.rounds.length}`;
+  document.getElementById('c1-check').disabled = false; document.getElementById('c1-next').hidden = true;
+  setProg('c1-fill','c1-ptxt', c1.checked, TERMS.length); }
+document.getElementById('c1-check').onclick = () => { let ok = 0; const items = document.querySelectorAll('#c1-zone .term-item');
+  if ([...items].some(it => !it.querySelector('select').value)) { panel('c1-result','<div class="instruction-box">Associez une lettre à chaque terme avant de vérifier.</div>'); return; }
+  items.forEach(it => { const good = it.querySelector('select').value === c1.map[it.dataset.t]; it.classList.toggle('ok', good); it.classList.toggle('ko', !good); if (good) ok++; });
+  c1.score += ok; c1.checked += items.length; document.getElementById('c1-check').disabled = true;
+  setProg('c1-fill','c1-ptxt', c1.checked, TERMS.length);
+  const last = c1.idx === c1.rounds.length - 1;
+  panel('c1-result', `<div class="result-panel"><h4>Round ${c1.idx + 1} : <span class="score">${ok} / ${items.length}</span></h4>${last ? `<p>Score total : <span class="score">${c1.score} / ${TERMS.length}</span></p>` : '<p>Les bordures vertes et rouges indiquent vos réponses. Passez au round suivant.</p>'}</div>`);
+  if (last) finish('c1'); else document.getElementById('c1-next').hidden = false; };
+document.getElementById('c1-next').onclick = () => { c1.idx++; panel('c1-result',''); c1Render(); };
+document.getElementById('c1-reveal').onclick = () => document.querySelectorAll('#c1-zone .term-item').forEach(it => it.querySelector('select').value = c1.map[it.dataset.t]);
+document.getElementById('c1-reset').onclick = c1Init;
+
+/* ---------- CAS 2 ---------- */
+let c2sel = {};
+function c2Init(){ c2sel = {}; panel('c2-result','');
+  panel('c2-zone', GROUPS.map((g, gi) => `<div class="group" data-g="${gi}"><h4>Groupe ${gi + 1} · ${esc(g[0])} <span class="ftag ${g[1]}">${FAM[g[1]]}</span></h4>
+   ${shuffle(g[2].map((s, si) => [s, si])).map(([s, si]) => `<button type="button" class="sit" data-s="${si}">${esc(s[0])}</button>`).join('')}<div class="expl" hidden></div></div>`).join(''));
+  document.querySelectorAll('#c2-zone .sit').forEach(b => b.onclick = () => { const g = b.closest('.group'); g.querySelectorAll('.sit').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); c2sel[g.dataset.g] = +b.dataset.s; setProg('c2-fill','c2-ptxt', Object.keys(c2sel).length, GROUPS.length); });
+  document.getElementById('c2-check').disabled = false; setProg('c2-fill','c2-ptxt', 0, GROUPS.length); }
+document.getElementById('c2-check').onclick = () => { if (Object.keys(c2sel).length < GROUPS.length) { panel('c2-result','<div class="instruction-box">Désignez une intruse dans chaque groupe avant de vérifier.</div>'); return; }
+  let ok = 0; document.querySelectorAll('#c2-zone .group').forEach(g => { const G = GROUPS[g.dataset.g]; const intr = G[2].findIndex(s => s[1]);
+    g.querySelectorAll('.sit').forEach(b => { const s = +b.dataset.s; if (s === intr) b.classList.add('good'); else if (s === c2sel[g.dataset.g]) b.classList.add('bad'); });
+    if (c2sel[g.dataset.g] === intr) ok++; const e = g.querySelector('.expl'); e.hidden = false; e.innerHTML = '💡 ' + esc(G[3]); });
+  document.getElementById('c2-check').disabled = true;
+  panel('c2-result', `<div class="result-panel"><h4>Intruses trouvées : <span class="score">${ok} / ${GROUPS.length}</span></h4><p>L'intruse de chaque groupe est encadrée en vert, avec son explication.</p></div>`); finish('c2'); };
+document.getElementById('c2-reveal').onclick = () => document.querySelectorAll('#c2-zone .group').forEach(g => { const intr = GROUPS[g.dataset.g][2].findIndex(s => s[1]); g.querySelector(`.sit[data-s="${intr}"]`).click(); });
+document.getElementById('c2-reset').onclick = c2Init;
+
+/* ---------- CAS 3 ---------- */
+let c3ans = {};
+function c3Init(){ c3ans = {}; panel('c3-result','');
+  panel('c3-zone', shuffle(VF.map((v, i) => [v, i])).map(([v, i], n) => `<div class="vf" data-i="${i}"><div class="vf-row"><p><strong>${n + 1}.</strong> ${esc(v[0])}</p><div class="vf-btns"><button type="button" data-v="1">Vrai</button><button type="button" data-v="0">Faux</button></div></div><div class="expl" hidden></div></div>`).join(''));
+  document.querySelectorAll('#c3-zone .vf-btns button').forEach(b => b.onclick = () => { const q = b.closest('.vf'); q.querySelectorAll('button').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); c3ans[q.dataset.i] = b.dataset.v === '1'; setProg('c3-fill','c3-ptxt', Object.keys(c3ans).length, VF.length); });
+  document.getElementById('c3-check').disabled = false; setProg('c3-fill','c3-ptxt', 0, VF.length); }
+document.getElementById('c3-check').onclick = () => { if (Object.keys(c3ans).length < VF.length) { panel('c3-result','<div class="instruction-box">Répondez à toutes les affirmations avant de vérifier.</div>'); return; }
+  let ok = 0; document.querySelectorAll('#c3-zone .vf').forEach(q => { const v = VF[q.dataset.i]; const good = c3ans[q.dataset.i] === v[1]; if (good) ok++;
+    q.classList.add(good ? 'good' : 'bad'); const e = q.querySelector('.expl'); e.hidden = false; e.innerHTML = `${good ? '✅' : '❌'} <strong>${v[1] ? 'Vrai' : 'Faux'}</strong> — ${esc(v[2])}`; });
+  document.getElementById('c3-check').disabled = true;
+  panel('c3-result', `<div class="result-panel"><h4>Score : <span class="score">${ok} / ${VF.length}</span></h4><p>Relisez les explications des affirmations encadrées en rouge.</p></div>`); finish('c3'); };
+document.getElementById('c3-reveal').onclick = () => document.querySelectorAll('#c3-zone .vf').forEach(q => q.querySelector(`button[data-v="${VF[q.dataset.i][1] ? 1 : 0}"]`).click());
+document.getElementById('c3-reset').onclick = c3Init;
+
+c1Init(); c2Init(); c3Init();
+
+/* ---------- exos : progression + navigation ---------- */
+function exoProg(){ [['exos','.exos-card'],['fb','.fb-card']].forEach(([k, sel]) => { const all = document.querySelectorAll(sel + ' .understood input'); const d = [...all].filter(i => i.checked).length;
+  document.getElementById('pfill-' + k).style.width = (all.length ? d/all.length*100 : 0) + '%'; document.getElementById('ptxt-' + k).textContent = d + ' / ' + all.length; }); }
+
+exoProg();
+document.querySelectorAll('.chip-m').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.getElementById(a.dataset.anchor).scrollIntoView({behavior:'smooth'}); }));
+document.getElementById('dl-filmbox').addEventListener('click', () => { const b = new Blob([FILMBOX_SQL], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'filmbox-s3.sql'; document.body.appendChild(a); a.click(); a.remove(); });
+
+function accCount(){ document.querySelectorAll('details.acc').forEach(d => { const all = d.querySelectorAll('.understood input'); if(!all.length) return; const k = [...all].filter(i => i.checked).length; const c = d.querySelector('.acc-count'); c.textContent = k + ' / ' + all.length; c.classList.toggle('full', k === all.length); }); }
+document.querySelectorAll('.exo .understood input').forEach(i => i.addEventListener('change', () => { i.closest('.understood').classList.toggle('done', i.checked); exoProg(); accCount(); }));
+document.querySelectorAll('.chip[data-acc]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const d = document.getElementById(a.dataset.acc); d.open = true; d.scrollIntoView({behavior:'smooth'}); }));
+document.querySelectorAll('.acc-open').forEach(b => b.onclick = () => b.closest('.panel').querySelectorAll('details.acc').forEach(d => d.open = true));
+document.querySelectorAll('.acc-close').forEach(b => b.onclick = () => b.closest('.panel').querySelectorAll('details.acc').forEach(d => d.open = false));
+</script></body></html>
