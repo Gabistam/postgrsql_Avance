@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Évaluation finale · SQL avancé avec PostgreSQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1e40af;--secondary:#059669;--secondary-light:#d1fae5;
+--accent:#d97706;--accent-light:#fef3c7;--danger:#dc2626;--danger-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;
+--dark:#0f172a;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--radius:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sora',system-ui,sans-serif;background:#fff;color:var(--text);line-height:1.5;font-size:13px}
+code,pre{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0}
+.wrap{max-width:900px;margin:0 auto}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 55%,#1e40af 100%);color:#fff;padding:28px 26px 24px;border-radius:var(--radius);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:4px 12px;border-radius:999px;font-size:11.5px;font-weight:600;margin-bottom:10px}
+header h1{font-size:27px;font-weight:800;line-height:1.2;margin-bottom:6px}
+header p{color:#cbd5e1}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:500}
+.corrige-flag{display:none;background:#fef3c7;color:#92400e;border-color:#fcd34d}
+body.corrige .corrige-flag{display:inline-block}
+.ident{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin:16px 0}
+.ident div{font-weight:600;font-size:12.5px;border-bottom:1px dotted #94a3b8;padding-bottom:14px}
+body.corrige .ident{display:none}
+.box{border-radius:10px;padding:12px 16px;margin:12px 0;font-size:12.5px}
+.box.info{background:var(--primary-light);border-left:4px solid var(--primary);color:var(--primary-dark)}
+.box.warn{background:var(--accent-light);border-left:4px solid var(--accent);color:#78350f}
+.box ul{margin:4px 0 0 18px}.box li{margin:2px 0}
+.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.legend div{border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:12px}
+.legend b{display:block;margin-bottom:3px}
+table.bareme{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+table.bareme th{background:#1e293b;color:#fff;text-align:left;padding:7px 10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+table.bareme td{border-bottom:1px solid var(--border);padding:6px 10px}
+.score-box{display:flex;justify-content:flex-end;gap:14px;margin-top:12px;font-weight:700}
+.score-box span{border:2px solid var(--dark);border-radius:8px;padding:8px 16px}
+.seance{page-break-before:always;break-before:page}
+.seance-head{display:flex;align-items:center;gap:12px;background:var(--dark);color:#fff;border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.seance-head .s{font-family:'JetBrains Mono',monospace;font-weight:700;background:var(--primary);border-radius:8px;padding:4px 10px;font-size:12px}
+.seance-head h2{font-size:16px;font-weight:700}
+.seance-head small{display:block;color:#cbd5e1;font-weight:400;font-size:11px}
+.q{border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
+.q-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.q-num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:#fff;background:var(--primary);border-radius:6px;padding:2px 8px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.tag{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.t-qcm{background:#dbeafe;color:#1e40af}.t-vf{background:#d1fae5;color:#065f46}.t-multi{background:#ede9fe;color:#5b21b6}
+.notion{font-size:10.5px;color:var(--muted);margin-left:auto;font-family:'JetBrains Mono',monospace}
+.enonce{font-weight:600;margin-bottom:6px}
+.enonce code,.opt code,.expl code{background:#e2e8f0;padding:0 5px;border-radius:4px;font-size:11.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+pre.code{background:#0d1117;color:#e2e8f0;border-radius:8px;padding:9px 12px;font-size:11.5px;line-height:1.5;margin:6px 0 8px;white-space:pre-wrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.opts{list-style:none;display:grid;gap:4px}
+.opts.vf{display:flex;gap:28px}
+.opt{display:flex;gap:9px;align-items:flex-start;padding:3px 6px;border-radius:6px}
+.mark{flex-shrink:0;width:14px;height:14px;border:1.6px solid #334155;margin-top:2px;display:grid;place-items:center;font-size:10px;font-weight:800;color:#fff}
+.t-qcm-m,.vf .mark{border-radius:50%}
+.letter{font-weight:700;color:var(--muted);min-width:14px}
+body.corrige .opt.ok{background:var(--secondary-light);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body.corrige .opt.ok .mark{background:var(--secondary);border-color:var(--secondary)}
+body.corrige .opt.ok .mark::after{content:"✓"}
+.expl{display:none;margin-top:8px;padding:8px 12px;border-left:3px solid var(--secondary);background:#f8fafc;font-size:12px;color:#334155}
+body.corrige .expl{display:block}
+.grille{display:none}
+body.corrige .grille{display:block}
+table.grid{width:100%;border-collapse:collapse;font-size:12px}
+table.grid td,table.grid th{border:1px solid var(--border);padding:5px 8px;text-align:center}
+table.grid th{background:#f1f5f9}
+footer{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
+@page{size:A4}
+@media screen{body{padding:24px 16px;background:#f1f5f9}.wrap{background:#fff;padding:24px;border-radius:var(--radius)}}
+</style></head>
+<body>
+<div class="wrap">
+<header>
+  <span class="badge">🎓 Évaluation finale · Module SQL avancé</span>
+  <h1>SQL avancé avec PostgreSQL</h1>
+  <p>Questionnaire de fin de module couvrant les notions N1 à N41 des 5 séances.</p>
+  <div class="meta">
+    <span class="pill">📝 40 questions</span><span class="pill">⏱ Durée conseillée : 60 min</span>
+    <span class="pill">🚫 Sans document ni ordinateur</span><span class="pill">🎯 Noté sur 20</span>
+    <span class="pill corrige-flag">🔑 CORRIGÉ · Document formateur</span>
+  </div>
+</header>
+
+<div class="ident">
+  <div>Nom :</div><div>Prénom :</div>
+  <div>Groupe / promotion :</div><div>Date :</div>
+</div>
+
+<div class="box info"><b>Consignes</b>
+<ul>
+<li>Répondez directement sur le sujet en cochant ou en noircissant la ou les cases choisies.</li>
+<li>Pour corriger une réponse, barrez-la nettement d'une croix et entourez la bonne case.</li>
+<li>Toutes les requêtes sont écrites pour PostgreSQL. Les tables citées sont celles des démonstrations du module (<code>joueurs</code>, <code>equipes</code>, <code>jeux</code>, <code>aventuriers</code>…).</li>
+</ul></div>
+
+<div class="legend">
+  <div><b><span class="tag t-qcm">QCM</span></b>Une seule bonne réponse. Cases rondes ○.</div>
+  <div><b><span class="tag t-vf">Vrai / Faux</span></b>Cochez Vrai ou Faux. Cases rondes ○.</div>
+  <div><b><span class="tag t-multi">Cases à cocher</span></b>Une ou plusieurs bonnes réponses. Cases carrées □.</div>
+</div>
+
+<div class="box warn"><b>Barème</b> : 1 point par question, soit 40 points ramenés sur 20.
+Pour les questions à cases à cocher, le point n'est accordé que si <b>toutes</b> les bonnes cases sont cochées <b>et aucune</b> mauvaise. Une réponse fausse ne retire pas de point.</div>
+
+<table class="bareme">
+<tr><th>Séance</th><th>Thème</th><th>Questions</th><th>Points</th></tr>
+<tr><td>S1</td><td>Fondamentaux et requêtage avancé (N1 → N9)</td><td>Q1 → Q8</td><td>/ 8</td></tr>
+<tr><td>S2</td><td>Agrégations, JSONB, vues et fonctions (N10 → N17)</td><td>Q9 → Q16</td><td>/ 8</td></tr>
+<tr><td>S3</td><td>Optimisation et index (N18 → N25)</td><td>Q17 → Q24</td><td>/ 8</td></tr>
+<tr><td>S4</td><td>Procédures stockées et triggers (N26 → N33)</td><td>Q25 → Q32</td><td>/ 8</td></tr>
+<tr><td>S5</td><td>Transactions et sécurité (N34 → N41)</td><td>Q33 → Q40</td><td>/ 8</td></tr>
+</table>
+<div class="score-box"><span>Total : ______ / 40</span><span>Note : ______ / 20</span></div>
+
+<div id="questions"></div>
+
+<div class="grille seance">
+  <div class="seance-head"><span class="s">🔑</span><h2>Grille de correction rapide<small>Réponses attendues, à reporter sur la copie</small></h2></div>
+  <table class="grid" id="grid"></table>
+</div>
+
+<footer>SQL avancé avec PostgreSQL · Évaluation finale</footer>
+</div>
+
+<script>
+// type : qcm (une réponse), vf (vrai/faux), multi (plusieurs réponses) · ok : index des bonnes options
+const SEANCES = [
+{ id:'S1', titre:'Fondamentaux et requêtage avancé', sous:'Notions N1 à N9 · psql, types, jointures, agrégats, CTE, fenêtrage', questions:[
+ { n:'N1', type:'qcm', q:"Dans psql, l'invite passe de `cours_sql=#` à `cours_sql-#` après avoir tapé une requête et appuyé sur Entrée. Que se passe-t-il ?",
+   opts:["La connexion au serveur a été perdue","psql attend la suite de l'instruction : le point-virgule final manque","La session n'a plus les droits de superutilisateur","La transaction en cours a échoué"], ok:[1],
+   expl:"Le `-` signale une instruction incomplète. On termine avec `;` puis Entrée, ou on annule avec Ctrl+C." },
+ { n:'N2', type:'multi', q:"On crée la colonne `prix` d'un catalogue et sa clé primaire. Quelles affirmations sont exactes ?",
+   opts:["`NUMERIC(10,2)` est le type adapté pour stocker un prix","`REAL` garantit que 0.1 + 0.2 vaut exactement 0.3","`CHECK (prix >= 0)` fait refuser par la base toute ligne au prix négatif","`GENERATED ALWAYS AS IDENTITY` est la syntaxe standard à privilégier à `SERIAL`"], ok:[0,2,3],
+   expl:"`REAL` et `FLOAT` sont approximatifs : on les exclut pour les montants. `NUMERIC` est exact." },
+ { n:'N3', type:'vf', q:"La requête suivante ne renvoie que des joueurs ayant marqué plus de 3 buts.",
+   code:"SELECT nom FROM joueurs\nWHERE poste = 'attaquant' AND buts > 3 OR poste = 'milieu';", ok:[1],
+   expl:"`AND` est prioritaire sur `OR` : la requête renvoie les attaquants à plus de 3 buts <b>et tous les milieux</b>. Il faut écrire `(poste = 'attaquant' OR poste = 'milieu') AND buts > 3`." },
+ { n:'N4', type:'qcm', q:"On veut lister <b>toutes</b> les équipes avec leur nombre de joueurs, y compris celles qui n'en ont aucun. Quelle jointure compléter ?",
+   code:"SELECT e.nom, COUNT(j.id)\nFROM equipes e ______ joueurs j ON j.equipe_id = e.id\nGROUP BY e.nom;",
+   opts:["`INNER JOIN`","`LEFT JOIN`","`CROSS JOIN`","`NATURAL JOIN`"], ok:[1],
+   expl:"Un `INNER JOIN` fait disparaître sans prévenir les équipes sans joueur. `LEFT JOIN` conserve toutes les lignes de gauche, et `COUNT(j.id)` vaut alors 0." },
+ { n:'N5', type:'multi', q:"Parmi ces affirmations sur `GROUP BY` et `HAVING`, lesquelles sont exactes ?",
+   opts:["`WHERE` filtre les lignes avant le regroupement","`HAVING` peut filtrer sur un agrégat, par exemple `HAVING COUNT(*) > 3`","`HAVING` est évalué avant `WHERE`","`WHERE COUNT(*) > 3` est une écriture valide"], ok:[0,1],
+   expl:"Ordre logique : `WHERE` → `GROUP BY` → `HAVING`. Un agrégat est interdit dans le `WHERE`." },
+ { n:'N6 · N7', type:'multi', q:"Parmi ces affirmations sur les CTE, lesquelles sont exactes ?",
+   opts:["Une CTE n'existe que le temps de la requête qui la suit","Chaque CTE doit être précédée de son propre mot-clé `WITH`","Une CTE récursive s'écrit `WITH RECURSIVE` et combine une partie d'ancrage et une partie récursive par `UNION ALL`","Sur des données qui forment une boucle (A → B → A), une CTE récursive s'arrête toujours d'elle-même"], ok:[0,2],
+   expl:"Un seul `WITH`, les CTE étant séparées par des virgules. Sur un graphe, il faut limiter la profondeur ou mémoriser le chemin parcouru pour éviter une boucle infinie." },
+ { n:'N8', type:'qcm', q:"Les scores triés par ordre décroissant sont 100, 90, 90, 80. Quels rangs `RANK() OVER (ORDER BY score DESC)` attribue-t-il ?",
+   opts:["1, 2, 3, 4","1, 2, 2, 3","1, 2, 2, 4","1, 1, 2, 3"], ok:[2],
+   expl:"`RANK` donne le même rang aux ex æquo puis saute des rangs (1, 2, 2, 4). `DENSE_RANK` donnerait 1, 2, 2, 3 et `ROW_NUMBER` 1, 2, 3, 4." },
+ { n:'N8 · N9', type:'multi', q:"Parmi ces affirmations sur les fonctions de fenêtrage, lesquelles sont exactes ?",
+   opts:["`LAG(ca) OVER (ORDER BY mois)` renvoie le chiffre d'affaires du mois précédent","`SUM(ca) OVER (ORDER BY mois)` calcule un cumul progressif","On peut écrire `WHERE rang <= 3` si `rang` est l'alias d'un `RANK() OVER (…)` du même `SELECT`","Avec un `ORDER BY` et sans cadre précisé, les lignes à égalité sont cumulées ensemble (cadre `RANGE`)"], ok:[0,1,3],
+   expl:"Le `WHERE` est évalué avant le fenêtrage : il faut filtrer dans une requête englobante (CTE ou sous-requête)." },
+]},
+{ id:'S2', titre:'Agrégations, JSONB, vues et fonctions', sous:'Notions N10 à N17 · FILTER, ROLLUP, LATERAL, JSONB, vues, fonctions', questions:[
+ { n:'N10', type:'qcm', q:"On veut, dans une même requête, deux colonnes : le nombre de ventes sur PC et le nombre de ventes sur PS5. Quelle écriture convient ?",
+   opts:["`COUNT(*) AS pc, COUNT(*) AS ps5` avec `WHERE plateforme = 'PC' AND plateforme = 'PS5'`","`COUNT(plateforme = 'PC') AS pc, COUNT(plateforme = 'PS5') AS ps5`","`COUNT(*) FILTER (WHERE plateforme = 'PC') AS pc, COUNT(*) FILTER (WHERE plateforme = 'PS5') AS ps5`","`COUNT(*)` avec `GROUP BY plateforme HAVING plateforme IN ('PC', 'PS5')`, sur une seule ligne"], ok:[2],
+   expl:"`FILTER` ne s'applique qu'à son agrégat. `COUNT(expression booléenne)` compte toutes les valeurs non nulles, donc aussi les `false`." },
+ { n:'N11', type:'vf', q:"Avec `GROUP BY ROLLUP (…)`, tester `colonne IS NULL` suffit toujours pour reconnaître une ligne de sous-total.", ok:[1],
+   expl:"Si les données contiennent de vrais `NULL`, les deux se confondent. On utilise `GROUPING(colonne)`." },
+ { n:'N12', type:'qcm', q:"Pour chaque jeu, on veut ses 3 meilleurs mois de ventes avec une sous-requête qui fait référence à la table de gauche (`WHERE v.jeu_id = j.id … LIMIT 3`). Que faut-il écrire ?",
+   opts:["`FROM jeux j CROSS JOIN LATERAL (sous-requête) m`","`FROM jeux j NATURAL JOIN (sous-requête) m`","`FROM jeux j, (sous-requête) m`, sans autre mot-clé","`FROM jeux j UNION (sous-requête)`"], ok:[0],
+   expl:"Sans `LATERAL`, la sous-requête du `FROM` ne voit pas la table de gauche et renvoie une erreur." },
+ { n:'N13', type:'multi', q:"La colonne `details` est de type `JSONB`. Quelles affirmations sont exactes ?",
+   opts:["`details ->> 'pegi'` renvoie du texte","`details -> 'pegi'` renvoie du texte","`details ->> 'pegi' > '12'` compare les valeurs numériquement","`details @> '{\"multijoueur\": true}'` teste si le document contient cette paire"], ok:[0,3],
+   expl:"`->` renvoie du `jsonb`, `->>` du texte. Entre textes, `'3' > '12'` (ordre alphabétique) : il faut caster, par exemple `(details ->> 'pegi')::int > 12`." },
+ { n:'N14', type:'vf', q:"Une vue ne stocke pas de données : sa requête est réexécutée à chaque lecture.", ok:[0],
+   expl:"Une vue lente reste lente. Autre piège : `SELECT *` dans une vue fige la liste des colonnes au moment de sa création." },
+ { n:'N15', type:'multi', q:"Parmi ces affirmations sur les vues matérialisées, lesquelles sont exactes ?",
+   opts:["Leurs données restent figées jusqu'au prochain `REFRESH MATERIALIZED VIEW`","`REFRESH MATERIALIZED VIEW CONCURRENTLY` exige un index unique sur la vue","Elles se mettent à jour automatiquement à chaque `INSERT` dans les tables sources","On peut créer des index sur une vue matérialisée"], ok:[0,1,3],
+   expl:"Une vue matérialisée jamais rafraîchie affiche des chiffres faux, sans aucun message d'erreur. Il faut décider qui la rafraîchit, et quand." },
+ { n:'N16', type:'vf', q:"`CREATE OR REPLACE FUNCTION` permet de changer le type de retour d'une fonction existante.", ok:[1],
+   expl:"`CREATE OR REPLACE` remplace le corps, pas le type de retour. Il faut d'abord `DROP FUNCTION`." },
+ { n:'N17', type:'qcm', q:"Une fonction PL/pgSQL lit la table `joueurs` sans la modifier. Quelle catégorie de volatilité faut-il déclarer ?",
+   opts:["`IMMUTABLE`","`STABLE`","`VOLATILE`","`STRICT`"], ok:[1],
+   expl:"`IMMUTABLE` sur une fonction qui lit une table peut produire des valeurs périmées (cache, index) sans avertissement. `STABLE` pour lire, `VOLATILE` pour écrire. `STRICT` concerne les arguments `NULL`." },
+]},
+{ id:'S3', titre:'Optimisation et index', sous:'Notions N18 à N25 · EXPLAIN, modes de lecture, statistiques, index B-tree, GIN', questions:[
+ { n:'N18', type:'vf', q:"`EXPLAIN ANALYZE DELETE FROM ecoutes WHERE …;` affiche le plan sans supprimer aucune ligne.", ok:[1],
+   expl:"`EXPLAIN ANALYZE` exécute réellement la requête. Pour analyser une écriture sans conséquence : `BEGIN; EXPLAIN ANALYZE DELETE …; ROLLBACK;`." },
+ { n:'N19', type:'qcm', q:"Une requête ramène environ 60 % des lignes d'une grande table, alors qu'un index B-tree existe sur la colonne filtrée. Quel mode de lecture le planificateur choisira-t-il très probablement ?",
+   opts:["`Seq Scan`","`Index Scan`","`Index Only Scan`","Aucun : la requête échoue"], ok:[0],
+   expl:"Un index n'est pas utilisé dès qu'il existe : sur une condition peu sélective, lire toute la table en séquence coûte moins cher. Seul le plan fait foi." },
+ { n:'N20', type:'qcm', q:"Juste après un import massif, un plan affiche `rows=12` estimé pour `rows=480000` réel. Quelle est l'interprétation la plus pertinente ?",
+   opts:["Les statistiques sont obsolètes : il faut lancer `ANALYZE` sur la table","La table est corrompue : il faut la recréer","Il manque un index : il faut en créer un sur chaque colonne","L'écart est normal et n'a aucun effet sur le choix du plan"], ok:[0],
+   expl:"Un écart important entre estimé et réel est un signal d'alerte : le planificateur raisonne sur l'ancienne table. L'autovacuum finit par corriger, mais après un gros import on lance `ANALYZE` soi-même." },
+ { n:'N21', type:'multi', q:"Un index composite existe sur `ecoutes (utilisateur_id, ecoute_le)`. Quelles conditions peuvent l'exploiter efficacement ?",
+   opts:["`WHERE utilisateur_id = 42`","`WHERE utilisateur_id = 42 AND ecoute_le >= '2025-01-01'`","`WHERE ecoute_le >= '2025-01-01'`, seule","`WHERE ecoute_le = '2025-03-01' OR utilisateur_id = 42`"], ok:[0,1],
+   expl:"Un index composite sert quand la requête filtre sur sa <b>première</b> colonne. Pour une recherche par date seule, il faut un index dont la date est la première colonne." },
+ { n:'N22', type:'qcm', q:"On a créé l'index `CREATE INDEX ON utilisateurs (LOWER(pseudo));`. Quelle requête peut l'utiliser ?",
+   opts:["`WHERE UPPER(pseudo) = 'USER_4242'`","`WHERE pseudo ILIKE 'user_4242'`","`WHERE LOWER(pseudo) = 'user_4242'`","`WHERE pseudo = 'user_4242'`"], ok:[2],
+   expl:"Un index sur expression n'est utilisé que si la requête contient exactement la même expression." },
+ { n:'N23', type:'vf', q:"Un index GIN sur une colonne `JSONB` accélère `details @> '{\"pegi\": 18}'`, mais pas `details ->> 'pegi' = '18'`.", ok:[0],
+   expl:"L'index GIN sert les opérateurs de contenance et d'existence (`@>`, `?`), pas l'extraction `->>`. Même question, deux écritures, deux plans." },
+ { n:'N24', type:'multi', q:"La colonne `cree_le` (de type `timestamp`) a un index B-tree simple. Quelles conditions <b>empêchent</b> son utilisation ?",
+   opts:["`WHERE EXTRACT(YEAR FROM cree_le) = 2025`","`WHERE cree_le >= '2025-01-01' AND cree_le < '2026-01-01'`","`WHERE cree_le::date = '2025-03-01'`","`WHERE cree_le + INTERVAL '1 day' > now()`"], ok:[0,2,3],
+   expl:"Toute fonction ou tout calcul appliqué à la colonne indexée empêche l'utilisation de l'index. On réécrit avec un intervalle sur la colonne brute, comme dans la réponse B." },
+ { n:'N25', type:'vf', q:"Un index qui n'apporte aucun gain mesuré doit être supprimé, car chaque index ralentit les écritures et consomme du stockage et de l'énergie.", ok:[0],
+   expl:"Règle du module, et démarche de sobriété. On mesure avant et après avec `EXPLAIN (ANALYZE, BUFFERS)`." },
+]},
+{ id:'S4', titre:'Procédures stockées et triggers', sous:'Notions N26 à N33 · CALL, erreurs, lots, triggers BEFORE / AFTER', questions:[
+ { n:'N26', type:'multi', q:"Parmi ces affirmations sur les procédures (`CREATE PROCEDURE`), lesquelles sont exactes ?",
+   opts:["Une procédure s'appelle avec `CALL acheter(1, 42);`","Une procédure s'appelle avec `SELECT acheter(1, 42);`","Une procédure peut transmettre une valeur à l'appelant via un paramètre `INOUT`","Une procédure renvoie son résultat avec `RETURN valeur;`"], ok:[0,2],
+   expl:"`SELECT` sur une procédure provoque l'erreur « is a procedure ». Une procédure ne renvoie rien avec `RETURN valeur` : on utilise `INOUT`, ou une fonction si le but est de calculer." },
+ { n:'N27', type:'qcm', q:"Quel est le principal danger de ce bloc dans une procédure ?",
+   code:"EXCEPTION\n  WHEN OTHERS THEN\n    RAISE NOTICE 'Une erreur est survenue';",
+   opts:["Il avale toutes les erreurs : l'appelant croit que tout s'est bien passé","Il provoque une erreur de syntaxe","Il annule systématiquement toute la base","Il empêche la procédure de s'exécuter"], ok:[0],
+   expl:"N'intercepter que les erreurs que l'on sait traiter. Pour les autres, les laisser remonter, ou les relancer avec `RAISE;` après les avoir journalisées." },
+ { n:'N28', type:'vf', q:"Une procédure qui contient un `COMMIT` peut être appelée à l'intérieur d'un bloc `BEGIN; … COMMIT;` ouvert par l'appelant.", ok:[1],
+   expl:"Elle ne peut pas valider un travail qui ne lui appartient pas : PostgreSQL renvoie une erreur de fin de transaction invalide." },
+ { n:'N29', type:'multi', q:"Quels éléments font partie de la mise en place d'un trigger dans PostgreSQL ?",
+   opts:["Une fonction déclarée `RETURNS trigger`","Une instruction `CREATE TRIGGER … EXECUTE FUNCTION …`","Un moment (`BEFORE` / `AFTER`) et un événement (`INSERT`, `UPDATE`, `DELETE`)","Un appel explicite par `CALL` après chaque écriture"], ok:[0,1,2],
+   expl:"Le trigger est déclenché automatiquement par l'événement. Il ne s'appelle jamais lui-même avec `CALL`." },
+ { n:'N30', type:'qcm', q:"Dans un trigger `BEFORE INSERT … FOR EACH ROW`, la fonction se termine par `RETURN NULL;`. Que se passe-t-il ?",
+   opts:["La ligne est insérée avec toutes ses colonnes à NULL","L'insertion de la ligne est annulée silencieusement, sans erreur","Une erreur est levée et la transaction échoue","Le trigger est ignoré et la ligne est insérée normalement"], ok:[1],
+   expl:"Dans un trigger BEFORE ROW, on renvoie `NEW` (éventuellement modifié) pour écrire la ligne. `RETURN NULL` l'annule sans message." },
+ { n:'N31', type:'qcm', q:"On veut tenir un journal d'audit qui n'enregistre que les modifications réellement appliquées. Quel type de trigger choisir ?",
+   opts:["`BEFORE … FOR EACH ROW`","`AFTER … FOR EACH ROW`","`INSTEAD OF` sur la table","Aucun : c'est impossible avec un trigger"], ok:[1],
+   expl:"`AFTER` s'exécute une fois l'écriture faite et les contraintes vérifiées. `BEFORE` sert plutôt à valider ou normaliser la ligne. `INSTEAD OF` est réservé aux vues." },
+ { n:'N32', type:'multi', q:"Parmi ces affirmations sur les triggers d'instruction, les tables de transition et `WHEN`, lesquelles sont exactes ?",
+   opts:["Les tables de transition (`REFERENCING NEW TABLE AS …`) ne sont disponibles qu'avec `AFTER`","Un trigger `FOR EACH STATEMENT` ne se déclenche que si au moins une ligne est modifiée","`WHEN (OLD IS DISTINCT FROM NEW)` évite d'exécuter un trigger `UPDATE` quand rien ne change","Les tables de transition sont compatibles avec une liste de colonnes (`UPDATE OF prix`)"], ok:[0,2],
+   expl:"Un trigger d'instruction se déclenche même si l'`UPDATE` ne trouve aucune ligne. Les tables de transition sont incompatibles avec `UPDATE OF …`." },
+ { n:'N33', type:'vf', q:"Un trigger se justifie quand une règle doit être garantie quel que soit le programme qui écrit dans la table (audit, intégrité, normalisation).", ok:[0],
+   expl:"En revanche, la logique métier qui dépend du contexte (envoyer un email, appeler une API, appliquer une promotion) reste dans l'application." },
+]},
+{ id:'S5', titre:'Transactions et sécurité', sous:'Notions N34 à N41 · transactions, isolation, verrous, rôles, RLS, injection', questions:[
+ { n:'N34', type:'qcm', q:"Dans une transaction ouverte par `BEGIN`, une instruction échoue. On tape ensuite `COMMIT;`. Que se passe-t-il ?",
+   opts:["Les instructions réussies avant l'erreur sont validées","Le `COMMIT` se transforme en `ROLLBACK` : rien n'est validé","Le `COMMIT` valide tout, y compris l'instruction en erreur","PostgreSQL redémarre la transaction automatiquement"], ok:[1],
+   expl:"Après une erreur, PostgreSQL refuse toute instruction jusqu'à la fin de la transaction, et le `COMMIT` ne valide plus rien." },
+ { n:'N35', type:'qcm', q:"Deux transactions lisent les mêmes données puis écrivent chacune une ligne différente, et laissent ensemble la base dans un état incohérent (<i>write skew</i>). Quel niveau d'isolation l'empêche à lui seul ?",
+   opts:["`READ UNCOMMITTED`","`READ COMMITTED`","`REPEATABLE READ`","`SERIALIZABLE`"], ok:[3],
+   expl:"Seul `SERIALIZABLE` (ou un verrou explicite) empêche le write skew. L'application doit alors savoir relancer une transaction refusée (erreur 40001)." },
+ { n:'N36', type:'vf', q:"Les verrous posés par un `UPDATE` sont conservés jusqu'au `COMMIT` ou au `ROLLBACK` de la transaction.", ok:[0],
+   expl:"D'où la règle : une transaction doit être courte. Les sessions « idle in transaction » se repèrent dans `pg_stat_activity`." },
+ { n:'N37', type:'multi', q:"Quelles affirmations sur les interblocages (<i>deadlocks</i>) sont exactes ?",
+   opts:["Verrouiller toujours les lignes dans le même ordre (par identifiant croissant, par exemple) réduit le risque","L'application doit prévoir de relancer une transaction annulée (erreur 40P01)","Augmenter le nombre maximal de connexions les fait disparaître","PostgreSQL détecte l'interblocage et annule l'une des transactions"], ok:[0,1,3],
+   expl:"Sur une application chargée, l'interblocage arrive régulièrement : ce n'est pas un bug rare qu'on peut ignorer." },
+ { n:'N38', type:'vf', q:"Pour éviter les erreurs de droits, l'application doit se connecter avec le compte `postgres`.", ok:[1],
+   expl:"Un superutilisateur ignore tous les droits et toutes les politiques de sécurité : la moindre injection lui donne un accès total. L'application a son propre rôle, sans droit sur la structure." },
+ { n:'N39', type:'multi', q:"La Row Level Security est activée sur une table, sans `FORCE ROW LEVEL SECURITY`. Quels rôles <b>ignorent</b> ses politiques ?",
+   opts:["Un superutilisateur comme `postgres`","Un rôle doté de l'attribut `BYPASSRLS`","Le propriétaire de la table","Le rôle applicatif, qui a seulement le droit `SELECT` sur la table"], ok:[0,1,2],
+   expl:"D'où le piège : tester ses politiques avec `postgres` donne l'impression que tout est visible. On teste avec le rôle applicatif." },
+ { n:'N40', type:'qcm', q:"Quelle précaution est indispensable dans une fonction `SECURITY DEFINER` ?",
+   opts:["`SET search_path = pg_temp, public`","`SET search_path = public, pg_temp`","`GRANT ALL ON ALL TABLES IN SCHEMA public TO PUBLIC`","La déclarer `IMMUTABLE`"], ok:[1],
+   expl:"Sans chemin figé, un utilisateur peut placer un faux objet du même nom dans son `search_path` et détourner la fonction avec les droits de son propriétaire. `pg_temp` doit être en <b>dernier</b>." },
+ { n:'N41', type:'multi', q:"Quelles mesures protègent réellement contre l'injection SQL ?",
+   opts:["Utiliser des requêtes paramétrées","Échapper les apostrophes « à la main »","Filtrer les mots-clés dangereux (`DROP`, `DELETE`…)","Pour un nom de colonne choisi par l'utilisateur, le valider contre une liste blanche puis l'insérer avec `format('%I', nom)`","Appliquer le moindre privilège au rôle applicatif, pour limiter l'impact d'une faille"], ok:[0,3,4],
+   expl:"Échapper à la main ou filtrer des mots-clés se contourne toujours. Un nom de colonne ou de table ne peut pas être passé en paramètre." },
+]},
+];
+
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// Le texte peut contenir <b>/<i> volontaires : on n'échappe que le contenu des `code`
+const fmt = s => s.replace(/`([^`]+)`/g, (_, c) => '<code>' + esc(c) + '</code>');
+const LABEL = {qcm:'QCM', vf:'Vrai / Faux', multi:'Cases à cocher'};
+const CLS = {qcm:'t-qcm', vf:'t-vf', multi:'t-multi'};
+
+let num = 0, html = '', grid = [];
+for (const s of SEANCES) {
+  html += `<section class="seance"><div class="seance-head"><span class="s">${s.id}</span><h2>${s.titre}<small>${s.sous}</small></h2></div>`;
+  for (const q of s.questions) {
+    num++;
+    const opts = q.type === 'vf' ? ['Vrai', 'Faux'] : q.opts;
+    const letters = opts.map((_, i) => String.fromCharCode(65 + i));
+    const shape = q.type === 'multi' ? '' : ' t-qcm-m';
+    html += `<div class="q"><div class="q-top"><span class="q-num">Q${num}</span><span class="tag ${CLS[q.type]}">${LABEL[q.type]}</span><span class="notion">${q.n}</span></div>`;
+    html += `<p class="enonce">${fmt(q.q)}</p>`;
+    if (q.code) html += `<pre class="code">${esc(q.code)}</pre>`;
+    html += `<ul class="opts${q.type === 'vf' ? ' vf' : ''}">`;
+    opts.forEach((o, i) => {
+      const ok = q.ok.includes(i) ? ' ok' : '';
+      const letter = q.type === 'vf' ? '' : `<span class="letter">${letters[i]}</span>`;
+      html += `<li class="opt${ok}"><span class="mark${shape}"></span>${letter}<span>${fmt(o)}</span></li>`;
+    });
+    html += `</ul><div class="expl">💡 ${fmt(q.expl)}</div></div>`;
+    grid.push([num, q.type === 'vf' ? (q.ok[0] === 0 ? 'Vrai' : 'Faux') : q.ok.map(i => letters[i]).join(', ')]);
+  }
+  html += '</section>';
+}
+document.getElementById('questions').innerHTML = html;
+
+let g = '<tr>' + '<th>Q</th><th>Réponse</th>'.repeat(4) + '</tr>';
+for (let r = 0; r < 10; r++) {
+  g += '<tr>';
+  for (let c = 0; c < 4; c++) { const [n, a] = grid[c * 10 + r]; g += `<td><b>Q${n}</b></td><td>${a}</td>`; }
+  g += '</tr>';
+}
+document.getElementById('grid').innerHTML = g;
+
+// Mode corrigé : evaluation-finale.html?corrige ou #corrige
+if (/[?&#]corrige\b/.test(location.search + location.hash)) {
+  document.body.classList.add('corrige');
+  document.title = 'Corrigé · ' + document.title;
+}
+</script>
+</body></html>
